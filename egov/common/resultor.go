@@ -51,16 +51,16 @@ func NewError(errorCode int,errorMsg string) ErrContext {
 
 
 
-func RetChanges(changes int64) *resultTemplate {
-	res := &resultTemplate{Ok: true}
+func RetChanges(changes int64) *ResultTemplate {
+	res := &ResultTemplate{Ok: true}
 	res.Changes = changes
 	return res
 }
 
 
 
-func RetErr(err ErrContext) *resultTemplate {
-	res := &resultTemplate{Ok: false}
+func RetErr(err ErrContext) *ResultTemplate {
+	res := &ResultTemplate{Ok: false}
 	if value, ok := Es[err.err().ErrCode]; ok {
 		res.Err = NewError(err.err().ErrCode, value+":"+err.err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
@@ -74,15 +74,15 @@ func RetErr(err ErrContext) *resultTemplate {
 	}
 }
 
-type resultTemplate struct {
+type ResultTemplate struct {
 	Ok      bool        `json:"ok" msgpack:"ok"`
 	Err     ErrContext  `json:"err" msgpack:"err"`
 	Changes int64       `json:"changes" msgpack:"changes"`
 	Data    interface{} `json:"data" msgpack:"data"`
 }
 
-func RetOk(result interface{}) *resultTemplate {
-	res := &resultTemplate{Ok: true}
+func RetOk(result interface{}) *ResultTemplate {
+	res := &ResultTemplate{Ok: true}
 	if result == nil {
 		res.Changes = int64(0)
 		res.Err = nil
