@@ -7,5 +7,5 @@ import (
 func main() {
 
 	var p = postlog.NewPl(128, 1, 1)
-	p.SendLog(postlog.D, postlog.E, "aaa")
+	p.SendLog(postlog.D, postlog.E, "aaa","")
 }
