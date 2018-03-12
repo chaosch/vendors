@@ -98,19 +98,19 @@ func (p *Pool) HttpPostLog(msg map[string]string) error{
 		b,_:=json.Marshal(msg)
 		req, err := http.NewRequest("POST","http://120.79.8.161:9022/api/logs" , bytes.NewBuffer(b))
 		if err != nil {
-			panic(err)
+			return
 		}
 		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err!=nil{
-			fmt.Println(err)
-		}
-		defer resp.Body.Close()
-		fmt.Println("response Status:", resp.Status)
-		fmt.Println("response Headers:", resp.Header)
-		body, _ := ioutil.ReadAll(resp.Body)
-		fmt.Println("response Body:", string(body))
+		client.Do(req)
+		//if err!=nil{
+		//	return
+		//}
+		//defer resp.Body.Close()
+		//fmt.Println("response Status:", resp.Status)
+		//fmt.Println("response Headers:", resp.Header)
+		//body, _ := ioutil.ReadAll(resp.Body)
+		//fmt.Println("response Body:", string(body))
 	})
 	if err!=nil{
 		return err
