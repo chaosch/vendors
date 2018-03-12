@@ -2,7 +2,6 @@ package postlog
 
 import (
 	"fmt"
-	"io/ioutil"
 	"encoding/json"
 	"bytes"
 	"time"
@@ -93,10 +92,10 @@ func (p *Pool) worker(task func()) {
 		task2()
 	}
 }
-func (p *Pool) HttpPostLog(msg map[string]string) error{
+func (p *Pool) HttpPostLog(msg map[string]string,logsUrl string) error{
 	err:=p.ScheduleTimeout(1*time.Second,func(){
 		b,_:=json.Marshal(msg)
-		req, err := http.NewRequest("POST","http://120.79.8.161:9022/api/logs" , bytes.NewBuffer(b))
+		req, err := http.NewRequest("POST","http://"+logsUrl+"/api/logs" , bytes.NewBuffer(b))
 		if err != nil {
 			return
 		}
