@@ -117,9 +117,9 @@ func (p *Pool) HttpPostLog(msg map[string]string,logsUrl string) error{
 	return nil
 }
 
-func(p *Pool) SendLog(s string,k string,c string){
+func(p *Pool) SendLog(s string,k string,c string,logsUrl string){
 	msg:=map [string]string{"system":s,"kind":k,"content":c}
-	err:=p.HttpPostLog(msg)
+	err:=p.HttpPostLog(msg,logsUrl)
 	if err!=nil{
 		fmt.Println("log send fail")
 	}
