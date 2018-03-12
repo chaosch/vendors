@@ -57,6 +57,12 @@ func RetChanges(changes int64) *ResultTemplate {
 	return res
 }
 
+func RetChangesStr(changes int64) string {
+	res := &ResultTemplate{Ok: true}
+	res.Changes = changes
+	str,_:=json.Marshal(res)
+	return string(str)
+}
 
 
 func RetErr(err ErrContext) *ResultTemplate {
@@ -73,6 +79,24 @@ func RetErr(err ErrContext) *ResultTemplate {
 		return res
 	}
 }
+
+
+
+func RetErrStr(err ErrContext) string {
+	res := &ResultTemplate{Ok: false}
+	if value, ok := Es[err.err().ErrCode]; ok {
+		res.Err = NewError(err.err().ErrCode, value+":"+err.err().ErrMsg)
+		x, _ := json.Marshal(res.Err)
+		log.Println(string(x))
+		return string(x)
+	} else {
+		res.Err = NewError(0, value+":"+err.err().ErrMsg)
+		x, _ := json.Marshal(res.Err)
+		log.Println(string(x))
+		return string(x)
+	}
+}
+
 
 type ResultTemplate struct {
 	Ok      bool        `json:"ok" msgpack:"ok"`
@@ -97,4 +121,24 @@ func RetOk(result interface{}) *ResultTemplate {
 		res.Changes = int64(1)
 	}
 	return res
+}
+
+
+func RetOkStr(result interface{}) string {
+	res := &ResultTemplate{Ok: true}
+	if result == nil {
+		res.Changes = int64(0)
+		res.Err = nil
+		res.Data = []interface{}{nil}
+	}
+	resValue := reflect.ValueOf(result)
+	if resValue.Kind() == reflect.Array || resValue.Kind() == reflect.Slice {
+		res.Data = result
+		res.Changes = int64(resValue.Len())
+	} else {
+		res.Data = []interface{}{result}
+		res.Changes = int64(1)
+	}
+	str,_:=json.Marshal(res)
+	return string(str)
 }
