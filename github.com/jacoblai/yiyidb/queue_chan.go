@@ -9,6 +9,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"bytes"
 	"os"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 //FIFO
@@ -84,6 +85,14 @@ func (q *ChanQueue) init() error {
 	return iter.Error()
 }
 
+func (q *ChanQueue) EnqueueObject(chname string, value interface{}) (*QueueItem, error) {
+	msg, err := msgpack.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	return q.Enqueue(chname, msg)
+}
+
 func (q *ChanQueue) Enqueue(chname string, value []byte) (*QueueItem, error) {
 	q.Lock()
 	defer q.Unlock()
@@ -139,13 +148,41 @@ func (q *ChanQueue) GetMetal(chname string) (uint64, uint64) {
 	q.RLock()
 	defer q.RUnlock()
 	if !q.isOpen {
-		return 0,0
+		return 0, 0
 	}
 	if mt, ok := q.mats[chname]; ok {
 		return mt.head, mt.tail
 	} else {
-		return 0,0
+		return 0, 0
 	}
+}
+
+func (q *ChanQueue) Clear(chname string) error {
+	q.RLock()
+	defer q.RUnlock()
+	if !q.isOpen {
+		return ErrDBClosed
+	}
+	if len(chname) > q.maxkv {
+		return errors.New("out of len")
+	}
+	if mt, ok := q.mats[chname]; ok {
+		mt.head = 0
+		mt.tail = 0
+	} else {
+		return errors.New("ch not ext")
+	}
+	batch := new(leveldb.Batch)
+	iter := q.db.NewIterator(util.BytesPrefix([]byte(chname+"-")), q.iteratorOpts)
+	for iter.Next() {
+		batch.Delete(iter.Key())
+	}
+	iter.Release()
+	err := q.db.Write(batch, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (q *ChanQueue) Peek(chname string) (*QueueItem, error) {
@@ -165,26 +202,39 @@ func (q *ChanQueue) Peek(chname string) (*QueueItem, error) {
 	}
 }
 
-func (q *ChanQueue) PeekStart(chname string) ([]*QueueItem, error) {
-	q.RLock()
-	defer q.RUnlock()
+func (q *ChanQueue) PeekStart(chname string) ([]QueueItem, error) {
+	q.Lock()
+	defer q.Unlock()
 	if !q.isOpen {
 		return nil, ErrDBClosed
 	}
 	if len(chname) > q.maxkv {
 		return nil, errors.New("out of len")
 	}
-	result := make([]*QueueItem, 0)
-	iter := q.db.NewIterator(util.BytesPrefix([]byte(chname)), q.iteratorOpts)
+	if mt, ok := q.mats[chname]; ok {
+		mt.head = 0
+		mt.tail = 0
+	} else {
+		return nil, errors.New("ch not ext")
+	}
+	batch := new(leveldb.Batch)
+	result := make([]QueueItem, 0)
+	iter := q.db.NewIterator(util.BytesPrefix([]byte(chname+"-")), q.iteratorOpts)
 	for iter.Next() {
-		item := &QueueItem{
-			ID:    keyToID(iter.Key()),
-			Key:   iter.Key(),
-			Value: iter.Value(),
-		}
+		item := QueueItem{}
+		item.ID=keyToID(iter.Key())
+		item.Key = make([]byte, len(iter.Key()))
+		item.Value = make([]byte, len(iter.Value()))
+		copy(item.Key, iter.Key())
+		copy(item.Value, iter.Value())
 		result = append(result, item)
+		batch.Delete(iter.Key())
 	}
 	iter.Release()
+	err := q.db.Write(batch, nil)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 

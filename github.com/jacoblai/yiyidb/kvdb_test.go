@@ -10,15 +10,44 @@ import (
 	"io/ioutil"
 )
 
+func TestKvdb_IterStartWith(t *testing.T) {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	//参数说明
+	//1数据库路径,2是否开启ttl自动删除记录,3数据碰测优化，输入可能出现key的最大长度
+	kv, err := OpenKvdb(dir, false, false, 10)
+	if err != nil {
+		panic(err)
+	}
+	defer kv.Close()
+
+	kv.Put([]byte("testkey1"), []byte("testkey1"), 0)
+	kv.Put([]byte("testkey22"), []byte("testkey22"), 0)
+	kv.Put([]byte("testke"), []byte("testke"), 0)
+
+	iter, err := kv.IterStartWith([]byte("testkey"))
+	if err != nil {
+		panic(err)
+	}
+	for iter.Next() {
+		fmt.Println(string(iter.Key()), string(iter.Value()))
+	}
+
+	kv.Drop()
+}
+
 func TestKvdb_KeyRangeByObject(t *testing.T) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
 	}
-
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
 	//参数说明
 	//1数据库路径,2是否开启ttl自动删除记录,3数据碰测优化，输入可能出现key的最大长度
-	kv, err := OpenKvdb(dir+"/kvdata8", false,false, 10)
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -49,8 +78,8 @@ func TestKvdb_KeyStartByObject(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata7", false,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -76,13 +105,44 @@ func TestKvdb_KeyStartByObject(t *testing.T) {
 	kv.Drop()
 }
 
+func TestKvdb_KeysByRegexp(t *testing.T) {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
+	if err != nil {
+		panic(err)
+	}
+	defer kv.Close()
+	topics := []string{"foo/bar/baz",
+		"foo/jhg/baz",
+		"foo/uyt/kkk",
+		"foo/bar/+",
+		"foo/#",
+		"foo/bar/#",
+		"foo/ytr/#"}
+	for _, v := range topics {
+		kv.Put([]byte(v), []byte(v), 0)
+	}
+	all, err := kv.RegexpKeys(`foo/((?:[^/#+]+/)*)`)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, v := range all {
+		fmt.Println(v)
+	}
+	kv.Drop()
+}
+
 func TestKvdb_AllByKV(t *testing.T) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata6", false,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -107,8 +167,8 @@ func TestKvdb_AllByKVChan(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata9", true,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, true, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -135,8 +195,8 @@ func TestKvdb_AllByObject(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata5", false, false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -163,8 +223,8 @@ func TestKvdb_Drop(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata4", false,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -178,8 +238,8 @@ func TestKvdb_Put(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata3", false,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -203,8 +263,8 @@ func TestKvdb_BatPutOrDel(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata2", false,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -248,8 +308,8 @@ func TestOpenKvdb(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata1", true,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, true, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -286,8 +346,8 @@ func TestTtlRunner_Run(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	kv, err := OpenKvdb(dir+"/kvdata", true,false, 10)
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
+	kv, err := OpenKvdb(dir, true, false, 10)
 	if err != nil {
 		panic(err)
 	}
@@ -326,8 +386,9 @@ func TestMaxKeyAndValue(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+	dir = dir + "/" + fmt.Sprintf("test_db_%d", time.Now().UnixNano())
 
-	kv, err := OpenKvdb(dir+"/kvdata11", false,false, 10)
+	kv, err := OpenKvdb(dir, false, false, 10)
 	if err != nil {
 		panic(err)
 	}

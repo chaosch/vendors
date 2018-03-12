@@ -199,6 +199,8 @@ func (q *Queue) UpdateObject(id uint64, newValue interface{}) (*QueueItem, error
 }
 
 func (q *Queue) Length() uint64 {
+	q.RLock()
+	defer q.RUnlock()
 	return q.tail - q.head
 }
 
@@ -220,7 +222,7 @@ func (q *Queue) Drop() {
 }
 
 func (q *Queue) getItemByID(id uint64) (*QueueItem, error) {
-	if q.Length() == 0 {
+	if q.tail - q.head == 0 {
 		return nil, ErrEmpty
 	} else if id <= q.head || id > q.tail {
 		return nil, ErrOutOfBounds
@@ -234,13 +236,19 @@ func (q *Queue) getItemByID(id uint64) (*QueueItem, error) {
 }
 
 func (q *Queue) init() error {
+	q.Lock()
+	defer q.Unlock()
 	iter := q.db.NewIterator(nil, q.iteratorOpts)
 	defer iter.Release()
-	if iter.First() {
+	if ok := iter.First(); ok {
 		q.head = KeyToIDPure(iter.Key()) - 1
+	} else {
+		q.head = 0
 	}
-	if iter.Last() {
+	if ok := iter.Last(); ok {
 		q.tail = KeyToIDPure(iter.Key())
+	} else {
+		q.tail = 0
 	}
 	return iter.Error()
 }

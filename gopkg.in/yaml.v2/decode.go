@@ -16,7 +16,6 @@ const (
 	sequenceNode
 	scalarNode
 	aliasNode
-	Test
 )
 
 type node struct {
