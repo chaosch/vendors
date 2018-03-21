@@ -121,7 +121,7 @@ func(p *Pool) SendLog(s string,k string,c string,logsUrl string){
 	msg:=map [string]string{"system":s,"kind":k,"content":c}
 	err:=p.HttpPostLog(msg,logsUrl)
 	if err!=nil{
-		fmt.Println("log send fail")
+		fmt.Println("log send fail",err.Error())
 	}
 }
 
