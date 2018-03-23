@@ -6,35 +6,37 @@ import (
 	"bytes"
 	"time"
 	"net/http"
+	"reflect"
 )
 
-const(
-	E string="错误"
-	L string="日志"
-	W string="警告"
+const (
+	E string = "错误"
+	L string = "日志"
+	W string = "警告"
 )
 
-const(
-	D string="dal"
-	Sync string="sync"
-	Msg string="msg"
-	File string="file"
-	Maint string="maint"
-	Cron string="corn"
+const (
+	D     string = "dal"
+	Sync  string = "sync"
+	Msg   string = "msg"
+	File  string = "file"
+	Maint string = "maint"
+	Cron  string = "corn"
 )
 
 type Dlog struct {
 	Pl *Pool
 }
 
-func NewPl(s,q,sp int) *Pool {
-	return NewPool(s,q,sp)
+func NewPl(s, q, sp int) *Pool {
+	return NewPool(s, q, sp)
 }
+
 var ErrScheduleTimeout = fmt.Errorf("schedule error: timed out")
 
 // Pool contains logic of goroutine reuse.
 type Pool struct {
-	sig  chan struct{}
+	sig   chan struct{}
 	workf chan func()
 }
 
@@ -49,7 +51,7 @@ func NewPool(size, queue, spawn int) *Pool {
 		panic("spawn > workers")
 	}
 	p := &Pool{
-		sig:  make(chan struct{}, size),
+		sig:   make(chan struct{}, size),
 		workf: make(chan func(), queue),
 	}
 	for i := 0; i < spawn; i++ {
@@ -92,10 +94,10 @@ func (p *Pool) worker(task func()) {
 		task2()
 	}
 }
-func (p *Pool) HttpPostLog(msg map[string]string,logsUrl string) error{
-	err:=p.ScheduleTimeout(10*time.Second,func(){
-		b,_:=json.Marshal(msg)
-		req, err := http.NewRequest("POST","http://"+logsUrl+"/api/logs" , bytes.NewBuffer(b))
+func (p *Pool) HttpPostLog(msg map[string]string, logsUrl string) error {
+	err := p.ScheduleTimeout(10*time.Second, func() {
+		b, _ := json.Marshal(msg)
+		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
 		if err != nil {
 			return
 		}
@@ -111,18 +113,32 @@ func (p *Pool) HttpPostLog(msg map[string]string,logsUrl string) error{
 		//body, _ := ioutil.ReadAll(resp.Body)
 		//fmt.Println("response Body:", string(body))
 	})
-	if err!=nil{
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func(p *Pool) SendLog(s string,k string,c string,logsUrl string){
-	msg:=map [string]string{"system":s,"kind":k,"content":c}
-	err:=p.HttpPostLog(msg,logsUrl)
-	if err!=nil{
-		fmt.Println("log send fail",err.Error())
-	}
+type simpleContent struct {
+	message interface{} `json:"message"`
 }
 
-
+func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
+	var cBytes []byte
+	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
+		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
+			sc := simpleContent{message: c}
+			cBytes,_=json.Marshal(sc)
+		} else {
+			return
+		}
+	}else{
+		cBytes,_=json.Marshal(c)
+	}
+	cStr:=string(cBytes)
+	msg := map[string]string{"system": s, "kind": k, "content": cStr}
+	err := p.HttpPostLog(msg, logsUrl)
+	if err != nil {
+		fmt.Println("log send fail", err.Error())
+	}
+}
