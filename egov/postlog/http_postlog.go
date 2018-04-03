@@ -95,7 +95,7 @@ func (p *Pool) worker(task func()) {
 	}
 }
 func (p *Pool) HttpPostLog(msg map[string]string, logsUrl string) error {
-	err := p.ScheduleTimeout(10*time.Second, func() {
+	err := p.ScheduleTimeout(1*time.Second, func() {
 		b, _ := json.Marshal(msg)
 		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
 		if err != nil {
