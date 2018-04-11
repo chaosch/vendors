@@ -16,6 +16,7 @@ type ProcessStatus struct {
 	IpAddress     string     `json:"ipaddress"`
 	InTransaction bool       `json:"intransaction"`
 	Prompt        string     `json:"prompt"`
+	Version       string     `json:"version"`
 }
 
 type LogData struct {
