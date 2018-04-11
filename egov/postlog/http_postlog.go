@@ -28,10 +28,10 @@ type Dlog struct {
 	Pl *Pool
 }
 
-var log *Pool
+var Log *Pool
 
 func init(){
-	log = NewPl(128, 1, 1)
+	Log = NewPl(128, 1, 1)
 }
 
 func NewPl(s, q, sp int) *Pool {
