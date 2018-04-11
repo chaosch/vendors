@@ -28,6 +28,12 @@ type Dlog struct {
 	Pl *Pool
 }
 
+var log *Pool
+
+func init(){
+	log = NewPl(128, 1, 1)
+}
+
 func NewPl(s, q, sp int) *Pool {
 	return NewPool(s, q, sp)
 }
