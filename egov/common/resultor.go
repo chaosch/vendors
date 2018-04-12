@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"runtime"
 	"encoding/json"
+	"strings"
 )
 
 type ErrContext interface {
@@ -141,4 +142,55 @@ func RetOkStr(result interface{}) string {
 	}
 	str,_:=json.Marshal(res)
 	return string(str)
+}
+
+
+func MixErrContext(errs ...ErrContext) ErrContext {
+	errMessage := ""
+	for idx, err := range errs {
+		if err != nil {
+			if idx == 0 {
+				errMessage += err.err().ErrMsg
+			} else {
+				errMessage += ":" + err.err().ErrMsg
+			}
+		} else {
+			if idx == 0 {
+				errMessage += ""
+			} else {
+				errMessage += ":"
+			}
+
+		}
+	}
+	if strings.Trim(errMessage, ":") == "" {
+		return nil
+	} else {
+		return NewError(0, errMessage)
+	}
+}
+
+func MixError(errs ...error) ErrContext {
+	errMessage := ""
+	for idx, err := range errs {
+		if err != nil {
+			if idx == 0 {
+				errMessage += err.Error()
+			} else {
+				errMessage += ":" + err.Error()
+			}
+		} else {
+			if idx == 0 {
+				errMessage += ""
+			} else {
+				errMessage += ":"
+			}
+
+		}
+	}
+	if strings.Trim(errMessage, ":") == "" {
+		return nil
+	} else {
+		return NewError(0, errMessage)
+	}
 }
