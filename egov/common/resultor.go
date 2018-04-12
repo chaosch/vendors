@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"encoding/json"
 	"strings"
+	"github.com/disintegration/imaging"
 )
 
 type ErrContext interface {
