@@ -141,7 +141,7 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
 	}
 }
 
-func (p *Pool) HttpPostLogWithSignal(msg map[string]string, logsUrl string, signal *chan bool) error {
+func (p *Pool) HttpPostLogWithSignal(msg map[string]string, logsUrl string, signal chan bool) error {
 	err := p.ScheduleTimeout(5*time.Second, func() {
 		b, _ := json.Marshal(msg)
 		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
@@ -155,11 +155,11 @@ func (p *Pool) HttpPostLogWithSignal(msg map[string]string, logsUrl string, sign
 	if err != nil {
 		return err
 	}
-	*signal <- true
+	signal <- true
 	return nil
 }
 
-func (p *Pool) SendLogWithSignal(s string, k string, c interface{}, logsUrl string, signal *chan bool) {
+func (p *Pool) SendLogWithSignal(s string, k string, c interface{}, logsUrl string, signal chan bool) {
 	var cBytes []byte
 	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
 		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
