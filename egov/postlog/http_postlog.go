@@ -141,7 +141,7 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
 	}
 }
 
-func (p *Pool) HttpPostLogWithCallback(msg map[string]string, logsUrl string, cb func()) error {
+func (p *Pool) HttpPostLogWithSignal(msg map[string]string, logsUrl string, signal chan bool) error {
 	err := p.ScheduleTimeout(5*time.Second, func() {
 		b, _ := json.Marshal(msg)
 		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
@@ -155,11 +155,11 @@ func (p *Pool) HttpPostLogWithCallback(msg map[string]string, logsUrl string, cb
 	if err != nil {
 		return err
 	}
-	cb()
+	signal <- true
 	return nil
 }
 
-func (p *Pool) SendLogWithCallBack(s string, k string, c interface{}, logsUrl string, cb func()) {
+func (p *Pool) SendLogWithSignal(s string, k string, c interface{}, logsUrl string, signal chan bool) {
 	var cBytes []byte
 	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
 		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
@@ -173,7 +173,7 @@ func (p *Pool) SendLogWithCallBack(s string, k string, c interface{}, logsUrl st
 	}
 	cStr := string(cBytes)
 	msg := map[string]string{"system": s, "kind": k, "content": cStr}
-	err := p.HttpPostLogWithCallback(msg, logsUrl, cb)
+	err := p.HttpPostLogWithSignal(msg, logsUrl, signal)
 	if err != nil {
 		fmt.Println("log send fail", err.Error())
 	}
