@@ -30,7 +30,7 @@ type Dlog struct {
 
 var Log *Pool
 
-func init(){
+func init() {
 	Log = NewPl(128, 1, 1)
 }
 
@@ -110,14 +110,6 @@ func (p *Pool) HttpPostLog(msg map[string]string, logsUrl string) error {
 		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
 		client.Do(req)
-		//if err!=nil{
-		//	return
-		//}
-		//defer resp.Body.Close()
-		//fmt.Println("response Status:", resp.Status)
-		//fmt.Println("response Headers:", resp.Header)
-		//body, _ := ioutil.ReadAll(resp.Body)
-		//fmt.Println("response Body:", string(body))
 	})
 	if err != nil {
 		return err
@@ -134,16 +126,54 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
 	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
 		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
 			sc := simpleContent{message: c}
-			cBytes,_=json.Marshal(sc)
+			cBytes, _ = json.Marshal(sc)
 		} else {
 			return
 		}
-	}else{
-		cBytes,_=json.Marshal(c)
+	} else {
+		cBytes, _ = json.Marshal(c)
 	}
-	cStr:=string(cBytes)
+	cStr := string(cBytes)
 	msg := map[string]string{"system": s, "kind": k, "content": cStr}
 	err := p.HttpPostLog(msg, logsUrl)
+	if err != nil {
+		fmt.Println("log send fail", err.Error())
+	}
+}
+
+func (p *Pool) HttpPostLogWithCallback(msg map[string]string, logsUrl string, cb func()) error {
+	err := p.ScheduleTimeout(5*time.Second, func() {
+		b, _ := json.Marshal(msg)
+		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
+		if err != nil {
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		client.Do(req)
+	})
+	if err != nil {
+		return err
+	}
+	cb()
+	return nil
+}
+
+func (p *Pool) SendLogWithCallBack(s string, k string, c interface{}, logsUrl string, cb func()) {
+	var cBytes []byte
+	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
+		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
+			sc := simpleContent{message: c}
+			cBytes, _ = json.Marshal(sc)
+		} else {
+			return
+		}
+	} else {
+		cBytes, _ = json.Marshal(c)
+	}
+	cStr := string(cBytes)
+	msg := map[string]string{"system": s, "kind": k, "content": cStr}
+	err := p.HttpPostLogWithCallback(msg, logsUrl, cb)
 	if err != nil {
 		fmt.Println("log send fail", err.Error())
 	}
