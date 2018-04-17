@@ -116,7 +116,21 @@ func (p *Pool) HttpPostLog(msg map[string]string, logsUrl string) error {
 	}
 	return nil
 }
-
+func (p *Pool) HttpPostLog2(b []byte, logsUrl string) error {
+	err := p.ScheduleTimeout(5*time.Second, func(){
+		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
+		if err != nil {
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		client.Do(req)
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 type simpleContent struct {
 	message interface{} `json:"message"`
 }
