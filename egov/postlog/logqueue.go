@@ -8,6 +8,8 @@ import (
 	"fmt"
 	//"egov/postlog"
 	"egov/json"
+	"os"
+	"path/filepath"
 )
 var p=NewPool(128,1,1)
 type LogsEngine struct {
@@ -23,13 +25,28 @@ func NewlogsEngine() *LogsEngine{
 	}
 	return le
 }
-func (l *LogsEngine)InQueue(val []byte)error{
+func(l *LogsEngine)Init(log_server string){
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	dir=dir+"/data"
+	fmt.Println(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	LogQueue,err2:=yiyidb.OpenQueue(dir+"/LogQueue")
+	if err!=nil{
+		panic(err2)
+	}
+	l.LogQueue=LogQueue
+	l.Connurl=log_server
+}
+func (l *LogsEngine)InQueue(val []byte)*ResultTemplate{
 	_,err:=l.LogQueue.Enqueue(val)
 	if err!=nil{
 		log.Println("add logdata queue err", err)
-		return err
+		return RetErr(MixError(err))
 	}
-	return nil
+	l.RunLogQueue()
+	return RetChanges(1)
 }
 
 func (l *LogsEngine)RunLogQueue(){
