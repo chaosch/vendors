@@ -6,10 +6,10 @@ import (
 	"github.com/jacoblai/yiyidb"
 	"log"
 	"fmt"
-	//"egov/postlog"
-	"egov/json"
 	"os"
+	"encoding/json"
 	"path/filepath"
+	. "egov/common"
 )
 var p=NewPool(128,1,1)
 type LogsEngine struct {
@@ -28,7 +28,6 @@ func NewlogsEngine() *LogsEngine{
 func(l *LogsEngine)Init(log_server string){
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	dir=dir+"/data"
-	fmt.Println(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
