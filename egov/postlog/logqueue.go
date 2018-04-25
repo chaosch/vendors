@@ -44,7 +44,7 @@ func (l *LogsEngine)InQueue(val []byte)*ResultTemplate{
 		log.Println("add logdata queue err", err)
 		return RetErr(MixError(err))
 	}
-	l.RunLogQueue()
+	l.ResumRunQueue()
 	return RetChanges(1)
 }
 
