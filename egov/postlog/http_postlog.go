@@ -100,7 +100,7 @@ func (p *Pool) worker(task func()) {
 		task2()
 	}
 }
-func (p *Pool) HttpPostLog(msg map[string]string, logsUrl string) error {
+func (p *Pool) HttpPostLog(msg map[string]interface{}, logsUrl string) error {
 	err := p.ScheduleTimeout(5*time.Second, func() {
 		b, _ := json.Marshal(msg)
 		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
@@ -136,19 +136,22 @@ type simpleContent struct {
 }
 
 func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
-	var cBytes []byte
-	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
-		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
-			sc := simpleContent{message: c}
-			cBytes, _ = json.Marshal(sc)
-		} else {
-			return
-		}
-	} else {
-		cBytes, _ = json.Marshal(c)
+	//var cBytes []byte
+	//if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
+	//	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
+	//		sc := simpleContent{message: c}
+	//		cBytes, _ = json.Marshal(sc)
+	//	} else {
+	//		return
+	//	}
+	//} else {
+	//	cBytes, _ = json.Marshal(c)
+	//}
+	//cStr := string(cBytes)
+	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String{
+		c=simpleContent{message: c}
 	}
-	cStr := string(cBytes)
-	msg := map[string]string{"system": s, "kind": k, "content": cStr}
+	msg := map[string]interface{}{"system": s, "kind": k, "content": c}
 	err := p.HttpPostLog(msg, logsUrl)
 	if err != nil {
 		fmt.Println("log send fail", err.Error())
