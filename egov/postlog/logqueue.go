@@ -100,7 +100,7 @@ func(l*LogsEngine)Sendlog(s string,k string,c interface{}){
 	var cBytes []byte
 	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
 		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
-			sc := simpleContent{message: c}
+			sc := simpleContent{Message: c}
 			cBytes,_=json.Marshal(sc)
 		} else {
 			return

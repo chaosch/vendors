@@ -132,7 +132,7 @@ func (p *Pool) HttpPostLog2(b []byte, logsUrl string) error {
 	return nil
 }
 type simpleContent struct {
-	message interface{} `json:"message"`
+	Message interface{} `json:"message"`
 }
 
 func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
@@ -149,7 +149,7 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
 	//}
 	//cStr := string(cBytes)
 	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String{
-		c=simpleContent{message: c}
+		c=simpleContent{Message: c}
 	}
 	msg := map[string]interface{}{"system": s, "kind": k, "content": c}
 	err := p.HttpPostLog(msg, logsUrl)
@@ -180,7 +180,7 @@ func (p *Pool) SendLogWithSignal(s string, k string, c interface{}, logsUrl stri
 	var cBytes []byte
 	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
 		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
-			sc := simpleContent{message: c}
+			sc := simpleContent{Message: c}
 			cBytes, _ = json.Marshal(sc)
 		} else {
 			return

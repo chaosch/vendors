@@ -20,7 +20,7 @@ type ProcessStatus struct {
 }
 
 type LogData struct {
-	system  string
-	kind    string
-	content interface{}
+	System  string   `json:"system"`
+	Kind    string   `json:"kind"`
+	Content interface{} `json:"content"`
 }
