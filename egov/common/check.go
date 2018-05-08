@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"time"
 	"strconv"
-	"fmt"
 	"errors"
 )
 
@@ -48,9 +47,20 @@ func CheckIdCard(idNo string) (error) {
 
 	if reg.MatchString(idNo) == true {
 		submatch := reg.FindStringSubmatch(idNo)
-		t, err := time.Parse("20060102", submatch[2])
+		t, err := time.ParseInLocation("20060102", submatch[2],time.Local)
 		if err != nil {
 			return err
+		}
+		minDate,err:=time.ParseInLocation("20060102", "19170101",time.Local)
+		if err!=nil{
+			return err
+		}
+		maxDate,err:=time.ParseInLocation("20060102", "20100101",time.Local)
+		if err!=nil{
+			return err
+		}
+		if t.Before(minDate)||t.After(maxDate){
+			return errors.New("出生日期不合法")
 		}
 		//fmt.Println(submatch)
 		//fmt.Println("date is ", submatch[2])
@@ -60,6 +70,7 @@ func CheckIdCard(idNo string) (error) {
 	if !res {
 		return errors.New(str)
 	}
+	return nil
 }
 
 func byte2int(x byte) byte {
@@ -108,20 +119,20 @@ func verify_id(verify int, id_v byte) (bool, string) {
 			//fmt.Println("verify_id id",)
 			// if a18[i] == 'X' ,let convert it to type string
 			if (a18[i] == 88 ) {
-				fmt.Println("计算得到身份证最后一位是 ", string(a18[i]))
+				//fmt.Println("计算得到身份证最后一位是 ", string(a18[i]))
 			} else {
-				fmt.Println("计算得到身份证最后一位是 ", a18[i])
+				//fmt.Println("计算得到身份证最后一位是 ", a18[i])
 			}
 			//fmt.Println(i, temp)
 			break
 		}
 	}
 	//if id_v == 'X', let's convert it to type string
-	if (id_v == 88) {
-		fmt.Println("身份证最后一位是 ", string(id_v))
-	} else {
-		fmt.Println("身份证最后一位是  ", id_v) // id_v是身份证的最后一位
-	}
+	//if (id_v == 88) {
+	//	fmt.Println("身份证最后一位是 ", string(id_v))
+	//} else {
+	//	fmt.Println("身份证最后一位是  ", id_v) // id_v是身份证的最后一位
+	//}
 
 	if temp == id_v {
 
