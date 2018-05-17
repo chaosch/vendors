@@ -126,7 +126,7 @@ func (p *Pool) HttpPostLogSlice(msg LogStructSlice, logsUrl string) error {
 			fmt.Println(err.Error())
 			return
 		}
-		fmt.Println(fmt.Sprintf("%+v", string(b)))
+		//fmt.Println(fmt.Sprintf("%+v", string(b)))
 		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logSlice", bytes.NewBuffer(b))
 		if err != nil {
 			return
