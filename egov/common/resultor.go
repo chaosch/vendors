@@ -8,16 +8,6 @@ import (
 	"strings"
 )
 
-type ErrContext interface {
-	err() *errType
-}
-
-type errType struct {
-	ErrCode int `json:"code" msgpack:"code"`
-	ErrMsg  string `json:"msg" msgpack:"msg"`
-	ErrLine int `json:"line" msgpack:"line"`
-	ErrFile string `json:"file" msgpack:"file"`
-}
 
 var Es = map[int]string{
 	//0:    "normal error",
@@ -37,7 +27,30 @@ var Es = map[int]string{
 	6001: "network error",
 }
 
-func (e *errType) err() *errType {
+type ResultTemplate struct {
+	Ok          bool        `json:"ok" msgpack:"ok"`
+	Err         ErrContext  `json:"err" msgpack:"err"`
+	Changes     int64       `json:"changes" msgpack:"changes"`
+	Duration    int64       `json:"duration" msgpack:"duration"`
+	SqlDuration int64       `json:"sql_duration" msgpack:"sql_duration"`
+	Data        interface{} `json:"data" msgpack:"data"`
+}
+
+
+type ErrContext interface {
+	Err() *ErrType
+}
+
+type ErrType struct {
+	ErrCode int `json:"code" msgpack:"code"`
+	ErrMsg  string `json:"msg" msgpack:"msg"`
+	ErrLine int `json:"line" msgpack:"line"`
+	ErrFile string `json:"file" msgpack:"file"`
+}
+
+
+
+func (e *ErrType) Err() *ErrType {
 	return e
 }
 
@@ -47,7 +60,7 @@ func NewError(errorCode int,errorMsg string) ErrContext {
 		file = "???"
 		line = 0
 	}
-	return &errType{ErrCode: errorCode, ErrMsg: errorMsg,ErrLine:line,ErrFile:file}
+	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg,ErrLine:line,ErrFile:file}
 }
 
 
@@ -68,13 +81,13 @@ func RetChangesStr(changes int64) string {
 
 func RetErr(err ErrContext) *ResultTemplate {
 	res := &ResultTemplate{Ok: false}
-	if value, ok := Es[err.err().ErrCode]; ok {
-		res.Err = NewError(err.err().ErrCode, value+":"+err.err().ErrMsg)
+	if value, ok := Es[err.Err().ErrCode]; ok {
+		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		log.Println(string(x))
 		return res
 	} else {
-		res.Err = NewError(0, value+":"+err.err().ErrMsg)
+		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		log.Println(string(x))
 		return res
@@ -85,13 +98,13 @@ func RetErr(err ErrContext) *ResultTemplate {
 
 func RetErrStr(err ErrContext) string {
 	res := &ResultTemplate{Ok: false}
-	if value, ok := Es[err.err().ErrCode]; ok {
-		res.Err = NewError(err.err().ErrCode, value+":"+err.err().ErrMsg)
+	if value, ok := Es[err.Err().ErrCode]; ok {
+		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		log.Println(string(x))
 		return string(x)
 	} else {
-		res.Err = NewError(0, value+":"+err.err().ErrMsg)
+		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		log.Println(string(x))
 		return string(x)
@@ -99,12 +112,6 @@ func RetErrStr(err ErrContext) string {
 }
 
 
-type ResultTemplate struct {
-	Ok      bool        `json:"ok" msgpack:"ok"`
-	Err     ErrContext  `json:"err" msgpack:"err"`
-	Changes int64       `json:"changes" msgpack:"changes"`
-	Data    interface{} `json:"data" msgpack:"data"`
-}
 
 func RetOk(result interface{}) *ResultTemplate {
 	res := &ResultTemplate{Ok: true}
@@ -150,9 +157,9 @@ func MixErrContext(errs ...ErrContext) ErrContext {
 	for idx, err := range errs {
 		if err != nil {
 			if idx == 0 {
-				errMessage += err.err().ErrMsg
+				errMessage += err.Err().ErrMsg
 			} else {
-				errMessage += ":" + err.err().ErrMsg
+				errMessage += ":" + err.Err().ErrMsg
 			}
 		} else {
 			if idx == 0 {

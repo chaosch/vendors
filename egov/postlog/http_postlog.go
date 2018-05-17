@@ -7,6 +7,9 @@ import (
 	"time"
 	"net/http"
 	"reflect"
+	"errors"
+	"github.com/pquerna/ffjson/ffjson"
+	. "egov/common"
 )
 
 const (
@@ -116,10 +119,35 @@ func (p *Pool) HttpPostLog(msg map[string]interface{}, logsUrl string) error {
 	}
 	return nil
 }
+
+func (p *Pool) HttpPostLogSlice(msg LogStructSlice, logsUrl string) error {
+	err := p.ScheduleTimeout(5*time.Second, func() {
+		b, err := ffjson.Marshal(msg)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logslice", bytes.NewBuffer(b))
+		if err != nil {
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		x := string(b)
+		fmt.Println(x)
+		client.Do(req)
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Pool) HttpPostLog2(b []byte, logsUrl string) error {
-	err := p.ScheduleTimeout(5*time.Second, func(){
+	err := p.ScheduleTimeout(5*time.Second, func() {
 		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logs", bytes.NewBuffer(b))
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
@@ -131,6 +159,7 @@ func (p *Pool) HttpPostLog2(b []byte, logsUrl string) error {
 	}
 	return nil
 }
+
 type simpleContent struct {
 	Message interface{} `json:"message"`
 }
@@ -148,14 +177,38 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
 	//	cBytes, _ = json.Marshal(c)
 	//}
 	//cStr := string(cBytes)
-	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String{
-		c=simpleContent{Message: c}
+	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
+		c = simpleContent{Message: c}
 	}
 	msg := map[string]interface{}{"system": s, "kind": k, "content": c}
 	err := p.HttpPostLog(msg, logsUrl)
 	if err != nil {
 		fmt.Println("log send fail", err.Error())
 	}
+}
+
+func (p *Pool) SendLogSlice(s LogStructSlice, logsUrl string) error {
+	//var cBytes []byte
+	//if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
+	//	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
+	//		sc := simpleContent{message: c}
+	//		cBytes, _ = json.Marshal(sc)
+	//	} else {
+	//		return
+	//	}
+	//} else {
+	//	cBytes, _ = json.Marshal(c)
+	//}
+	//cStr := string(cBytes)
+	if reflect.TypeOf(s.LogStructs).Kind() != reflect.Slice {
+		return errors.New("inputed log is not slice")
+	}
+	msg := s
+	err := p.HttpPostLogSlice(msg, logsUrl)
+	if err != nil {
+		fmt.Println("log send fail", err.Error())
+	}
+	return nil
 }
 
 func (p *Pool) HttpPostLogWithSignal(msg map[string]string, logsUrl string, signal chan bool) error {
@@ -194,4 +247,33 @@ func (p *Pool) SendLogWithSignal(s string, k string, c interface{}, logsUrl stri
 	if err != nil {
 		fmt.Println("log send fail", err.Error())
 	}
+}
+
+type LogStruct struct {
+	Time    time.Time     `json:"time"`
+	Content ProcessStatus `json:"content"`
+	Kind    string        `json:"kind"`
+	System  string        `json:"system"`
+}
+
+type LogStructSlice struct {
+	LogStructs []LogStruct `json:"log_structs"`
+}
+
+type ProcessStatus struct {
+	InBuf         string                 `json:"inbuf"`
+//	InBufObject   map[string]interface{} `json:"inBufObject" `
+	Starttime     time.Time              `json:"starttime"`
+	EndTime       time.Time              `json:"endtime"`
+	CreateTime    time.Time              `json:"create_time"` //必须
+	Duration      int64                  `json:"duration"`
+	OK            bool                   `json:"ok"`
+	Err           ErrContext             `json:"err"`
+	SqlDuration   int64                  `json:"sqlduration"`
+	Changes       int64                  `json:"changes"`
+	ChipId        int64                  `json:"chipid"`        //唯一标识
+	Version       string                 `json:"version"`       //版本
+	IpAddress     string                 `json:"ipaddress"`     //ip地址
+	InTransaction bool                   `json:"intransaction"` //必须
+	Prompt        string                 `json:"prompt"`
 }
