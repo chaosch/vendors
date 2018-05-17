@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"errors"
 	"github.com/pquerna/ffjson/ffjson"
-	. "egov/common"
 )
 
 const (
@@ -127,14 +126,15 @@ func (p *Pool) HttpPostLogSlice(msg LogStructSlice, logsUrl string) error {
 			fmt.Println(err.Error())
 			return
 		}
-		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logslice", bytes.NewBuffer(b))
+		fmt.Println(fmt.Sprintf("%+v", string(b)))
+		req, err := http.NewRequest("POST", "http://"+logsUrl+"/api/logSlice", bytes.NewBuffer(b))
 		if err != nil {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
-		x := string(b)
-		fmt.Println(x)
+		//x := string(b)
+		//fmt.Println(x)
 		client.Do(req)
 	})
 	if err != nil {
@@ -261,19 +261,19 @@ type LogStructSlice struct {
 }
 
 type ProcessStatus struct {
-	InBuf         string                 `json:"inbuf"`
-//	InBufObject   map[string]interface{} `json:"inBufObject" `
-	Starttime     time.Time              `json:"starttime"`
-	EndTime       time.Time              `json:"endtime"`
-	CreateTime    time.Time              `json:"create_time"` //必须
-	Duration      int64                  `json:"duration"`
-	OK            bool                   `json:"ok"`
-	Err           ErrContext             `json:"err"`
-	SqlDuration   int64                  `json:"sqlduration"`
-	Changes       int64                  `json:"changes"`
-	ChipId        int64                  `json:"chipid"`        //唯一标识
-	Version       string                 `json:"version"`       //版本
-	IpAddress     string                 `json:"ipaddress"`     //ip地址
-	InTransaction bool                   `json:"intransaction"` //必须
-	Prompt        string                 `json:"prompt"`
+	InBuf string `json:"inbuf"`
+	InBufObject   map[string]interface{} `json:"inBufObject" `
+	Starttime     time.Time   `json:"starttime"`
+	EndTime       time.Time   `json:"endtime"`
+	CreateTime    time.Time   `json:"create_time"` //必须
+	Duration      int64       `json:"duration"`
+	OK            bool        `json:"ok"`
+	Err           interface{} `json:"err"`
+	SqlDuration   int64       `json:"sqlduration"`
+	Changes       int64       `json:"changes"`
+	ChipId        int64       `json:"chipid"`        //唯一标识
+	Version       string      `json:"version"`       //版本
+	IpAddress     string      `json:"ipaddress"`     //ip地址
+	InTransaction bool        `json:"intransaction"` //必须
+	Prompt        string      `json:"prompt"`
 }
