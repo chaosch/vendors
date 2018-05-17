@@ -26,14 +26,27 @@ var Es = map[int]string{
 	9000: "database error",
 	6001: "network error",
 }
-
+//swagger:model
 type ResultTemplate struct {
+	//成功
+	//example: false
 	Ok          bool        `json:"ok" msgpack:"ok"`
+	//错误对象
 	Err         ErrContext  `json:"err" msgpack:"err"`
+	//影响记录数
+	//example: 0
 	Changes     int64       `json:"changes" msgpack:"changes"`
+	//耗时
+	//example: 1000000
 	Duration    int64       `json:"duration" msgpack:"duration"`
+	//sql语句耗时
+	//example: 1000000
 	SqlDuration int64       `json:"sql_duration" msgpack:"sql_duration"`
+	//返回数据
 	Data        interface{} `json:"data" msgpack:"data"`
+	//成功提示:
+	//example:
+	OKMessage   string      `json:"ok_message"`
 }
 
 
@@ -42,9 +55,17 @@ type ErrContext interface {
 }
 
 type ErrType struct {
+	//错误代码
+	//example: 1002
 	ErrCode int `json:"code" msgpack:"code"`
-	ErrMsg  string `json:"msg" msgpack:"msg"`
+	//错误消息
+	//example: table null
+	ErrMsg  string `json:"ms" msgpack:"msg"`
+	//出错行号
+	//example: 35
 	ErrLine int `json:"line" msgpack:"line"`
+	//出错文件
+	//example: /usercenter/src/micros/handler_cors_maint.go
 	ErrFile string `json:"file" msgpack:"file"`
 }
 
@@ -184,6 +205,7 @@ func MixError(errs ...error) ErrContext {
 			if idx == 0 {
 				errMessage += err.Error()
 			} else {
+
 				errMessage += ":" + err.Error()
 			}
 		} else {
