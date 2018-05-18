@@ -60,7 +60,7 @@ type ErrType struct {
 	ErrCode int `json:"code" msgpack:"code"`
 	//错误消息
 	//example: table null
-	ErrMsg  string `json:"ms" msgpack:"msg"`
+	ErrMsg  string `json:"msg" msgpack:"msg"`
 	//出错行号
 	//example: 35
 	ErrLine int `json:"line" msgpack:"line"`
