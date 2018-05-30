@@ -6,6 +6,8 @@ import (
 	"errors"
 	"encoding/json"
 	"strconv"
+
+	"regexp"
 )
 
 // 当前操作字典
@@ -91,6 +93,13 @@ func ParseValue(val interface{}) (interface{}, error) {
 		if valTemp, err := time.Parse(time.RFC3339, val.(string)); err == nil {
 			return valTemp.Local().Format("2006-01-02 15:04:05"), nil
 		}
+		re,err:=FilterSQLinObject()
+		if err!=nil{
+			return nil,err
+		}
+		if re.MatchString(val.(string)){
+			return nil,errors.New("发现限制字符")
+		}
 		return val, nil
 	case float64:
 		floatString := strconv.FormatFloat(val.(float64), 'f', -1, 64)
@@ -110,4 +119,16 @@ func ParseValue(val interface{}) (interface{}, error) {
 	default:
 		return nil, errors.New("it's not singer type")
 	}
+}
+
+
+func FilterSQLinObject()(*regexp.Regexp,error){
+	//str := `(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\b(select|update|insert|trancate|char|chr|into|substr|ascii|declare|exec|master|into|drop|execute)\b)`
+	str := `(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\b(select|update|insert|trancate|char|chr|into|substr|ascii|declare|exec|master|into|drop|execute)\b)`
+	re, err := regexp.Compile(str)
+	if err != nil {
+		//fmt.Println(err.Error())
+		return nil,err
+	}
+	return re,nil
 }
