@@ -1,0 +1,4 @@
+[submodule "src/vendor"]
+	path = src/vendor
+	url = https://gitee.com/dev-backend/vendor.git
+	branch = master
