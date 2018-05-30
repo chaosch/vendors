@@ -10,6 +10,7 @@ import "database/sql"
 // are conditions.
 func (session *Session) Count(bean interface{}) (int64, error) {
 	defer session.resetStatement()
+	session.prepareStmt=true
 	if session.IsAutoClose {
 		defer session.Close()
 	}
@@ -75,6 +76,7 @@ func (session *Session) Sum(bean interface{}, columnName string) (float64, error
 // Sums call sum some columns. bean's non-empty fields are conditions.
 func (session *Session) Sums(bean interface{}, columnNames ...string) ([]float64, error) {
 	defer session.resetStatement()
+	session.prepareStmt=true
 	if session.IsAutoClose {
 		defer session.Close()
 	}
