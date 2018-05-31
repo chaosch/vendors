@@ -140,7 +140,6 @@ func (session *Session) FindRawSql(rowsSlicePtr interface{}, condiBean ...interf
 // are conditions. beans could be []Struct, []*Struct, map[int64]Struct
 // map[int64]*Struct
 func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
-	session.prepareStmt=true
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
