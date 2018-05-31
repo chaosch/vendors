@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+
 func TestQueueClose(t *testing.T) {
 	file := fmt.Sprintf("test_db_%d", time.Now().UnixNano())
 	q, err := OpenQueue(file)
