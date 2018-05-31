@@ -10,7 +10,6 @@ import "database/sql"
 // are conditions.
 func (session *Session) Count(bean interface{}) (int64, error) {
 	defer session.resetStatement()
-	session.prepareStmt=true
 	if session.IsAutoClose {
 		defer session.Close()
 	}
