@@ -39,6 +39,7 @@ type Column struct {
 	SetOptions      map[string]int
 	DisableTimeZone bool
 	Comment         string
+	XormTag         string
 	ForeignKey      string
 	TimeZone        *time.Location // column specified time zone
 }
@@ -65,6 +66,7 @@ func NewColumn(name, fieldName string, sqlType SQLType, len1, len2 int, nullable
 		IsVersion:       false,
 		DefaultIsEmpty:  false,
 		Comment:         "",
+		XormTag:         "",
 		ForeignKey:      "",
 		EnumOptions:     make(map[string]int),
 	}

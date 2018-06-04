@@ -76,6 +76,10 @@ type Dialect interface {
 	GetTables() ([]*Table, error)
 	GetIndexes(tableName string) (map[string]*Index, error)
 
+	GetColumnsStructTag(tableName string,colName string)(string,error)
+
+	IsColumnDifferent(tableName string,colName string,column Column)
+
 	Filters() []Filter
 }
 
