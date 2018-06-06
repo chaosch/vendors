@@ -5,6 +5,7 @@ import (
 	"time"
 	"strconv"
 	"errors"
+	"fmt"
 )
 
 func CheckIdCard(idNo string) (error) {
@@ -140,4 +141,31 @@ func verify_id(verify int, id_v byte) (bool, string) {
 	}
 
 	return false, "验证失败"
+}
+
+const (
+	black=30
+	red=31
+	green=32
+	yellow=33
+	blue=34
+	pink=35
+	cyan=36
+	white=37
+)
+
+func Println(foreaground int,format string, a ...interface{}){
+	fmt.Printf("%c[0;0;%dm%s%c[0m\n",0x1B,foreaground,fmt.Sprintf(format,a...), 0x1B)
+}
+
+func PrintRed(format string, a ...interface{}){
+	Println(red,format,a...)
+}
+
+func PrintGreen(format string, a ...interface{}){
+	Println(green,format,a...)
+}
+
+func Print(format string, a ...interface{}){
+	Println(0,format,a...)
 }
