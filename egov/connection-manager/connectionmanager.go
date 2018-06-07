@@ -3,6 +3,7 @@ package connectionmanager
 const (
 	ConnectionHttp      = "http"
 	ConnectionWebsocket = "websocket"
+	ConnectionGrpc		= "grpc"
 	//添加连接种类
 )
 
