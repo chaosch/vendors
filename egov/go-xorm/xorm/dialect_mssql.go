@@ -11,195 +11,196 @@ import (
 	"strings"
 
 	"egov/go-xorm/core"
+	"reflect"
 )
 
 var (
 	mssqlReservedWords = map[string]bool{
-		"ADD":                    true,
-		"EXTERNAL":               true,
-		"PROCEDURE":              true,
-		"ALL":                    true,
-		"FETCH":                  true,
-		"PUBLIC":                 true,
-		"ALTER":                  true,
-		"FILE":                   true,
-		"RAISERROR":              true,
-		"AND":                    true,
-		"FILLFACTOR":             true,
-		"READ":                   true,
-		"ANY":                    true,
-		"FOR":                    true,
-		"READTEXT":               true,
-		"AS":                     true,
-		"FOREIGN":                true,
-		"RECONFIGURE":            true,
-		"ASC":                    true,
-		"FREETEXT":               true,
-		"REFERENCES":             true,
-		"AUTHORIZATION":          true,
-		"FREETEXTTABLE":          true,
-		"REPLICATION":            true,
-		"BACKUP":                 true,
-		"FROM":                   true,
-		"RESTORE":                true,
-		"BEGIN":                  true,
-		"FULL":                   true,
-		"RESTRICT":               true,
-		"BETWEEN":                true,
-		"FUNCTION":               true,
-		"RETURN":                 true,
-		"BREAK":                  true,
-		"GOTO":                   true,
-		"REVERT":                 true,
-		"BROWSE":                 true,
-		"GRANT":                  true,
-		"REVOKE":                 true,
-		"BULK":                   true,
-		"GROUP":                  true,
-		"RIGHT":                  true,
-		"BY":                     true,
-		"HAVING":                 true,
-		"ROLLBACK":               true,
-		"CASCADE":                true,
-		"HOLDLOCK":               true,
-		"ROWCOUNT":               true,
-		"CASE":                   true,
-		"IDENTITY":               true,
-		"ROWGUIDCOL":             true,
-		"CHECK":                  true,
-		"IDENTITY_INSERT":        true,
-		"RULE":                   true,
-		"CHECKPOINT":             true,
-		"IDENTITYCOL":            true,
-		"SAVE":                   true,
-		"CLOSE":                  true,
-		"IF":                     true,
-		"SCHEMA":                 true,
-		"CLUSTERED":              true,
-		"IN":                     true,
-		"SECURITYAUDIT":          true,
-		"COALESCE":               true,
-		"INDEX":                  true,
-		"SELECT":                 true,
-		"COLLATE":                true,
-		"INNER":                  true,
-		"SEMANTICKEYPHRASETABLE": true,
-		"COLUMN":                 true,
-		"INSERT":                 true,
+		"ADD":                            true,
+		"EXTERNAL":                       true,
+		"PROCEDURE":                      true,
+		"ALL":                            true,
+		"FETCH":                          true,
+		"PUBLIC":                         true,
+		"ALTER":                          true,
+		"FILE":                           true,
+		"RAISERROR":                      true,
+		"AND":                            true,
+		"FILLFACTOR":                     true,
+		"READ":                           true,
+		"ANY":                            true,
+		"FOR":                            true,
+		"READTEXT":                       true,
+		"AS":                             true,
+		"FOREIGN":                        true,
+		"RECONFIGURE":                    true,
+		"ASC":                            true,
+		"FREETEXT":                       true,
+		"REFERENCES":                     true,
+		"AUTHORIZATION":                  true,
+		"FREETEXTTABLE":                  true,
+		"REPLICATION":                    true,
+		"BACKUP":                         true,
+		"FROM":                           true,
+		"RESTORE":                        true,
+		"BEGIN":                          true,
+		"FULL":                           true,
+		"RESTRICT":                       true,
+		"BETWEEN":                        true,
+		"FUNCTION":                       true,
+		"RETURN":                         true,
+		"BREAK":                          true,
+		"GOTO":                           true,
+		"REVERT":                         true,
+		"BROWSE":                         true,
+		"GRANT":                          true,
+		"REVOKE":                         true,
+		"BULK":                           true,
+		"GROUP":                          true,
+		"RIGHT":                          true,
+		"BY":                             true,
+		"HAVING":                         true,
+		"ROLLBACK":                       true,
+		"CASCADE":                        true,
+		"HOLDLOCK":                       true,
+		"ROWCOUNT":                       true,
+		"CASE":                           true,
+		"IDENTITY":                       true,
+		"ROWGUIDCOL":                     true,
+		"CHECK":                          true,
+		"IDENTITY_INSERT":                true,
+		"RULE":                           true,
+		"CHECKPOINT":                     true,
+		"IDENTITYCOL":                    true,
+		"SAVE":                           true,
+		"CLOSE":                          true,
+		"IF":                             true,
+		"SCHEMA":                         true,
+		"CLUSTERED":                      true,
+		"IN":                             true,
+		"SECURITYAUDIT":                  true,
+		"COALESCE":                       true,
+		"INDEX":                          true,
+		"SELECT":                         true,
+		"COLLATE":                        true,
+		"INNER":                          true,
+		"SEMANTICKEYPHRASETABLE":         true,
+		"COLUMN":                         true,
+		"INSERT":                         true,
 		"SEMANTICSIMILARITYDETAILSTABLE": true,
-		"COMMIT":                  true,
-		"INTERSECT":               true,
-		"SEMANTICSIMILARITYTABLE": true,
-		"COMPUTE":                 true,
-		"INTO":                    true,
-		"SESSION_USER":            true,
-		"CONSTRAINT":              true,
-		"IS":                      true,
-		"SET":                     true,
-		"CONTAINS":                true,
-		"JOIN":                    true,
-		"SETUSER":                 true,
-		"CONTAINSTABLE":           true,
-		"KEY":                     true,
-		"SHUTDOWN":                true,
-		"CONTINUE":                true,
-		"KILL":                    true,
-		"SOME":                    true,
-		"CONVERT":                 true,
-		"LEFT":                    true,
-		"STATISTICS":              true,
-		"CREATE":                  true,
-		"LIKE":                    true,
-		"SYSTEM_USER":             true,
-		"CROSS":                   true,
-		"LINENO":                  true,
-		"TABLE":                   true,
-		"CURRENT":                 true,
-		"LOAD":                    true,
-		"TABLESAMPLE":             true,
-		"CURRENT_DATE":            true,
-		"MERGE":                   true,
-		"TEXTSIZE":                true,
-		"CURRENT_TIME":            true,
-		"NATIONAL":                true,
-		"THEN":                    true,
-		"CURRENT_TIMESTAMP":       true,
-		"NOCHECK":                 true,
-		"TO":                      true,
-		"CURRENT_USER":            true,
-		"NONCLUSTERED":            true,
-		"TOP":                     true,
-		"CURSOR":                  true,
-		"NOT":                     true,
-		"TRAN":                    true,
-		"DATABASE":                true,
-		"NULL":                    true,
-		"TRANSACTION":             true,
-		"DBCC":                    true,
-		"NULLIF":                  true,
-		"TRIGGER":                 true,
-		"DEALLOCATE":              true,
-		"OF":                      true,
-		"TRUNCATE":                true,
-		"DECLARE":                 true,
-		"OFF":                     true,
-		"TRY_CONVERT":             true,
-		"DEFAULT":                 true,
-		"OFFSETS":                 true,
-		"TSEQUAL":                 true,
-		"DELETE":                  true,
-		"ON":                      true,
-		"UNION":                   true,
-		"DENY":                    true,
-		"OPEN":                    true,
-		"UNIQUE":                  true,
-		"DESC":                    true,
-		"OPENDATASOURCE":          true,
-		"UNPIVOT":                 true,
-		"DISK":                    true,
-		"OPENQUERY":               true,
-		"UPDATE":                  true,
-		"DISTINCT":                true,
-		"OPENROWSET":              true,
-		"UPDATETEXT":              true,
-		"DISTRIBUTED":             true,
-		"OPENXML":                 true,
-		"USE":                     true,
-		"DOUBLE":                  true,
-		"OPTION":                  true,
-		"USER":                    true,
-		"DROP":                    true,
-		"OR":                      true,
-		"VALUES":                  true,
-		"DUMP":                    true,
-		"ORDER":                   true,
-		"VARYING":                 true,
-		"ELSE":                    true,
-		"OUTER":                   true,
-		"VIEW":                    true,
-		"END":                     true,
-		"OVER":                    true,
-		"WAITFOR":                 true,
-		"ERRLVL":                  true,
-		"PERCENT":                 true,
-		"WHEN":                    true,
-		"ESCAPE":                  true,
-		"PIVOT":                   true,
-		"WHERE":                   true,
-		"EXCEPT":                  true,
-		"PLAN":                    true,
-		"WHILE":                   true,
-		"EXEC":                    true,
-		"PRECISION":               true,
-		"WITH":                    true,
-		"EXECUTE":                 true,
-		"PRIMARY":                 true,
-		"WITHIN":                  true,
-		"EXISTS":                  true,
-		"PRINT":                   true,
-		"WRITETEXT":               true,
-		"EXIT":                    true,
-		"PROC":                    true,
+		"COMMIT":                         true,
+		"INTERSECT":                      true,
+		"SEMANTICSIMILARITYTABLE":        true,
+		"COMPUTE":                        true,
+		"INTO":                           true,
+		"SESSION_USER":                   true,
+		"CONSTRAINT":                     true,
+		"IS":                             true,
+		"SET":                            true,
+		"CONTAINS":                       true,
+		"JOIN":                           true,
+		"SETUSER":                        true,
+		"CONTAINSTABLE":                  true,
+		"KEY":                            true,
+		"SHUTDOWN":                       true,
+		"CONTINUE":                       true,
+		"KILL":                           true,
+		"SOME":                           true,
+		"CONVERT":                        true,
+		"LEFT":                           true,
+		"STATISTICS":                     true,
+		"CREATE":                         true,
+		"LIKE":                           true,
+		"SYSTEM_USER":                    true,
+		"CROSS":                          true,
+		"LINENO":                         true,
+		"TABLE":                          true,
+		"CURRENT":                        true,
+		"LOAD":                           true,
+		"TABLESAMPLE":                    true,
+		"CURRENT_DATE":                   true,
+		"MERGE":                          true,
+		"TEXTSIZE":                       true,
+		"CURRENT_TIME":                   true,
+		"NATIONAL":                       true,
+		"THEN":                           true,
+		"CURRENT_TIMESTAMP":              true,
+		"NOCHECK":                        true,
+		"TO":                             true,
+		"CURRENT_USER":                   true,
+		"NONCLUSTERED":                   true,
+		"TOP":                            true,
+		"CURSOR":                         true,
+		"NOT":                            true,
+		"TRAN":                           true,
+		"DATABASE":                       true,
+		"NULL":                           true,
+		"TRANSACTION":                    true,
+		"DBCC":                           true,
+		"NULLIF":                         true,
+		"TRIGGER":                        true,
+		"DEALLOCATE":                     true,
+		"OF":                             true,
+		"TRUNCATE":                       true,
+		"DECLARE":                        true,
+		"OFF":                            true,
+		"TRY_CONVERT":                    true,
+		"DEFAULT":                        true,
+		"OFFSETS":                        true,
+		"TSEQUAL":                        true,
+		"DELETE":                         true,
+		"ON":                             true,
+		"UNION":                          true,
+		"DENY":                           true,
+		"OPEN":                           true,
+		"UNIQUE":                         true,
+		"DESC":                           true,
+		"OPENDATASOURCE":                 true,
+		"UNPIVOT":                        true,
+		"DISK":                           true,
+		"OPENQUERY":                      true,
+		"UPDATE":                         true,
+		"DISTINCT":                       true,
+		"OPENROWSET":                     true,
+		"UPDATETEXT":                     true,
+		"DISTRIBUTED":                    true,
+		"OPENXML":                        true,
+		"USE":                            true,
+		"DOUBLE":                         true,
+		"OPTION":                         true,
+		"USER":                           true,
+		"DROP":                           true,
+		"OR":                             true,
+		"VALUES":                         true,
+		"DUMP":                           true,
+		"ORDER":                          true,
+		"VARYING":                        true,
+		"ELSE":                           true,
+		"OUTER":                          true,
+		"VIEW":                           true,
+		"END":                            true,
+		"OVER":                           true,
+		"WAITFOR":                        true,
+		"ERRLVL":                         true,
+		"PERCENT":                        true,
+		"WHEN":                           true,
+		"ESCAPE":                         true,
+		"PIVOT":                          true,
+		"WHERE":                          true,
+		"EXCEPT":                         true,
+		"PLAN":                           true,
+		"WHILE":                          true,
+		"EXEC":                           true,
+		"PRECISION":                      true,
+		"WITH":                           true,
+		"EXECUTE":                        true,
+		"PRIMARY":                        true,
+		"WITHIN":                         true,
+		"EXISTS":                         true,
+		"PRINT":                          true,
+		"WRITETEXT":                      true,
+		"EXIT":                           true,
+		"PROC":                           true,
 	}
 )
 
@@ -216,11 +217,11 @@ func (db *mssql) SqlType(c *core.Column) string {
 	switch t := c.SQLType.Name; t {
 	case core.Bool:
 		res = core.TinyInt
-		if strings.EqualFold(c.Default, "1") { //bool型统一数字设置初始值
-			c.Default = "1"
-		} else {
-			c.Default = "0"
-		}
+		//if strings.EqualFold(c.Default, "1") { //bool型统一数字设置初始值
+		//	c.Default = "1"
+		//} else {
+		//	c.Default = "0"
+		//}
 	case core.Serial:
 		c.IsAutoIncrement = true
 		c.IsPrimaryKey = true
@@ -232,7 +233,7 @@ func (db *mssql) SqlType(c *core.Column) string {
 		c.Nullable = false
 		res = core.BigInt
 	case core.Bytea, core.Blob, core.Binary, core.TinyBlob, core.MediumBlob, core.LongBlob:
-		res = core.VarBinary
+		res = core.Binary
 		if c.Length == 0 {
 			c.Length = 50
 		}
@@ -244,19 +245,19 @@ func (db *mssql) SqlType(c *core.Column) string {
 	case core.MediumInt:
 		res = core.Int
 	case core.Text, core.MediumText, core.TinyText, core.LongText, core.Json:
-		res = core.Varchar + "(MAX)"
+		res = core.Text
 	case core.Double:
 		res = core.Real
 	case core.Uuid:
 		res = core.Varchar
 		c.Length = 40
 	case core.TinyInt:
-		res=core.TinyInt
-		c.Length=4
+		res = core.TinyInt
+		c.Length = 4
 	case core.Float:
-		res=core.Decimal
-		c.Length=38
-		c.Length2=6
+		res = core.Decimal
+		c.Length = 38
+		c.Length2 = 6
 	default:
 		res = t
 	}
@@ -329,10 +330,322 @@ func (db *mssql) IndexCheckSql(tableName, idxName string) (string, []interface{}
 	return sql, args
 }*/
 
-func (db *mssql) IsColumnExist(tableName, colName string) (bool, error) {
-	query := `SELECT "COLUMN_NAME" FROM "INFORMATION_SCHEMA"."COLUMNS" WHERE "TABLE_NAME" = ? AND "COLUMN_NAME" = ?`
+func (db *mssql) GetPhysicalColumn(table *core.Table, column *core.Column) *core.Column {
+	sql := `select   c.object_id,
+			tName = c.Name,
+			tComment = isnull(f.value, ''),
+			name = a.Name,
+			sortcode = a.Column_id,
+			autoincr = case when is_identity = 1 then 1 else 0 end,
+		pk =
+		case
+		when exists
+			(SELECT 1
+			FROM   INFORMATION_SCHEMA.KEY_COLUMN_USAGE u
+			WHERE  CONSTRAINT_NAME IN (SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE='PRIMARY KEY' ) and c.name = u.TABLE_NAME and a.name = u.COLUMN_NAME)
+			then
+			1
+			else
+			0
+			end,
+			fk = T.f_tab + '(' + T.f_clon + ')',
+			type = b.Name,
+			byte =
+		case
+		when a.max_length = -1 and b.Name != 'xml' then 'max/2G'
+             when b.Name = 'xml' then ' 2^31-1字节/2G'
+             else rtrim(a.max_length)
+		end,
+		length = ColumnProperty(a.object_id, a.Name, 'Precision'),
+		precision = isnull(ColumnProperty(a.object_id, a.Name, 'Scale'), 0),
+		nullable = case when a.is_nullable = 1 then 1 else 0 end,
+		comments = isnull(e.value, ''),
+		defaultvalue = isnull(d.text, ''),
+		indexes = g.val,
+		indexnum = isnull(g.indexNum, 0)
+		from     sys.columns a
+		left join sys.types b on a.user_type_id = b.user_type_id
+		inner join sys.objects c on a.object_id = c.object_id and c.Type = 'U' and c.name = '%[1]s'
+         left join syscomments d on a.default_object_id = d.ID
+         left join sys.extended_properties e on e.major_id = c.object_id and e.minor_id = a.Column_id and e.class = 1 and e.name='MS_Description'
+         left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1 and f.name='MS_Description'
+         left join
+         (SELECT m_tab, f_tab, m_clon, f_clon
+          FROM   (SELECT O3.NAME F_NAME, O1.NAME M_TAB, O2.NAME F_TAB, L1.NAME M_CLON, L2.NAME F_CLON
+                  FROM   SYSFOREIGNKEYS A, SYSOBJECTS O1, SYSOBJECTS O2, SYSOBJECTS O3, SYSCOLUMNS L1, SYSCOLUMNS L2
+                  WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O1.ID AND L2.ID = O2.ID AND A.FKEY
+                         = L1.COLID AND A.RKEY = L2.COLID AND O1.XTYPE = 'U' AND O2.XTYPE = 'U' and o1.name='%[1]s' ) M) T
+           on T.m_tab = c.name and T.m_clon = a.name
+         left join
+         (select   c_name,
+                   val =
+                     (select i_name + ' '
+                      from   ((select case  a1.is_unique when 1  then 'unique('+a1.name+')' else 'index('+a1.name+')' end i_name, c1.name c_name
+                               from   sys.indexes a1
+                                      inner join sys.index_columns b1 on a1.index_id = b1.index_id
+                                      inner join sys.columns c1 on b1.column_id = c1.column_id
+                                      inner join sys.tables d1
+                                        on c1.object_id = d1.object_id and c1.object_id = object_id('%[1]s')
+                               where  d1.object_id = a1.object_id and b1.object_id = d1.object_id and a1.is_primary_key <>
+                                      1)) bb
+                      where  bb.c_name = aa.c_name
+                      for xml path ( '' )),
+                   count(*) indexNum
+          from     (select a2.name i_name, c2.name c_name
+                    from   sys.indexes a2
+                           inner join sys.index_columns b2 on a2.index_id = b2.index_id
+                           inner join sys.columns c2 on b2.column_id = c2.column_id
+                           inner join sys.tables d2 on c2.object_id = d2.object_id and a2.object_id = object_id('%[1]s')
+                    where  d2.object_id = a2.object_id and b2.object_id = d2.object_id and a2.is_primary_key <> 1) aa
+          group by c_name) g
+           on g.c_name = a.name
+	where a.name='%[2]s'
+`
 
-	return db.HasRecords(query, tableName, colName)
+	//if column.Name=="description"{
+	//	fmt.Println("description")
+	//}
+	sqlQuery := fmt.Sprintf(sql, table.Name, column.Name)
+	rows, _ := db.DB().Query(sqlQuery)
+
+	colRow := make(map[string]string)
+
+	//	columns, _ = rows.ToMapString()
+	cols, err := rows.Columns()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	if rows.Next() {
+		slice := make([]interface{}, len(cols))
+		err = rows.ScanSlice(&slice)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		//fmt.Println(cols)
+		//fmt.Println(slice)
+		for idx, colName := range cols {
+			if slice[idx] == nil {
+				colRow[colName] = ""
+				continue
+			}
+			colKind := reflect.TypeOf(slice[idx]).Kind()
+			switch colKind {
+			case reflect.String:
+				colRow[colName] = slice[idx].(string)
+			case reflect.Int64:
+				colRow[colName] = strconv.FormatInt(slice[idx].(int64), 10)
+			default:
+				panic("not except type ")
+			}
+
+		}
+	}
+	//if len(colRow) == 0 {
+	//	fmt.Println(sqlQuery)
+	//}
+	rows.Close()
+	_, col := TransMapStringColumn(50, colRow)
+	return col
+}
+
+/**
+ * 字符串首字母转化为大写
+ */
+func strFirstToUpper(str string) string {
+	//fmt.Println("str:", str)
+	//if str == "bithday" {
+	//	fmt.Println("str:", str)
+	//}
+	chars := []rune(str)
+	chars[0] = []rune(strings.ToUpper(string(chars[0])))[0]
+	return string(chars)
+}
+
+func TransMapStringColumn(maxColLen int, column map[string]string) (string, *core.Column) {
+	content := ""
+	col := &core.Column{}
+	col.Name = column["name"]
+	col.Default = strings.Trim(column["defaultvalue"], "(")
+	col.Default = strings.Trim(col.Default, ")")
+	col.FieldName = column["name"]
+	col.Comment = column["comments"]
+	col.IsAutoIncrement = column["autoincr"] == "1"
+	col.IsPrimaryKey = column["pk"] == "1"
+	temp, _ := strconv.ParseInt(column["length"], 10, 64)
+	col.Length = int(temp)
+	temp, _ = strconv.ParseInt(column["precision"], 10, 64)
+	col.Length2 = int(temp)
+	col.StartWith = 1
+	col.TableName = column["t_name"]
+	col.Nullable = column["nullable"] == "1"
+	col.SQLType.Name = strings.ToUpper(column["type"])
+	col.SQLType.DefaultLength = col.Length
+	col.SQLType.DefaultLength2 = col.Length2
+
+	typeString := ""
+	if !col.IsPrimaryKey {
+		if col.SQLType.Name != core.Binary {
+			if col.SQLType.Name == "TINYINT" {
+				typeString = "*Boolean"
+			} else {
+				typeString = "*" + core.SQLType2Type(col.SQLType).String()
+			}
+		} else {
+			typeString = core.SQLType2Type(col.SQLType).String()
+		}
+	} else {
+		if col.SQLType.Name != core.Binary {
+			typeString = "*" + core.SQLType2Type(col.SQLType).String()
+
+		} else {
+			typeString = core.SQLType2Type(col.SQLType).String()
+		}
+	}
+
+	if col.FieldName == "" {
+		fmt.Println("col.FieldName is empty", col.Name, col.FieldName)
+	}
+	content += fmt.Sprintf("	%s", strFirstToUpper(col.FieldName)+strings.Repeat(" ", maxColLen-len(col.FieldName)+1))
+
+	content += fmt.Sprintf("%s", typeString+strings.Repeat(" ", 10-len(typeString)+1))
+
+	content += "`xorm:\""
+	col.XormTag = ""
+	pkString := ""
+	if col.IsPrimaryKey {
+		pkString = "pk"
+	}
+	if pkString != "" {
+		content += fmt.Sprintf(" %s", pkString)
+		col.XormTag += fmt.Sprintf(" %s", pkString)
+	}
+	autoincrString := ""
+	startwith := 1
+	if col.IsAutoIncrement {
+		autoincrString = "autoincr"
+		if strings.Index(col.TableName, "dic_") != 0 {
+			startwith = 0
+		}
+	}
+	if autoincrString != "" {
+		//		content += fmt.Sprintf(" %s", autoincrString)
+		//		col.XormTag += fmt.Sprintf(" %s", autoincrString)
+	}
+	factString := ""
+
+	coltype := core.SQLType2Type(col.SQLType).String()
+
+	switch coltype {
+	case "string":
+		if col.SQLType.Name == "TEXT" {
+			factString = "text"
+		} else {
+			factString = fmt.Sprintf("varchar(%d)", col.Length)
+		}
+	default:
+		if col.SQLType.Name == strings.ToUpper("binary") {
+			factString = fmt.Sprintf("binary(%d)", col.Length)
+		} else {
+			factString = ""
+		}
+	}
+
+	if factString != "" {
+		content += fmt.Sprintf(" %s", factString)
+		col.XormTag += fmt.Sprintf(" %s", factString)
+	}
+	nullString := "null"
+	if !col.Nullable {
+		nullString = "not null"
+	}
+
+	if nullString != "" {
+		content += fmt.Sprintf(" %s", nullString)
+		col.XormTag += fmt.Sprintf(" %s", nullString)
+	}
+
+	defaultString := ""
+	if len(col.Default) > 0 {
+		switch core.SQLType2Type(col.SQLType).String() {
+		case "string":
+			defaultString = fmt.Sprintf("default '%s'", strings.Replace(col.Default, "'", "", -1))
+		case "time.Time":
+			defaultString = fmt.Sprintf("default '%s'", col.Default)
+		case "tinyint":
+			defaultString = fmt.Sprintf("default %v", col.Default == "1")
+		default:
+			defaultString = fmt.Sprintf("default %s", col.Default)
+		}
+	}
+
+	if defaultString != "" {
+		content += fmt.Sprintf(" %s", defaultString)
+		col.XormTag += fmt.Sprintf(" %s", defaultString)
+	}
+
+	if col.FieldName == "create_date" {
+		content += fmt.Sprintf(" created")
+		col.XormTag += fmt.Sprintf(" created")
+	}
+
+	if col.FieldName == "modify_date" {
+		content += fmt.Sprintf(" updated")
+		col.XormTag += fmt.Sprintf(" updated")
+	}
+
+	content += fmt.Sprintf(" '%s'", col.FieldName)
+	col.XormTag += fmt.Sprintf(" '%s'", col.FieldName)
+
+	content += "\""
+
+	content += " indexes:\""
+
+	indexes := column["indexes"]
+	indexNum, _ := strconv.ParseInt(column["indexnum"], 10, 64)
+
+	indexString := ""
+
+	if indexNum >= 1 {
+		indexString = " " + indexes
+	} else if indexNum == 0 {
+		indexString = ""
+	}
+
+	content += indexString
+	content += "\""
+
+	content += fmt.Sprintf(" comment:\"%s\"", col.Comment)
+
+	content += fmt.Sprintf(" json:\"%s,omitempty\"", col.FieldName)
+
+	if startwith == 0 {
+		content += fmt.Sprintf(" startwith:\"%d\"", startwith)
+	}
+
+	content += fmt.Sprintf(" bson:\",omitempty\"")
+
+	content += fmt.Sprintf(" msgpack:\"%s,omitempty\"", col.FieldName)
+
+	if string(column["fk"]) != "" {
+		content += fmt.Sprintf(" fk:\"%s\"", column["fk"])
+	}
+
+	content += "`\n"
+
+	return content, col
+
+}
+
+func (db *mssql) IsColumnExist(table *core.Table, column *core.Column) (bool, error, *core.Column) {
+	query := `SELECT "COLUMN_NAME" FROM "INFORMATION_SCHEMA"."COLUMNS" WHERE "TABLE_NAME" = ? AND "COLUMN_NAME" = ?`
+	col := &core.Column{}
+	ifHasRecords, err := db.HasRecords(query, table.Name, column.Name)
+	if ifHasRecords {
+		//col = db.GetPhysicalColumn(table, column)
+	}
+	//fmt.Println(col.XormTag,col.Comment)
+	return ifHasRecords, err, col
 }
 
 func (db *mssql) TableCheckSql(tableName string) (string, []interface{}) {
@@ -497,13 +810,12 @@ WHERE IXS.TYPE_DESC='NONCLUSTERED' and OBJECT_NAME(IXS.OBJECT_ID) =?
 	return indexes, nil
 }
 
-func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) (string){
+func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) (string) {
 	var sql string
 	var sqlcomment string
 	if tableName == "" {
 		tableName = table.Name
 	}
-
 	sql = "IF NOT EXISTS (SELECT [name] FROM sys.tables WHERE [name] = '" + tableName + "' ) CREATE TABLE "
 
 	sql += db.QuoteStr() + tableName + db.QuoteStr() + " ("
@@ -520,7 +832,7 @@ func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 		sql = strings.TrimSpace(sql)
 		sql += ", "
 		//fmt.Println(col.Comment)
-		sqlcomment+=fmt.Sprintf("EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'%s', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'%s', @level2type = N'COLUMN', @level2name = N'%s'",col.Comment,tableName,colName)
+		sqlcomment += fmt.Sprintf("EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'%s', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'%s', @level2type = N'COLUMN', @level2name = N'%s'", col.Comment, tableName, colName)
 		//sqlcomment+=fmt.Sprintf("execute sp_addextendedproperty 'MS_Description',  '%s','user', user_name(), 'table', '%s', 'column', '%s';",col.Comment,tableName,colName)
 	}
 
@@ -531,23 +843,21 @@ func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 	}
 
 	sql = sql[:len(sql)-2] + ")"
-	sql += ";"+sqlcomment
+	sql += ";" + sqlcomment
 	return sql
 }
-
 
 func (db *mssql) ModifyColumnSql(tableName string, col *core.Column) string {
 	return fmt.Sprintf("alter table %s alter COLUMN %s", tableName, col.StringNoPk(db))
 }
 
-
-func (db *mssql) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string){
+func (db *mssql) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string) {
 	var sql string
-	sql=""
+	sql = ""
 	for _, colName := range table.ColumnsSeq() {
 		col := table.GetColumn(colName)
-		if table.AutoIncrement==colName&&col.IsAutoIncrement {
-			sql = fmt.Sprintf("DBCC CHECKIDENT (%s, RESEED, %d)",tableName,col.StartWith)
+		if table.AutoIncrement == colName && col.IsAutoIncrement {
+			sql = fmt.Sprintf("DBCC CHECKIDENT (%s, RESEED, %d)", tableName, col.StartWith)
 			break
 		}
 	}
@@ -582,4 +892,227 @@ func (p *odbcDriver) Parse(driverName, dataSourceName string) (*core.Uri, error)
 		return nil, errors.New("no db name provided")
 	}
 	return &core.Uri{DbName: dbName, DbType: core.MSSQL}, nil
+}
+
+func (db *mssql) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
+	sql := `SELECT
+	c.object_id,
+	tName = c. NAME,
+	tComment = isnull(f. VALUE, ''),
+	NAME = a. NAME,
+	sortcode = a.Column_id,
+	autoincr = CASE
+WHEN is_identity = 1 THEN
+	1
+ELSE
+	0
+END,
+ pk = CASE
+WHEN EXISTS (
+	SELECT
+		1
+	FROM
+		INFORMATION_SCHEMA.KEY_COLUMN_USAGE u
+	WHERE
+		CONSTRAINT_NAME IN (
+			SELECT
+				CONSTRAINT_NAME
+			FROM
+				INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+			WHERE
+				INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'PRIMARY KEY'
+		)
+	AND c. NAME = u.TABLE_NAME
+	AND a. NAME = u.COLUMN_NAME
+) THEN
+	1
+ELSE
+	0
+END,
+ fk = T.f_tab + '(' + T.f_clon + ')',
+ type = b. NAME,
+ byte = CASE
+WHEN a.max_length = - 1
+AND b. NAME != 'xml' THEN
+	'max/2G'
+WHEN b. NAME = 'xml' THEN
+	' 2^31-1字节/2G'
+ELSE
+	rtrim(a.max_length)
+END,
+ length = ColumnProperty (
+	a.object_id,
+	a. NAME,
+	'Precision'
+),
+ PRECISION = isnull(
+	ColumnProperty (a.object_id, a. NAME, 'Scale'),
+	0
+),
+ nullable = CASE
+WHEN a.is_nullable = 1 THEN
+	1
+ELSE
+	0
+END,
+ comments = isnull(e. VALUE, ''),
+ defaultvalue = isnull(d.text, ''),
+ indexes = g.val,
+ indexnum = isnull(g.indexNum, 0)
+FROM
+	sys. COLUMNS a
+LEFT JOIN sys.types b ON a.user_type_id = b.user_type_id
+INNER JOIN sys.objects c ON a.object_id = c.object_id
+AND c.Type = 'U'
+LEFT JOIN syscomments d ON a.default_object_id = d.ID
+LEFT JOIN sys.extended_properties e ON e.major_id = c.object_id
+AND e.minor_id = a.Column_id
+AND e.class = 1
+AND e. NAME = 'MS_Description'
+LEFT JOIN sys.extended_properties f ON f.major_id = c.object_id
+AND f.minor_id = 0
+AND f.class = 1
+AND f. NAME = 'MS_Description'
+LEFT JOIN (
+	SELECT
+		m_tab,
+		f_tab,
+		m_clon,
+		f_clon
+	FROM
+		(
+			SELECT
+				O3. NAME F_NAME,
+				O1. NAME M_TAB,
+				O2. NAME F_TAB,
+				L1. NAME M_CLON,
+				L2. NAME F_CLON
+			FROM
+				SYSFOREIGNKEYS A,
+				SYSOBJECTS O1,
+				SYSOBJECTS O2,
+				SYSOBJECTS O3,
+				SYSCOLUMNS L1,
+				SYSCOLUMNS L2
+			WHERE
+				A.CONSTID = O3.ID
+			AND A.FKEYID = O1.ID
+			AND A.RKEYID = O2.ID
+			AND L1.ID = O1.ID
+			AND L2.ID = O2.ID
+			AND A.FKEY = L1.COLID
+			AND A.RKEY = L2.COLID
+			AND O1.XTYPE = 'U'
+			AND O2.XTYPE = 'U'
+		) M
+) T ON T.m_tab = c. NAME
+AND T.m_clon = a. NAME
+LEFT JOIN (
+	SELECT
+		c_name,
+		val = (
+			SELECT
+				i_name + ' '
+			FROM
+				(
+					(
+						SELECT
+							CASE a1.is_unique
+						WHEN 1 THEN
+							'unique(' + a1. NAME + ')'
+						ELSE
+							'index(' + a1. NAME + ')'
+						END i_name,
+						c1. NAME c_name
+					FROM
+						sys.indexes a1
+					INNER JOIN sys.index_columns b1 ON a1.index_id = b1.index_id
+					INNER JOIN sys. COLUMNS c1 ON b1.column_id = c1.column_id
+					INNER JOIN sys. TABLES d1 ON c1.object_id = d1.object_id
+					WHERE
+						d1.object_id = a1.object_id
+					AND b1.object_id = d1.object_id
+					AND a1.is_primary_key <> 1
+					)
+				) bb
+			WHERE
+				bb.c_name = aa.c_name FOR XML path ('')
+		),
+		count(*) indexNum
+	FROM
+		(
+			SELECT
+				a2. NAME i_name,
+				c2. NAME c_name
+			FROM
+				sys.indexes a2
+			INNER JOIN sys.index_columns b2 ON a2.index_id = b2.index_id
+			INNER JOIN sys. COLUMNS c2 ON b2.column_id = c2.column_id
+			INNER JOIN sys. TABLES d2 ON c2.object_id = d2.object_id
+			WHERE
+				d2.object_id = a2.object_id
+			AND b2.object_id = d2.object_id
+			AND a2.is_primary_key <> 1
+		) aa
+	GROUP BY
+		c_name
+) g ON g.c_name = a. NAME
+`
+	result := make(map[string]map[string]*core.Column)
+	columnProperties := make(map[string]map[string]map[string]string)
+	rows, err := db.DB().Query(sql)
+	defer rows.Close()
+
+	if err != nil {
+		panic(err)
+	}
+
+	cols, err := rows.Columns()
+
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		slice := make([]interface{}, len(cols))
+		err = rows.ScanSlice(&slice)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		tName := slice[1].(string) //表名
+		cName := slice[3].(string) //列明
+		if columnProperties[tName] == nil {
+			columnProperties[tName] = make(map[string]map[string]string)
+			result[tName] = make(map[string]*core.Column)
+		}
+		if columnProperties[tName][cName] == nil {
+			columnProperties[tName][cName] = make(map[string]string)
+			columnProperties[tName][cName]["name"]=cName
+			result[tName][cName] = &core.Column{}
+
+		}
+		for idx, colName := range cols {
+			if idx <= 3 { //object_id tName
+				continue
+			}
+
+			if slice[idx] == nil {
+				columnProperties[tName][cName][colName] = ""
+				continue
+			}
+			colKind := reflect.TypeOf(slice[idx]).Kind()
+			switch colKind {
+			case reflect.String:
+				columnProperties[tName][cName][colName] = slice[idx].(string)
+			case reflect.Int64:
+				columnProperties[tName][cName][colName] = strconv.FormatInt(slice[idx].(int64), 10)
+			default:
+				panic("not except type ")
+			}
+
+		}
+		_, col := TransMapStringColumn(50, columnProperties[tName][cName])
+		result[tName][cName] = col
+	}
+	return result, nil
 }

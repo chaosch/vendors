@@ -59,7 +59,6 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		return nil, fmt.Errorf("UnSurpported driver name: %v", driverName)
 	}
 
-
 	uri, err := driver.Parse(driverName, dataSourceName)
 	if err != nil {
 		return nil, err
@@ -89,6 +88,7 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		TagComment:    "comment",
 		TagStartWith:  "startwith",
 		TagFK:         "fk",
+		TagIndexes:    "indexes",
 		TZLocation:    time.Local,
 		tagHandlers:   defaultTagHandlers,
 		EngineName:    "ORN",

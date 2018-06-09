@@ -903,19 +903,20 @@ func (db *postgres) DropIndexSql(tableName string, index *core.Index) string {
 	return fmt.Sprintf("DROP INDEX %v", quote(idxName))
 }
 
-func (db *postgres) IsColumnExist(tableName, colName string) (bool, error) {
-	args := []interface{}{tableName, colName}
+func (db *postgres) IsColumnExist(table *core.Table, column *core.Column) (bool, error,*core.Column) {
+
+	args := []interface{}{table.Name, column.Name}
 	query := "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = $1" +
 		" AND column_name = $2"
 	db.LogSQL(query, args)
 
 	rows, err := db.DB().Query(query, args...)
 	if err != nil {
-		return false, err
+		return false, err,nil
 	}
 	defer rows.Close()
 
-	return rows.Next(), nil
+	return rows.Next(), nil,nil
 }
 
 func (db *postgres) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
@@ -1203,4 +1204,13 @@ func (p *pqDriver) Parse(driverName, dataSourceName string) (*core.Uri, error) {
 		db.Schema = "public"
 	}*/
 	return db, nil
+}
+
+func (db *postgres) GetPhysicalColumn(table *core.Table, column *core.Column) *core.Column {
+	return &core.Column{}
+}
+
+func (db *postgres)GetAllTableColumns()(map[string]map[string]*core.Column,error){
+	result:=make(map[string]map[string]*core.Column)
+	return result,nil
 }

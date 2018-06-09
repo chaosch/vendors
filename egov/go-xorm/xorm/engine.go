@@ -35,6 +35,7 @@ type Engine struct {
 	TagStartWith  string
 	TagComment    string
 	TagFK         string
+	TagIndexes    string
 	Tables        map[reflect.Type]*core.Table
 
 	mutex  *sync.RWMutex
@@ -954,6 +955,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 	var idFieldColName string
 	var hasCacheTag, hasNoCacheTag bool
 
+
 	for i := 0; i < t.NumField(); i++ {
 		tag := t.Field(i).Tag
 		//fmt.Println("tag:",tag)
@@ -961,6 +963,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 		prefixTagStr := tag.Get(engine.TagStartWith)
 		commentTagStr := tag.Get(engine.TagComment)
 		fkTagStr := tag.Get(engine.TagFK)
+		indexesTagStr := tag.Get(engine.TagIndexes)
 
 		//fmt.Println("TagIdentifier",engine.TagIdentifier)
 		//fmt.Println("ormTagStr:",ormTagStr)
@@ -974,6 +977,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 			col = &core.Column{FieldName: t.Field(i).Name, Nullable: true, IsPrimaryKey: false,
 				IsAutoIncrement: false, MapType: core.TWOSIDES, Indexes: make(map[string]int)}
 			tags := splitTag(ormTagStr)
+			col.XormTag=ormTagStr
 
 			if len(tags) > 0 {
 				if tags[0] == "-" {
@@ -996,6 +1000,8 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 				}
 
 				for j, key := range tags {
+
+
 					if ctx.ignoreNext {
 						ctx.ignoreNext = false
 						continue
@@ -1037,10 +1043,10 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 					}
 
 					if j > 0 {
-						ctx.preTag = strings.ToUpper(tags[j-1])
+						ctx.preTag = tags[j-1]
 					}
 					if j < len(tags)-1 {
-						ctx.nextTag = strings.ToUpper(tags[j+1])
+						ctx.nextTag = tags[j+1]
 					} else {
 						ctx.nextTag = ""
 					}
@@ -1115,6 +1121,80 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 				}
 			}
 
+		}
+
+		if indexesTagStr != "" {
+			tags := splitTag(indexesTagStr)
+
+			if len(tags) > 0 {
+				if tags[0] == "-" {
+					continue
+				}
+
+				var ctx = tagContext{
+					table:      table,
+					col:        col,
+					fieldValue: fieldValue,
+					indexNames: make(map[string]int),
+					engine:     engine,
+				}
+
+				for j, key := range tags {
+					if ctx.ignoreNext {
+						ctx.ignoreNext = false
+						continue
+					}
+					k := strings.ToUpper(key)
+					ctx.tagName = k
+					ctx.params = []string{}
+
+					pStart := strings.Index(k, "(")
+					if pStart == 0 {
+						return nil, errors.New("( could not be the first charactor")
+					}
+					if pStart > -1 {
+						if !strings.HasSuffix(k, ")") {
+							return nil, errors.New("cannot match ) charactor")
+						}
+
+						ctx.tagName = k[:pStart]
+						ctx.params = strings.Split(key[pStart+1:len(k)-1], ",")
+
+					}
+
+					if j > 0 {
+						ctx.preTag = strings.ToUpper(tags[j-1])
+					}
+					if j < len(tags)-1 {
+						ctx.nextTag = strings.ToUpper(tags[j+1])
+					} else {
+						ctx.nextTag = ""
+					}
+
+					if h, ok := engine.tagHandlers[ctx.tagName]; ok {
+						if err := h(&ctx); err != nil {
+							return nil, err
+						}
+					}
+
+					if ctx.hasCacheTag {
+						hasCacheTag = true
+					}
+					if ctx.hasNoCacheTag {
+						hasNoCacheTag = true
+					}
+				}
+
+				if ctx.isUnique {
+					ctx.indexNames[col.Name] = core.UniqueType
+				} else if ctx.isIndex {
+					ctx.indexNames[col.Name] = core.IndexType
+				}
+
+				for indexName, indexType := range ctx.indexNames {
+					addIndex(indexName, table, col, indexType)
+				}
+			}
 		}
 
 		if commentTagStr != "" {
@@ -1395,10 +1475,159 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 	return false
 }
 
+
+
+func (Engine *Engine)RevertDatabase()(map[string]*core.Table){
+	result:=make(map[string]*core.Table)
+	tables,err:=Engine.dialect.GetTables()
+	if err!=nil{
+		panic(err)
+	}
+	for _,table:=range tables{
+		_,cols,err:=Engine.dialect.GetColumns(table.Name)
+		if err!=nil{
+			panic(err)
+		}
+		for _,cols:=range cols{
+			table.AddColumn(cols)
+		}
+		result[table.Name]=table
+	}
+	return result
+
+}
+
+
+func (engine *Engine)SyncFast(tableMaps map[string]map[string]*core.Column, beans ...interface{})error{
+
+	for _, bean := range beans {
+		v := rValue(bean)
+		tableName := engine.tbName(v)
+		table, err := engine.autoMapType(v)
+		s := engine.NewSession()
+		defer s.Close()
+		_,isExist:=tableMaps[tableName]
+		if !isExist {
+			err = engine.CreateTables(bean)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+			continue
+		} else {
+			///todo 如果表存在，则修改自增长字段起始值
+			//fmt.Sprintln("如果表存在，则修改自增长字段起始值")
+			//engine.AlterAutoIncrement(bean)
+
+		}
+
+		//由于表结构基于数据库建立，不考虑下面的操作 by chaos
+		/*isEmpty, err := engine.IsEmptyTable(bean)
+		  if err != nil {
+		      return err
+		  }*/
+		var isEmpty = false
+		if isEmpty {
+			err = engine.DropTables(bean)
+			if err != nil {
+				return err
+			}
+			err = engine.CreateTables(bean)
+			if err != nil {
+				return err
+			}
+		} else {
+
+			for _, col := range table.Columns() {
+				phyCol,isExist:= tableMaps[tableName][col.Name]
+				if isExist&&col.XormTag!=phyCol.XormTag{
+					fmt.Println(table.Name,col.Name," modify from ",phyCol.XormTag,"to",col.XormTag)
+				}
+				//if isExist&&col.Comment!=phyCol.Comment{
+				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
+				//}
+				//continue
+				//fmt.Println(phyCol.Comment)
+				if err != nil {
+					return err
+				}
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+					err = session.addColumn(col)
+					if err != nil {
+						//log.Println("增加字段错:"+err.Error())
+						return err
+					}
+				} else {
+					_, err := engine.Exec(engine.dialect.ModifyColumnSql(table.Name, col))
+					if err != nil {
+						//log.Println("修改字段出错:"+err.Error())
+					}
+					if col.Default != "" {
+						sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
+						engine.Exec(sqlUpdateDefault)
+					}
+				}
+			}
+
+			for name, index := range table.Indexes {
+				session := engine.NewSession()
+				defer session.Close()
+				if err := session.Statement.setRefValue(v); err != nil {
+					return err
+				}
+				if index.Type == core.UniqueType {
+					//isExist, err := session.isIndexExist(table.Name, name, true)
+					isExist, err := session.isIndexExist2(tableName, index.Cols, true)
+					if err != nil {
+						return err
+					}
+					if !isExist {
+						session := engine.NewSession()
+						defer session.Close()
+						if err := session.Statement.setRefValue(v); err != nil {
+							return err
+						}
+
+						err = session.addUnique(tableName, name)
+						if err != nil {
+							return err
+						}
+					}
+				} else if index.Type == core.IndexType {
+					isExist, err := session.isIndexExist2(tableName, index.Cols, false)
+					if err != nil {
+						return err
+					}
+					if !isExist {
+						session := engine.NewSession()
+						defer session.Close()
+						if err := session.Statement.setRefValue(v); err != nil {
+							return err
+						}
+
+						err = session.addIndex(tableName, name)
+						if err != nil {
+							return err
+						}
+					}
+				} else {
+					return errors.New("unknow index type")
+				}
+			}
+		}
+	}
+	return nil
+}
 // Sync the new struct changes to database, this method will automatically add
 // table, column, index, unique. but will not delete or change anything.
 // If you change some field, you should change the database manually.
 func (engine *Engine) Sync(beans ...interface{}) error {
+	//tableMaps:=engine.RevertDatabase()
 	for _, bean := range beans {
 		v := rValue(bean)
 		tableName := engine.tbName(v)
@@ -1442,7 +1671,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		} else {
 
 			for _, col := range table.Columns() {
-				isExist, err := engine.dialect.IsColumnExist(tableName, col.Name)
+				isExist, err,_:= engine.dialect.IsColumnExist(table, col)
 				if err != nil {
 					return err
 				}

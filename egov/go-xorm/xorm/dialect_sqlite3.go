@@ -158,11 +158,11 @@ func (db *sqlite3) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName st
 func (db *sqlite3) SqlType(c *core.Column) string {
 	switch t := c.SQLType.Name; t {
 	case core.Bool:
-		if c.Default == "true" {
-			c.Default = "1"
-		} else if c.Default == "false" {
-			c.Default = "0"
-		}
+		//if c.Default == "true" {
+		//	c.Default = "1"
+		//} else if c.Default == "false" {
+		//	c.Default = "0"
+		//}
 		return core.Integer
 	case core.Date, core.DateTime, core.TimeStamp, core.Time:
 		return core.DateTime
@@ -262,20 +262,21 @@ func (db *sqlite3) ForUpdateSql(query string) string {
 	return sql, args
 }*/
 
-func (db *sqlite3) IsColumnExist(tableName, colName string) (bool, error) {
-	args := []interface{}{tableName}
-	query := "SELECT name FROM sqlite_master WHERE type='table' and name = ? and ((sql like '%`" + colName + "`%') or (sql like '%[" + colName + "]%'))"
+func (db *sqlite3) IsColumnExist(table *core.Table, column *core.Column) (bool, error, *core.Column) {
+
+	args := []interface{}{table.Name}
+	query := "SELECT name FROM sqlite_master WHERE type='table' and name = ? and ((sql like '%`" + column.Name + "`%') or (sql like '%[" + column.Name + "]%'))"
 	db.LogSQL(query, args)
 	rows, err := db.DB().Query(query, args...)
 	if err != nil {
-		return false, err
+		return false, err,nil
 	}
 	defer rows.Close()
 
 	if rows.Next() {
-		return true, nil
+		return true, nil,nil
 	}
-	return false, nil
+	return false, nil, nil
 }
 
 func (db *sqlite3) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
@@ -443,4 +444,14 @@ type sqlite3Driver struct {
 
 func (p *sqlite3Driver) Parse(driverName, dataSourceName string) (*core.Uri, error) {
 	return &core.Uri{DbType: core.SQLITE, DbName: dataSourceName}, nil
+}
+
+func (db *sqlite3) GetPhysicalColumn(table *core.Table, column *core.Column) *core.Column {
+	return &core.Column{}
+}
+
+
+func (db *sqlite3)GetAllTableColumns()(map[string]map[string]*core.Column,error){
+	result:=make(map[string]map[string]*core.Column)
+	return result,nil
 }

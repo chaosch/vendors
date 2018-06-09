@@ -9,18 +9,18 @@ import (
 type DbType string
 
 type Uri struct {
-	DbType  DbType
-	Proto   string
-	Host    string
-	Port    string
-	DbName  string
-	User    string
-	Passwd  string
-	Charset string
-	Laddr   string
-	Raddr   string
-	Timeout time.Duration
-	Schema  string
+	DbType     DbType
+	Proto      string
+	Host       string
+	Port       string
+	DbName     string
+	User       string
+	Passwd     string
+	Charset    string
+	Laddr      string
+	Raddr      string
+	Timeout    time.Duration
+	Schema     string
 	EngineName string
 }
 
@@ -52,11 +52,12 @@ type Dialect interface {
 	SupportDropIfExists() bool
 	IndexOnTable() bool
 	ShowCreateNull() bool
-
+    GetPhysicalColumn(table *Table, column *Column) *Column
 	IndexCheckSql(tableName, idxName string) (string, []interface{})
 	TableCheckSql(tableName string) (string, []interface{})
 
-	IsColumnExist(tableName string, colName string) (bool, error)
+	IsColumnExist(table *Table, col *Column) (bool, error,*Column)
+
 
 	CreateTableSql(table *Table, tableName, storeEngine, charset string) (string)
 	AlterIncrementSql(table *Table, tableName, storeEngine, charset string) (string)
@@ -76,10 +77,18 @@ type Dialect interface {
 	GetTables() ([]*Table, error)
 	GetIndexes(tableName string) (map[string]*Index, error)
 
+	GetAllTableColumns()(map[string]map[string]*Column,error)
 
 	//IsColumnDifferent(tableName string,colName string,column Column)
 
 	Filters() []Filter
+}
+
+
+
+func (db *Base)GetAllTableColumns()(map[string]map[string]*Column,error){
+	result:=make(map[string]map[string]*Column)
+	return result,nil
 }
 
 func OpenDialect(dialect Dialect) (*DB, error) {
@@ -171,10 +180,12 @@ func (db *Base) HasRecords(query string, args ...interface{}) (bool, error) {
 	return false, nil
 }
 
-func (db *Base) IsColumnExist(tableName, colName string) (bool, error) {
+func (db *Base) IsColumnExist(table *Table, column *Column) (bool, error,*Column) {
 	query := "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ? AND `COLUMN_NAME` = ?"
 	query = strings.Replace(query, "`", db.dialect.QuoteStr(), -1)
-	return db.HasRecords(query, db.DbName, tableName, colName)
+	//col:=db.GetPhysicalColumn(table,column)
+	ifHasRecords, err := db.HasRecords(query, db.DbName, table.Name,column.Name)
+	return ifHasRecords, err, nil
 }
 
 /*
@@ -209,12 +220,12 @@ func (db *Base) CreateIndexSql(tableName string, index *Index) string {
 		unique = " UNIQUE"
 	}
 	idxName = index.XName(tableName)
-	if db.DbType==MSSQL {
-		notnull:=quote(strings.Join(index.Cols, quote(" is not null and "))+" is not null")
+	if db.DbType == MSSQL {
+		notnull := quote(strings.Join(index.Cols, quote(" is not null and ")) + " is not null")
 		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v) where %v", unique,
 			quote(idxName), quote(tableName),
-			quote(strings.Join(index.Cols, quote(","))),notnull)
-	}else {
+			quote(strings.Join(index.Cols, quote(","))), notnull)
+	} else {
 		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v)", unique,
 			quote(idxName), quote(tableName),
 			quote(strings.Join(index.Cols, quote(","))))
@@ -233,15 +244,14 @@ func (db *Base) DropIndexSql(tableName string, index *Index) string {
 }
 
 func (db *Base) ModifyColumnSql(tableName string, col *Column) string {
-	if col.IsPrimaryKey{
-		sql:=fmt.Sprintf("alter table %s MODIFY COLUMN %s Comment '%s'", tableName, col.ModifyString(db.dialect),col.Comment)
-//		fmt.Println(sql)
+	if col.IsPrimaryKey {
+		sql := fmt.Sprintf("alter table %s MODIFY COLUMN %s Comment '%s'", tableName, col.ModifyString(db.dialect), col.Comment)
+		//		fmt.Println(sql)
 		return sql
-	}else {
-		return fmt.Sprintf("alter table %s MODIFY COLUMN %s comment '%s'", tableName, col.StringNoPk(db.dialect),col.Comment)
+	} else {
+		return fmt.Sprintf("alter table %s MODIFY COLUMN %s comment '%s'", tableName, col.StringNoPk(db.dialect), col.Comment)
 	}
 }
-
 
 func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset string) (string) {
 	var sql string
@@ -265,14 +275,13 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 				sql += col.StringNoPk(b.dialect)
 			}
 			sql = strings.TrimSpace(sql)
-			if len(col.Comment)>0{
-				sql+=fmt.Sprintf(" comment '%s'",col.Comment)
+			if len(col.Comment) > 0 {
+				sql += fmt.Sprintf(" comment '%s'", col.Comment)
 			}
 			sql += ", "
 
-
-			if col.IsAutoIncrement{
-				startwith=col.StartWith
+			if col.IsAutoIncrement {
+				startwith = col.StartWith
 			}
 		}
 
@@ -284,13 +293,12 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 
 		sql = sql[:len(sql)-2]
 
-
 	}
 	sql += ")"
 	//fmt.Println(table.AutoIncrement)
 	///去除自增长字段
-	if len(table.AutoIncrement)>0{
-		sql+=fmt.Sprintf("AUTO_INCREMENT=%d",startwith)
+	if len(table.AutoIncrement) > 0 {
+		sql += fmt.Sprintf("AUTO_INCREMENT=%d", startwith)
 	}
 
 	if b.dialect.SupportEngine() && storeEngine != "" {
@@ -305,23 +313,22 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		}
 	}
 
-
 	return sql
 }
 
 func (b *Base) AlterIncrementSql(table *Table, tableName, storeEngine, charset string) (string) {
 	var sql string
 	var startwith int64
-	sql=""
+	sql = ""
 	if tableName == "" {
 		tableName = table.Name
 	}
 	if len(table.ColumnsSeq()) > 0 {
 		for _, colName := range table.ColumnsSeq() {
 			col := table.GetColumn(colName)
-			if col.IsAutoIncrement&&col.IsPrimaryKey{
-				startwith=col.StartWith
-				sql=fmt.Sprintf("alter table %s AUTO_INCREMENT=%d",tableName,startwith)
+			if col.IsAutoIncrement && col.IsPrimaryKey {
+				startwith = col.StartWith
+				sql = fmt.Sprintf("alter table %s AUTO_INCREMENT=%d", tableName, startwith)
 			}
 		}
 	}
@@ -360,4 +367,8 @@ func QueryDialect(dbName DbType) Dialect {
 		return d()
 	}
 	return nil
+}
+
+func (db *Base) GetPhysicalColumn(table *Table, column *Column) *Column {
+	return &Column{}
 }

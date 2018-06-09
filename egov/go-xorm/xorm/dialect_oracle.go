@@ -230,271 +230,271 @@ var (
 		"LOGGING":                   true,
 		"LOGICAL_READS_PER_CALL":    true,
 		"LOGICAL_READS_PER_SESSION": true,
-		"LONG":                     true,
-		"MANAGE":                   true,
-		"MASTER":                   true,
-		"MAX":                      true,
-		"MAXARCHLOGS":              true,
-		"MAXDATAFILES":             true,
-		"MAXEXTENTS":               true,
-		"MAXINSTANCES":             true,
-		"MAXLOGFILES":              true,
-		"MAXLOGHISTORY":            true,
-		"MAXLOGMEMBERS":            true,
-		"MAXSIZE":                  true,
-		"MAXTRANS":                 true,
-		"MAXVALUE":                 true,
-		"MIN":                      true,
-		"MEMBER":                   true,
-		"MINIMUM":                  true,
-		"MINEXTENTS":               true,
-		"MINUS":                    true,
-		"MINVALUE":                 true,
-		"MLSLABEL":                 true,
-		"MLS_LABEL_FORMAT":         true,
-		"MODE":                     true,
-		"MODIFY":                   true,
-		"MOUNT":                    true,
-		"MOVE":                     true,
-		"MTS_DISPATCHERS":          true,
-		"MULTISET":                 true,
-		"NATIONAL":                 true,
-		"NCHAR":                    true,
-		"NCHAR_CS":                 true,
-		"NCLOB":                    true,
-		"NEEDED":                   true,
-		"NESTED":                   true,
-		"NETWORK":                  true,
-		"NEW":                      true,
-		"NEXT":                     true,
-		"NOARCHIVELOG":             true,
-		"NOAUDIT":                  true,
-		"NOCACHE":                  true,
-		"NOCOMPRESS":               true,
-		"NOCYCLE":                  true,
-		"NOFORCE":                  true,
-		"NOLOGGING":                true,
-		"NOMAXVALUE":               true,
-		"NOMINVALUE":               true,
-		"NONE":                     true,
-		"NOORDER":                  true,
-		"NOOVERRIDE":               true,
-		"NOPARALLEL":               true,
-		"NOREVERSE":                true,
-		"NORMAL":                   true,
-		"NOSORT":                   true,
-		"NOT":                      true,
-		"NOTHING":                  true,
-		"NOWAIT":                   true,
-		"NULL":                     true,
-		"NUMBER":                   true,
-		"NUMERIC":                  true,
-		"NVARCHAR2":                true,
-		"OBJECT":                   true,
-		"OBJNO":                    true,
-		"OBJNO_REUSE":              true,
-		"OF":                       true,
-		"OFF":                      true,
-		"OFFLINE":                  true,
-		"OID":                      true,
-		"OIDINDEX":                 true,
-		"OLD":                      true,
-		"ON":                       true,
-		"ONLINE":                   true,
-		"ONLY":                     true,
-		"OPCODE":                   true,
-		"OPEN":                     true,
-		"OPTIMAL":                  true,
-		"OPTIMIZER_GOAL":           true,
-		"OPTION":                   true,
-		"OR":                       true,
-		"ORDER":                    true,
-		"ORGANIZATION":             true,
-		"OSLABEL":                  true,
-		"OVERFLOW":                 true,
-		"OWN":                      true,
-		"PACKAGE":                  true,
-		"PARALLEL":                 true,
-		"PARTITION":                true,
-		"PASSWORD":                 true,
-		"PASSWORD_GRACE_TIME":      true,
-		"PASSWORD_LIFE_TIME":       true,
-		"PASSWORD_LOCK_TIME":       true,
-		"PASSWORD_REUSE_MAX":       true,
-		"PASSWORD_REUSE_TIME":      true,
-		"PASSWORD_VERIFY_FUNCTION": true,
-		"PCTFREE":                  true,
-		"PCTINCREASE":              true,
-		"PCTTHRESHOLD":             true,
-		"PCTUSED":                  true,
-		"PCTVERSION":               true,
-		"PERCENT":                  true,
-		"PERMANENT":                true,
-		"PLAN":                     true,
-		"PLSQL_DEBUG":              true,
-		"POST_TRANSACTION":         true,
-		"PRECISION":                true,
-		"PRESERVE":                 true,
-		"PRIMARY":                  true,
-		"PRIOR":                    true,
-		"PRIVATE":                  true,
-		"PRIVATE_SGA":              true,
-		"PRIVILEGE":                true,
-		"PRIVILEGES":               true,
-		"PROCEDURE":                true,
-		"PROFILE":                  true,
-		"PUBLIC":                   true,
-		"PURGE":                    true,
-		"QUEUE":                    true,
-		"QUOTA":                    true,
-		"RANGE":                    true,
-		"RAW":                      true,
-		"RBA":                      true,
-		"READ":                     true,
-		"READUP":                   true,
-		"REAL":                     true,
-		"REBUILD":                  true,
-		"RECOVER":                  true,
-		"RECOVERABLE":              true,
-		"RECOVERY":                 true,
-		"REF":                      true,
-		"REFERENCES":               true,
-		"REFERENCING":              true,
-		"REFRESH":                  true,
-		"RENAME":                   true,
-		"REPLACE":                  true,
-		"RESET":                    true,
-		"RESETLOGS":                true,
-		"RESIZE":                   true,
-		"RESOURCE":                 true,
-		"RESTRICTED":               true,
-		"RETURN":                   true,
-		"RETURNING":                true,
-		"REUSE":                    true,
-		"REVERSE":                  true,
-		"REVOKE":                   true,
-		"ROLE":                     true,
-		"ROLES":                    true,
-		"ROLLBACK":                 true,
-		"ROW":                      true,
-		"ROWID":                    true,
-		"ROWNUM":                   true,
-		"ROWS":                     true,
-		"RULE":                     true,
-		"SAMPLE":                   true,
-		"SAVEPOINT":                true,
-		"SB4":                      true,
-		"SCAN_INSTANCES":           true,
-		"SCHEMA":                   true,
-		"SCN":                      true,
-		"SCOPE":                    true,
-		"SD_ALL":                   true,
-		"SD_INHIBIT":               true,
-		"SD_SHOW":                  true,
-		"SEGMENT":                  true,
-		"SEG_BLOCK":                true,
-		"SEG_FILE":                 true,
-		"SELECT":                   true,
-		"SEQUENCE":                 true,
-		"SERIALIZABLE":             true,
-		"SESSION":                  true,
-		"SESSION_CACHED_CURSORS":   true,
-		"SESSIONS_PER_USER":        true,
-		"SET":                      true,
-		"SHARE":                    true,
-		"SHARED":                   true,
-		"SHARED_POOL":              true,
-		"SHRINK":                   true,
-		"SIZE":                     true,
-		"SKIP":                     true,
-		"SKIP_UNUSABLE_INDEXES":    true,
-		"SMALLINT":                 true,
-		"SNAPSHOT":                 true,
-		"SOME":                     true,
-		"SORT":                     true,
-		"SPECIFICATION":            true,
-		"SPLIT":                    true,
-		"SQL_TRACE":                true,
-		"STANDBY":                  true,
-		"START":                    true,
-		"STATEMENT_ID":             true,
-		"STATISTICS":               true,
-		"STOP":                     true,
-		"STORAGE":                  true,
-		"STORE":                    true,
-		"STRUCTURE":                true,
-		"SUCCESSFUL":               true,
-		"SWITCH":                   true,
-		"SYS_OP_ENFORCE_NOT_NULL$": true,
-		"SYS_OP_NTCIMG$":           true,
-		"SYNONYM":                  true,
-		"SYSDATE":                  true,
-		"SYSDBA":                   true,
-		"SYSOPER":                  true,
-		"SYSTEM":                   true,
-		"TABLE":                    true,
-		"TABLES":                   true,
-		"TABLESPACE":               true,
-		"TABLESPACE_NO":            true,
-		"TABNO":                    true,
-		"TEMPORARY":                true,
-		"THAN":                     true,
-		"THE":                      true,
-		"THEN":                     true,
-		"THREAD":                   true,
-		"TIMESTAMP":                true,
-		"TIME":                     true,
-		"TO":                       true,
-		"TOPLEVEL":                 true,
-		"TRACE":                    true,
-		"TRACING":                  true,
-		"TRANSACTION":              true,
-		"TRANSITIONAL":             true,
-		"TRIGGER":                  true,
-		"TRIGGERS":                 true,
-		"TRUE":                     true,
-		"TRUNCATE":                 true,
-		"TX":                       true,
-		"TYPE":                     true,
-		"UB2":                      true,
-		"UBA":                      true,
-		"UID":                      true,
-		"UNARCHIVED":               true,
-		"UNDO":                     true,
-		"UNION":                    true,
-		"UNIQUE":                   true,
-		"UNLIMITED":                true,
-		"UNLOCK":                   true,
-		"UNRECOVERABLE":            true,
-		"UNTIL":                    true,
-		"UNUSABLE":                 true,
-		"UNUSED":                   true,
-		"UPDATABLE":                true,
-		"UPDATE":                   true,
-		"USAGE":                    true,
-		"USE":                      true,
-		"USER":                     true,
-		"USING":                    true,
-		"VALIDATE":                 true,
-		"VALIDATION":               true,
-		"VALUE":                    true,
-		"VALUES":                   true,
-		"VARCHAR":                  true,
-		"VARCHAR2":                 true,
-		"VARYING":                  true,
-		"VIEW":                     true,
-		"WHEN":                     true,
-		"WHENEVER":                 true,
-		"WHERE":                    true,
-		"WITH":                     true,
-		"WITHOUT":                  true,
-		"WORK":                     true,
-		"WRITE":                    true,
-		"WRITEDOWN":                true,
-		"WRITEUP":                  true,
-		"XID":                      true,
-		"YEAR":                     true,
-		"ZONE":                     true,
+		"LONG":                      true,
+		"MANAGE":                    true,
+		"MASTER":                    true,
+		"MAX":                       true,
+		"MAXARCHLOGS":               true,
+		"MAXDATAFILES":              true,
+		"MAXEXTENTS":                true,
+		"MAXINSTANCES":              true,
+		"MAXLOGFILES":               true,
+		"MAXLOGHISTORY":             true,
+		"MAXLOGMEMBERS":             true,
+		"MAXSIZE":                   true,
+		"MAXTRANS":                  true,
+		"MAXVALUE":                  true,
+		"MIN":                       true,
+		"MEMBER":                    true,
+		"MINIMUM":                   true,
+		"MINEXTENTS":                true,
+		"MINUS":                     true,
+		"MINVALUE":                  true,
+		"MLSLABEL":                  true,
+		"MLS_LABEL_FORMAT":          true,
+		"MODE":                      true,
+		"MODIFY":                    true,
+		"MOUNT":                     true,
+		"MOVE":                      true,
+		"MTS_DISPATCHERS":           true,
+		"MULTISET":                  true,
+		"NATIONAL":                  true,
+		"NCHAR":                     true,
+		"NCHAR_CS":                  true,
+		"NCLOB":                     true,
+		"NEEDED":                    true,
+		"NESTED":                    true,
+		"NETWORK":                   true,
+		"NEW":                       true,
+		"NEXT":                      true,
+		"NOARCHIVELOG":              true,
+		"NOAUDIT":                   true,
+		"NOCACHE":                   true,
+		"NOCOMPRESS":                true,
+		"NOCYCLE":                   true,
+		"NOFORCE":                   true,
+		"NOLOGGING":                 true,
+		"NOMAXVALUE":                true,
+		"NOMINVALUE":                true,
+		"NONE":                      true,
+		"NOORDER":                   true,
+		"NOOVERRIDE":                true,
+		"NOPARALLEL":                true,
+		"NOREVERSE":                 true,
+		"NORMAL":                    true,
+		"NOSORT":                    true,
+		"NOT":                       true,
+		"NOTHING":                   true,
+		"NOWAIT":                    true,
+		"NULL":                      true,
+		"NUMBER":                    true,
+		"NUMERIC":                   true,
+		"NVARCHAR2":                 true,
+		"OBJECT":                    true,
+		"OBJNO":                     true,
+		"OBJNO_REUSE":               true,
+		"OF":                        true,
+		"OFF":                       true,
+		"OFFLINE":                   true,
+		"OID":                       true,
+		"OIDINDEX":                  true,
+		"OLD":                       true,
+		"ON":                        true,
+		"ONLINE":                    true,
+		"ONLY":                      true,
+		"OPCODE":                    true,
+		"OPEN":                      true,
+		"OPTIMAL":                   true,
+		"OPTIMIZER_GOAL":            true,
+		"OPTION":                    true,
+		"OR":                        true,
+		"ORDER":                     true,
+		"ORGANIZATION":              true,
+		"OSLABEL":                   true,
+		"OVERFLOW":                  true,
+		"OWN":                       true,
+		"PACKAGE":                   true,
+		"PARALLEL":                  true,
+		"PARTITION":                 true,
+		"PASSWORD":                  true,
+		"PASSWORD_GRACE_TIME":       true,
+		"PASSWORD_LIFE_TIME":        true,
+		"PASSWORD_LOCK_TIME":        true,
+		"PASSWORD_REUSE_MAX":        true,
+		"PASSWORD_REUSE_TIME":       true,
+		"PASSWORD_VERIFY_FUNCTION":  true,
+		"PCTFREE":                   true,
+		"PCTINCREASE":               true,
+		"PCTTHRESHOLD":              true,
+		"PCTUSED":                   true,
+		"PCTVERSION":                true,
+		"PERCENT":                   true,
+		"PERMANENT":                 true,
+		"PLAN":                      true,
+		"PLSQL_DEBUG":               true,
+		"POST_TRANSACTION":          true,
+		"PRECISION":                 true,
+		"PRESERVE":                  true,
+		"PRIMARY":                   true,
+		"PRIOR":                     true,
+		"PRIVATE":                   true,
+		"PRIVATE_SGA":               true,
+		"PRIVILEGE":                 true,
+		"PRIVILEGES":                true,
+		"PROCEDURE":                 true,
+		"PROFILE":                   true,
+		"PUBLIC":                    true,
+		"PURGE":                     true,
+		"QUEUE":                     true,
+		"QUOTA":                     true,
+		"RANGE":                     true,
+		"RAW":                       true,
+		"RBA":                       true,
+		"READ":                      true,
+		"READUP":                    true,
+		"REAL":                      true,
+		"REBUILD":                   true,
+		"RECOVER":                   true,
+		"RECOVERABLE":               true,
+		"RECOVERY":                  true,
+		"REF":                       true,
+		"REFERENCES":                true,
+		"REFERENCING":               true,
+		"REFRESH":                   true,
+		"RENAME":                    true,
+		"REPLACE":                   true,
+		"RESET":                     true,
+		"RESETLOGS":                 true,
+		"RESIZE":                    true,
+		"RESOURCE":                  true,
+		"RESTRICTED":                true,
+		"RETURN":                    true,
+		"RETURNING":                 true,
+		"REUSE":                     true,
+		"REVERSE":                   true,
+		"REVOKE":                    true,
+		"ROLE":                      true,
+		"ROLES":                     true,
+		"ROLLBACK":                  true,
+		"ROW":                       true,
+		"ROWID":                     true,
+		"ROWNUM":                    true,
+		"ROWS":                      true,
+		"RULE":                      true,
+		"SAMPLE":                    true,
+		"SAVEPOINT":                 true,
+		"SB4":                       true,
+		"SCAN_INSTANCES":            true,
+		"SCHEMA":                    true,
+		"SCN":                       true,
+		"SCOPE":                     true,
+		"SD_ALL":                    true,
+		"SD_INHIBIT":                true,
+		"SD_SHOW":                   true,
+		"SEGMENT":                   true,
+		"SEG_BLOCK":                 true,
+		"SEG_FILE":                  true,
+		"SELECT":                    true,
+		"SEQUENCE":                  true,
+		"SERIALIZABLE":              true,
+		"SESSION":                   true,
+		"SESSION_CACHED_CURSORS":    true,
+		"SESSIONS_PER_USER":         true,
+		"SET":                       true,
+		"SHARE":                     true,
+		"SHARED":                    true,
+		"SHARED_POOL":               true,
+		"SHRINK":                    true,
+		"SIZE":                      true,
+		"SKIP":                      true,
+		"SKIP_UNUSABLE_INDEXES":     true,
+		"SMALLINT":                  true,
+		"SNAPSHOT":                  true,
+		"SOME":                      true,
+		"SORT":                      true,
+		"SPECIFICATION":             true,
+		"SPLIT":                     true,
+		"SQL_TRACE":                 true,
+		"STANDBY":                   true,
+		"START":                     true,
+		"STATEMENT_ID":              true,
+		"STATISTICS":                true,
+		"STOP":                      true,
+		"STORAGE":                   true,
+		"STORE":                     true,
+		"STRUCTURE":                 true,
+		"SUCCESSFUL":                true,
+		"SWITCH":                    true,
+		"SYS_OP_ENFORCE_NOT_NULL$":  true,
+		"SYS_OP_NTCIMG$":            true,
+		"SYNONYM":                   true,
+		"SYSDATE":                   true,
+		"SYSDBA":                    true,
+		"SYSOPER":                   true,
+		"SYSTEM":                    true,
+		"TABLE":                     true,
+		"TABLES":                    true,
+		"TABLESPACE":                true,
+		"TABLESPACE_NO":             true,
+		"TABNO":                     true,
+		"TEMPORARY":                 true,
+		"THAN":                      true,
+		"THE":                       true,
+		"THEN":                      true,
+		"THREAD":                    true,
+		"TIMESTAMP":                 true,
+		"TIME":                      true,
+		"TO":                        true,
+		"TOPLEVEL":                  true,
+		"TRACE":                     true,
+		"TRACING":                   true,
+		"TRANSACTION":               true,
+		"TRANSITIONAL":              true,
+		"TRIGGER":                   true,
+		"TRIGGERS":                  true,
+		"TRUE":                      true,
+		"TRUNCATE":                  true,
+		"TX":                        true,
+		"TYPE":                      true,
+		"UB2":                       true,
+		"UBA":                       true,
+		"UID":                       true,
+		"UNARCHIVED":                true,
+		"UNDO":                      true,
+		"UNION":                     true,
+		"UNIQUE":                    true,
+		"UNLIMITED":                 true,
+		"UNLOCK":                    true,
+		"UNRECOVERABLE":             true,
+		"UNTIL":                     true,
+		"UNUSABLE":                  true,
+		"UNUSED":                    true,
+		"UPDATABLE":                 true,
+		"UPDATE":                    true,
+		"USAGE":                     true,
+		"USE":                       true,
+		"USER":                      true,
+		"USING":                     true,
+		"VALIDATE":                  true,
+		"VALIDATION":                true,
+		"VALUE":                     true,
+		"VALUES":                    true,
+		"VARCHAR":                   true,
+		"VARCHAR2":                  true,
+		"VARYING":                   true,
+		"VIEW":                      true,
+		"WHEN":                      true,
+		"WHENEVER":                  true,
+		"WHERE":                     true,
+		"WITH":                      true,
+		"WITHOUT":                   true,
+		"WORK":                      true,
+		"WRITE":                     true,
+		"WRITEDOWN":                 true,
+		"WRITEUP":                   true,
+		"XID":                       true,
+		"YEAR":                      true,
+		"ZONE":                      true,
 	}
 )
 
@@ -511,12 +511,12 @@ func (db *oracle) SqlType(c *core.Column) string {
 	switch t := c.SQLType.Name; t {
 
 	case core.Bool:
-		res="NUMBER"
-		if strings.EqualFold(c.Default, "1") { //bool型统一数字设置初始值
-			c.Default = "1"
-		} else {
-			c.Default = "0"
-		}
+		res = "NUMBER"
+		//if strings.EqualFold(c.Default, "1") { //bool型统一数字设置初始值
+		//	c.Default = "1"
+		//} else {
+		//	c.Default = "0"
+		//}
 	case core.Bit, core.TinyInt, core.SmallInt, core.MediumInt, core.Int, core.Integer, core.BigInt, core.Bool, core.Serial, core.BigSerial:
 		res = "NUMBER"
 	case core.Binary, core.VarBinary, core.Blob, core.TinyBlob, core.MediumBlob, core.LongBlob, core.Bytea:
@@ -530,11 +530,11 @@ func (db *oracle) SqlType(c *core.Column) string {
 	case core.Text, core.MediumText, core.LongText, core.Json:
 		res = "CLOB"
 	case core.Char, core.Varchar, core.TinyText:
-		if c.Length>1000{
-			c.SQLType.Name=core.Text
-			res=core.Text
-			c.Length=0
-		}else {
+		if c.Length > 1000 {
+			c.SQLType.Name = core.Text
+			res = core.Text
+			c.Length = 0
+		} else {
 			res = "VARCHAR2"
 		}
 	default:
@@ -595,20 +595,18 @@ func (db *oracle) DropTableSql(tableName string) string {
 	return fmt.Sprintf("DROP TABLE `%s`", tableName)
 }
 
-
 func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) (string) {
 	var sql string
 	var sequencesql string
 	var sqlcomment string
 	sql = "CREATE TABLE "
-	sequencesql="CREATE SEQUENCE "
+	sequencesql = "CREATE SEQUENCE "
 
 	if tableName == "" {
 		tableName = table.Name
 	}
 
 	sql += db.Quote(tableName) + " ("
-
 
 	pkList := table.PrimaryKeys
 
@@ -619,10 +617,9 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 		} else {*/
 
 		//core中使用的col.StringNoPk方法null(not null)在default之前，oracle必须default在前 --by chaos
-		sql+= db.QuoteStr() + col.Name + db.QuoteStr() + " "
+		sql += db.QuoteStr() + col.Name + db.QuoteStr() + " "
 
-
-		sql+= db.SqlType(col) + " "
+		sql += db.SqlType(col) + " "
 
 		if col.Default != "" {
 			sql += "DEFAULT " + col.Default + " "
@@ -637,20 +634,17 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 		}
 
 		if col.IsAutoIncrement {
-				sequencesql=sequencesql+" seq_"+tableName+" start with "+strconv.FormatInt(col.StartWith,10)
+			sequencesql = sequencesql + " seq_" + tableName + " start with " + strconv.FormatInt(col.StartWith, 10)
 		}
 		// by chaos end
-
-
 
 		//sql += sql1
 		//}
 		sql = strings.TrimSpace(sql)
 		sql += ", "
-		sqlcomment+=fmt.Sprintf(" comment on column %s.%s is '%s';",table.Name,col.Name,col.Comment)
+		sqlcomment += fmt.Sprintf(" comment on column %s.%s is '%s';", table.Name, col.Name, col.Comment)
 
 	}
-
 
 	if len(pkList) > 0 {
 		sql += "PRIMARY KEY ( "
@@ -671,22 +665,20 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 		}
 	}
 	//fmt.Println(sql)
-	return sql+";"+sequencesql+";"+sqlcomment
+	return sql + ";" + sequencesql + ";" + sqlcomment
 }
 
-
-func (db *oracle) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string){
+func (db *oracle) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string) {
 	var sql string
-	sql=""
+	sql = ""
 	for _, colName := range table.ColumnsSeq() {
 		col := table.GetColumn(colName)
-		if col.IsPrimaryKey&&col.IsAutoIncrement {
-			sql = fmt.Sprintf("create sequence seq_%s start with %d",tableName,col.StartWith)
+		if col.IsPrimaryKey && col.IsAutoIncrement {
+			sql = fmt.Sprintf("create sequence seq_%s start with %d", tableName, col.StartWith)
 		}
 	}
 	return sql
 }
-
 
 func (db *oracle) IndexCheckSql(tableName, idxName string) (string, []interface{}) {
 	args := []interface{}{tableName, idxName}
@@ -726,12 +718,9 @@ func (db *oracle) MustDropTable(tableName string) error {
 		" AND column_name = ?", args
 }*/
 
-func (db *oracle) IsColumnExist(tableName, colName string) (bool, error) {
-	//args := []interface{}{tableName, colName}
-	query :=fmt.Sprintf( "SELECT column_name CNT FROM USER_TAB_COLUMNS WHERE table_name = upper('%s') AND column_name = upper('%s')",tableName,colName)
+func (db *oracle) IsColumnExist(table *core.Table, column *core.Column) (bool, error, *core.Column) {
+	query := fmt.Sprintf("SELECT column_name CNT FROM USER_TAB_COLUMNS WHERE table_name = upper('%s') AND column_name = upper('%s')", table.Name, column.Name)
 	//result:=db.DB().QueryRow(query)
-
-
 
 	args := []interface{}{}
 	//s := "SELECT table_name FROM user_tables"
@@ -739,37 +728,16 @@ func (db *oracle) IsColumnExist(tableName, colName string) (bool, error) {
 
 	rows, err := db.DB().Query(query, args...)
 	if err != nil {
-		return false, err
+		return false, err, nil
 	}
 	defer rows.Close()
 
-	i:=0
+	i := 0
 	for rows.Next() {
 		i++
 	}
-	return i>0,nil
-	//if err!=nil{
-	//	fmt.Println(err)
-	//	return true,nil
-	//}
-	//ra,_:=result.RowsAffected()
-	//if ra>0{
-	//	return true,nil
-	//}
-	//return false,nil
-
-	//db.LogSQL(query, args)
-	//
-	//rows, err := db.DB().Query(query, args...)
-	//
-	//if err != nil {
-	//	return false, err
-	//}
-	//defer rows.Close()
-	//if rows.Next() {
-	//	return true, nil
-	//}
-	//return false, nil
+	//col:=db.GetPhysicalColumn(table,column)
+	return i > 0, nil, nil
 }
 
 func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
@@ -1000,7 +968,6 @@ func (p *oci8Driver) Parse(driverName, dataSourceName string) (*core.Uri, error)
 	return db, nil
 }
 
-
 //func (col * github.com.go-xorm.core.Column) StringNoPk(d Dialect) string {
 
 //	sql := d.QuoteStr() + col.Name + d.QuoteStr() + " "
@@ -1038,3 +1005,12 @@ func (p *oci8Driver) Parse(driverName, dataSourceName string) (*core.Uri, error)
 //
 //	return sql
 //}
+
+func (db *oracle) GetPhysicalColumn(table *core.Table, column *core.Column) *core.Column {
+	return &core.Column{}
+}
+
+func (db *oracle) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
+	result := make(map[string]map[string]*core.Column)
+	return result, nil
+}
