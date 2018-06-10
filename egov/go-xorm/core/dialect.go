@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"reflect"
+	"strconv"
 )
 
 type DbType string
@@ -52,12 +54,11 @@ type Dialect interface {
 	SupportDropIfExists() bool
 	IndexOnTable() bool
 	ShowCreateNull() bool
-    GetPhysicalColumn(table *Table, column *Column) *Column
+	GetPhysicalColumn(table *Table, column *Column) *Column
 	IndexCheckSql(tableName, idxName string) (string, []interface{})
 	TableCheckSql(tableName string) (string, []interface{})
 
-	IsColumnExist(table *Table, col *Column) (bool, error,*Column)
-
+	IsColumnExist(table *Table, col *Column) (bool, error, *Column)
 
 	CreateTableSql(table *Table, tableName, storeEngine, charset string) (string)
 	AlterIncrementSql(table *Table, tableName, storeEngine, charset string) (string)
@@ -77,18 +78,11 @@ type Dialect interface {
 	GetTables() ([]*Table, error)
 	GetIndexes(tableName string) (map[string]*Index, error)
 
-	GetAllTableColumns()(map[string]map[string]*Column,error)
+	GetAllTableColumns() (map[string]map[string]*Column, error)
 
 	//IsColumnDifferent(tableName string,colName string,column Column)
 
 	Filters() []Filter
-}
-
-
-
-func (db *Base)GetAllTableColumns()(map[string]map[string]*Column,error){
-	result:=make(map[string]map[string]*Column)
-	return result,nil
 }
 
 func OpenDialect(dialect Dialect) (*DB, error) {
@@ -180,11 +174,11 @@ func (db *Base) HasRecords(query string, args ...interface{}) (bool, error) {
 	return false, nil
 }
 
-func (db *Base) IsColumnExist(table *Table, column *Column) (bool, error,*Column) {
+func (db *Base) IsColumnExist(table *Table, column *Column) (bool, error, *Column) {
 	query := "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ? AND `COLUMN_NAME` = ?"
 	query = strings.Replace(query, "`", db.dialect.QuoteStr(), -1)
 	//col:=db.GetPhysicalColumn(table,column)
-	ifHasRecords, err := db.HasRecords(query, db.DbName, table.Name,column.Name)
+	ifHasRecords, err := db.HasRecords(query, db.DbName, table.Name, column.Name)
 	return ifHasRecords, err, nil
 }
 
@@ -221,10 +215,10 @@ func (db *Base) CreateIndexSql(tableName string, index *Index) string {
 	}
 	idxName = index.XName(tableName)
 	if db.DbType == MSSQL {
-		notnull := quote(strings.Join(index.Cols, quote(" is not null and ")) + " is not null")
-		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v) where %v", unique,
+		//notnull := quote(strings.Join(index.Cols, quote(" is not null and ")) + " is not null")
+		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v) ", unique,
 			quote(idxName), quote(tableName),
-			quote(strings.Join(index.Cols, quote(","))), notnull)
+			quote(strings.Join(index.Cols, quote(","))))
 	} else {
 		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v)", unique,
 			quote(idxName), quote(tableName),
@@ -371,4 +365,277 @@ func QueryDialect(dbName DbType) Dialect {
 
 func (db *Base) GetPhysicalColumn(table *Table, column *Column) *Column {
 	return &Column{}
+}
+
+func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
+	sql := `select 	
+  1 object_id,
+	table_name tName ,
+	'' tComment,
+	column_name NAME,
+	ORDINAL_POSITION  sortcode,
+	0 autoincr,
+  case COLUMN_KEY when 'PRI' then 1 else 0 end pk,
+  0 fk,
+  '' type,
+  0 byte,
+  case DATA_TYPE when 'VARCHAR' then CHARACTER_MAXIMUM_LENGTH when 'BINARY' then 0 else 1 end  length,
+  0 %sPRECISION%s,
+  case IS_NULLABLE when  'YES' then 1 else 0 end nullable,
+  COLUMN_COMMENT comments,
+  COLUMN_DEFAULT defaultvalue,
+  '' indexes,
+  0 indexnum
+from information_schema.COLUMNS where TABLE_SCHEMA=?
+`
+    sql=fmt.Sprintf(sql,"`","`")
+	rows, err := db.DB().Query(sql,db.DbName)
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	return GetStringColumnFormRows(rows), nil
+}
+
+func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
+	result := make(map[string]map[string]*Column)
+	columnProperties := make(map[string]map[string]map[string]string)
+	cols, err := rows.Columns()
+
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		slice := make([]interface{}, len(cols))
+		err = rows.ScanSlice(&slice)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		tName := slice[1].(string) //表名
+		cName := slice[3].(string) //列明
+		if columnProperties[tName] == nil {
+			columnProperties[tName] = make(map[string]map[string]string)
+			result[tName] = make(map[string]*Column)
+		}
+		if columnProperties[tName][cName] == nil {
+			columnProperties[tName][cName] = make(map[string]string)
+			columnProperties[tName][cName]["name"] = cName
+			result[tName][cName] = &Column{}
+
+		}
+		for idx, colName := range cols {
+			if idx <= 3 { //object_id tName
+				continue
+			}
+
+			if slice[idx] == nil {
+				columnProperties[tName][cName][colName] = ""
+				continue
+			}
+			colKind := reflect.TypeOf(slice[idx]).Kind()
+			switch colKind {
+			case reflect.String:
+				columnProperties[tName][cName][colName] = slice[idx].(string)
+			case reflect.Int64:
+				columnProperties[tName][cName][colName] = strconv.FormatInt(slice[idx].(int64), 10)
+			default:
+				panic("not except type ")
+			}
+
+		}
+		_, col := TransMapStringColumn(50, columnProperties[tName][cName])
+		result[tName][cName] = col
+	}
+	return result
+}
+
+func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Column) {
+	content := ""
+	col := &Column{}
+	col.Name = column["name"]
+	col.Default = strings.Trim(column["defaultvalue"], "(")
+	col.Default = strings.Trim(col.Default, ")")
+	col.FieldName = column["name"]
+	col.Comment = column["comments"]
+	col.IsAutoIncrement = column["autoincr"] == "1"
+	col.IsPrimaryKey = column["pk"] == "1"
+	temp, _ := strconv.ParseInt(column["length"], 10, 64)
+	col.Length = int(temp)
+	temp, _ = strconv.ParseInt(column["precision"], 10, 64)
+	col.Length2 = int(temp)
+	col.StartWith = 1
+	col.TableName = column["t_name"]
+	col.Nullable = column["nullable"] == "1"
+	col.SQLType.Name = strings.ToUpper(column["type"])
+	col.SQLType.DefaultLength = col.Length
+	col.SQLType.DefaultLength2 = col.Length2
+
+	typeString := ""
+	if !col.IsPrimaryKey {
+		if col.SQLType.Name != Binary {
+			if col.SQLType.Name == "TINYINT" {
+				typeString = "*Boolean"
+			} else {
+				typeString = "*" + SQLType2Type(col.SQLType).String()
+			}
+		} else {
+			typeString = SQLType2Type(col.SQLType).String()
+		}
+	} else {
+		if col.SQLType.Name != Binary {
+			typeString = "*" + SQLType2Type(col.SQLType).String()
+
+		} else {
+			typeString = SQLType2Type(col.SQLType).String()
+		}
+	}
+
+	if col.FieldName == "" {
+		fmt.Println("col.FieldName is empty", col.Name, col.FieldName)
+	}
+	content += fmt.Sprintf("	%s", strFirstToUpper(col.FieldName)+strings.Repeat(" ", maxColLen-len(col.FieldName)+1))
+
+	content += fmt.Sprintf("%s", typeString+strings.Repeat(" ", 10-len(typeString)+1))
+
+	content += "`xorm:\""
+	col.XormTag = ""
+	pkString := ""
+	if col.IsPrimaryKey {
+		pkString = "pk"
+	}
+	if pkString != "" {
+		content += fmt.Sprintf(" %s", pkString)
+		col.XormTag += fmt.Sprintf(" %s", pkString)
+	}
+	autoincrString := ""
+	startwith := 1
+	if col.IsAutoIncrement {
+		autoincrString = "autoincr"
+		if strings.Index(col.TableName, "dic_") != 0 {
+			startwith = 0
+		}
+	}
+	if autoincrString != "" {
+		//		content += fmt.Sprintf(" %s", autoincrString)
+		//		col.XormTag += fmt.Sprintf(" %s", autoincrString)
+	}
+	factString := ""
+
+	coltype := SQLType2Type(col.SQLType).String()
+
+	switch coltype {
+	case "string":
+		if col.SQLType.Name == "TEXT" {
+			factString = "text"
+		} else {
+			factString = fmt.Sprintf("varchar(%d)", col.Length)
+		}
+	default:
+		if col.SQLType.Name == strings.ToUpper("binary") {
+			factString = fmt.Sprintf("binary(%d)", col.Length)
+		} else {
+			factString = ""
+		}
+	}
+
+	if factString != "" {
+		content += fmt.Sprintf(" %s", factString)
+		col.XormTag += fmt.Sprintf(" %s", factString)
+	}
+	nullString := "null"
+	if !col.Nullable {
+		nullString = "not null"
+	}
+
+	if nullString != "" {
+		content += fmt.Sprintf(" %s", nullString)
+		col.XormTag += fmt.Sprintf(" %s", nullString)
+	}
+
+	defaultString := ""
+	if len(col.Default) > 0 {
+		switch SQLType2Type(col.SQLType).String() {
+		case "string":
+			defaultString = fmt.Sprintf("default '%s'", strings.Replace(col.Default, "'", "", -1))
+		case "time.Time":
+			defaultString = fmt.Sprintf("default '%s'", col.Default)
+		case "tinyint":
+			defaultString = fmt.Sprintf("default %v", col.Default == "1")
+		default:
+			defaultString = fmt.Sprintf("default %s", col.Default)
+		}
+	}
+
+	if defaultString != "" {
+		content += fmt.Sprintf(" %s", defaultString)
+		col.XormTag += fmt.Sprintf(" %s", defaultString)
+	}
+
+	if col.FieldName == "create_date" {
+		content += fmt.Sprintf(" created")
+		col.XormTag += fmt.Sprintf(" created")
+	}
+
+	if col.FieldName == "modify_date" {
+		content += fmt.Sprintf(" updated")
+		col.XormTag += fmt.Sprintf(" updated")
+	}
+
+	content += fmt.Sprintf(" '%s'", col.FieldName)
+	col.XormTag += fmt.Sprintf(" '%s'", col.FieldName)
+
+	content += "\""
+
+	content += " indexes:\""
+
+	indexes := column["indexes"]
+	indexNum, _ := strconv.ParseInt(column["indexnum"], 10, 64)
+
+	indexString := ""
+
+	if indexNum >= 1 {
+		indexString = " " + indexes
+	} else if indexNum == 0 {
+		indexString = ""
+	}
+
+	content += indexString
+	content += "\""
+
+	content += fmt.Sprintf(" comment:\"%s\"", col.Comment)
+
+	content += fmt.Sprintf(" json:\"%s,omitempty\"", col.FieldName)
+
+	if startwith == 0 {
+		content += fmt.Sprintf(" startwith:\"%d\"", startwith)
+	}
+
+	content += fmt.Sprintf(" bson:\",omitempty\"")
+
+	content += fmt.Sprintf(" msgpack:\"%s,omitempty\"", col.FieldName)
+
+	if string(column["fk"]) != "" {
+		content += fmt.Sprintf(" fk:\"%s\"", column["fk"])
+	}
+
+	content += "`\n"
+
+	return content, col
+
+}
+
+/**
+ * 字符串首字母转化为大写
+ */
+func strFirstToUpper(str string) string {
+	//fmt.Println("str:", str)
+	//if str == "bithday" {
+	//	fmt.Println("str:", str)
+	//}
+	chars := []rune(str)
+	chars[0] = []rune(strings.ToUpper(string(chars[0])))[0]
+	return string(chars)
 }

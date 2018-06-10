@@ -445,197 +445,11 @@ func (db *mssql) GetPhysicalColumn(table *core.Table, column *core.Column) *core
 	//	fmt.Println(sqlQuery)
 	//}
 	rows.Close()
-	_, col := TransMapStringColumn(50, colRow)
+	_, col := core.TransMapStringColumn(50, colRow)
 	return col
 }
 
-/**
- * 字符串首字母转化为大写
- */
-func strFirstToUpper(str string) string {
-	//fmt.Println("str:", str)
-	//if str == "bithday" {
-	//	fmt.Println("str:", str)
-	//}
-	chars := []rune(str)
-	chars[0] = []rune(strings.ToUpper(string(chars[0])))[0]
-	return string(chars)
-}
 
-func TransMapStringColumn(maxColLen int, column map[string]string) (string, *core.Column) {
-	content := ""
-	col := &core.Column{}
-	col.Name = column["name"]
-	col.Default = strings.Trim(column["defaultvalue"], "(")
-	col.Default = strings.Trim(col.Default, ")")
-	col.FieldName = column["name"]
-	col.Comment = column["comments"]
-	col.IsAutoIncrement = column["autoincr"] == "1"
-	col.IsPrimaryKey = column["pk"] == "1"
-	temp, _ := strconv.ParseInt(column["length"], 10, 64)
-	col.Length = int(temp)
-	temp, _ = strconv.ParseInt(column["precision"], 10, 64)
-	col.Length2 = int(temp)
-	col.StartWith = 1
-	col.TableName = column["t_name"]
-	col.Nullable = column["nullable"] == "1"
-	col.SQLType.Name = strings.ToUpper(column["type"])
-	col.SQLType.DefaultLength = col.Length
-	col.SQLType.DefaultLength2 = col.Length2
-
-	typeString := ""
-	if !col.IsPrimaryKey {
-		if col.SQLType.Name != core.Binary {
-			if col.SQLType.Name == "TINYINT" {
-				typeString = "*Boolean"
-			} else {
-				typeString = "*" + core.SQLType2Type(col.SQLType).String()
-			}
-		} else {
-			typeString = core.SQLType2Type(col.SQLType).String()
-		}
-	} else {
-		if col.SQLType.Name != core.Binary {
-			typeString = "*" + core.SQLType2Type(col.SQLType).String()
-
-		} else {
-			typeString = core.SQLType2Type(col.SQLType).String()
-		}
-	}
-
-	if col.FieldName == "" {
-		fmt.Println("col.FieldName is empty", col.Name, col.FieldName)
-	}
-	content += fmt.Sprintf("	%s", strFirstToUpper(col.FieldName)+strings.Repeat(" ", maxColLen-len(col.FieldName)+1))
-
-	content += fmt.Sprintf("%s", typeString+strings.Repeat(" ", 10-len(typeString)+1))
-
-	content += "`xorm:\""
-	col.XormTag = ""
-	pkString := ""
-	if col.IsPrimaryKey {
-		pkString = "pk"
-	}
-	if pkString != "" {
-		content += fmt.Sprintf(" %s", pkString)
-		col.XormTag += fmt.Sprintf(" %s", pkString)
-	}
-	autoincrString := ""
-	startwith := 1
-	if col.IsAutoIncrement {
-		autoincrString = "autoincr"
-		if strings.Index(col.TableName, "dic_") != 0 {
-			startwith = 0
-		}
-	}
-	if autoincrString != "" {
-		//		content += fmt.Sprintf(" %s", autoincrString)
-		//		col.XormTag += fmt.Sprintf(" %s", autoincrString)
-	}
-	factString := ""
-
-	coltype := core.SQLType2Type(col.SQLType).String()
-
-	switch coltype {
-	case "string":
-		if col.SQLType.Name == "TEXT" {
-			factString = "text"
-		} else {
-			factString = fmt.Sprintf("varchar(%d)", col.Length)
-		}
-	default:
-		if col.SQLType.Name == strings.ToUpper("binary") {
-			factString = fmt.Sprintf("binary(%d)", col.Length)
-		} else {
-			factString = ""
-		}
-	}
-
-	if factString != "" {
-		content += fmt.Sprintf(" %s", factString)
-		col.XormTag += fmt.Sprintf(" %s", factString)
-	}
-	nullString := "null"
-	if !col.Nullable {
-		nullString = "not null"
-	}
-
-	if nullString != "" {
-		content += fmt.Sprintf(" %s", nullString)
-		col.XormTag += fmt.Sprintf(" %s", nullString)
-	}
-
-	defaultString := ""
-	if len(col.Default) > 0 {
-		switch core.SQLType2Type(col.SQLType).String() {
-		case "string":
-			defaultString = fmt.Sprintf("default '%s'", strings.Replace(col.Default, "'", "", -1))
-		case "time.Time":
-			defaultString = fmt.Sprintf("default '%s'", col.Default)
-		case "tinyint":
-			defaultString = fmt.Sprintf("default %v", col.Default == "1")
-		default:
-			defaultString = fmt.Sprintf("default %s", col.Default)
-		}
-	}
-
-	if defaultString != "" {
-		content += fmt.Sprintf(" %s", defaultString)
-		col.XormTag += fmt.Sprintf(" %s", defaultString)
-	}
-
-	if col.FieldName == "create_date" {
-		content += fmt.Sprintf(" created")
-		col.XormTag += fmt.Sprintf(" created")
-	}
-
-	if col.FieldName == "modify_date" {
-		content += fmt.Sprintf(" updated")
-		col.XormTag += fmt.Sprintf(" updated")
-	}
-
-	content += fmt.Sprintf(" '%s'", col.FieldName)
-	col.XormTag += fmt.Sprintf(" '%s'", col.FieldName)
-
-	content += "\""
-
-	content += " indexes:\""
-
-	indexes := column["indexes"]
-	indexNum, _ := strconv.ParseInt(column["indexnum"], 10, 64)
-
-	indexString := ""
-
-	if indexNum >= 1 {
-		indexString = " " + indexes
-	} else if indexNum == 0 {
-		indexString = ""
-	}
-
-	content += indexString
-	content += "\""
-
-	content += fmt.Sprintf(" comment:\"%s\"", col.Comment)
-
-	content += fmt.Sprintf(" json:\"%s,omitempty\"", col.FieldName)
-
-	if startwith == 0 {
-		content += fmt.Sprintf(" startwith:\"%d\"", startwith)
-	}
-
-	content += fmt.Sprintf(" bson:\",omitempty\"")
-
-	content += fmt.Sprintf(" msgpack:\"%s,omitempty\"", col.FieldName)
-
-	if string(column["fk"]) != "" {
-		content += fmt.Sprintf(" fk:\"%s\"", column["fk"])
-	}
-
-	content += "`\n"
-
-	return content, col
-
-}
 
 func (db *mssql) IsColumnExist(table *core.Table, column *core.Column) (bool, error, *core.Column) {
 	query := `SELECT "COLUMN_NAME" FROM "INFORMATION_SCHEMA"."COLUMNS" WHERE "TABLE_NAME" = ? AND "COLUMN_NAME" = ?`
@@ -897,9 +711,9 @@ func (p *odbcDriver) Parse(driverName, dataSourceName string) (*core.Uri, error)
 func (db *mssql) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
 	sql := `SELECT
 	c.object_id,
-	tName = c. NAME,
+	tName = c.NAME,
 	tComment = isnull(f. VALUE, ''),
-	NAME = a. NAME,
+	NAME = a.NAME,
 	sortcode = a.Column_id,
 	autoincr = CASE
 WHEN is_identity = 1 THEN
@@ -922,31 +736,31 @@ WHEN EXISTS (
 			WHERE
 				INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'PRIMARY KEY'
 		)
-	AND c. NAME = u.TABLE_NAME
-	AND a. NAME = u.COLUMN_NAME
+	AND c.NAME = u.TABLE_NAME
+	AND a.NAME = u.COLUMN_NAME
 ) THEN
 	1
 ELSE
 	0
 END,
  fk = T.f_tab + '(' + T.f_clon + ')',
- type = b. NAME,
+ type = b.NAME,
  byte = CASE
 WHEN a.max_length = - 1
-AND b. NAME != 'xml' THEN
+AND b.NAME != 'xml' THEN
 	'max/2G'
-WHEN b. NAME = 'xml' THEN
+WHEN b.NAME = 'xml' THEN
 	' 2^31-1字节/2G'
 ELSE
 	rtrim(a.max_length)
 END,
- length = ColumnProperty (
+ length = ColumnProperty(
 	a.object_id,
-	a. NAME,
+	a.NAME,
 	'Precision'
 ),
  PRECISION = isnull(
-	ColumnProperty (a.object_id, a. NAME, 'Scale'),
+	ColumnProperty(a.object_id, a.NAME, 'Scale'),
 	0
 ),
  nullable = CASE
@@ -956,11 +770,11 @@ ELSE
 	0
 END,
  comments = isnull(e. VALUE, ''),
- defaultvalue = isnull(d.text, ''),
+ defaultvalue = isnull(d. TEXT, ''),
  indexes = g.val,
  indexnum = isnull(g.indexNum, 0)
 FROM
-	sys. COLUMNS a
+	sys.COLUMNS a
 LEFT JOIN sys.types b ON a.user_type_id = b.user_type_id
 INNER JOIN sys.objects c ON a.object_id = c.object_id
 AND c.Type = 'U'
@@ -968,11 +782,11 @@ LEFT JOIN syscomments d ON a.default_object_id = d.ID
 LEFT JOIN sys.extended_properties e ON e.major_id = c.object_id
 AND e.minor_id = a.Column_id
 AND e.class = 1
-AND e. NAME = 'MS_Description'
+AND e.NAME = 'MS_Description'
 LEFT JOIN sys.extended_properties f ON f.major_id = c.object_id
 AND f.minor_id = 0
 AND f.class = 1
-AND f. NAME = 'MS_Description'
+AND f.NAME = 'MS_Description'
 LEFT JOIN (
 	SELECT
 		m_tab,
@@ -982,11 +796,11 @@ LEFT JOIN (
 	FROM
 		(
 			SELECT
-				O3. NAME F_NAME,
-				O1. NAME M_TAB,
-				O2. NAME F_TAB,
-				L1. NAME M_CLON,
-				L2. NAME F_CLON
+				O3.NAME F_NAME,
+				O1.NAME M_TAB,
+				O2.NAME F_TAB,
+				L1.NAME M_CLON,
+				L2.NAME F_CLON
 			FROM
 				SYSFOREIGNKEYS A,
 				SYSOBJECTS O1,
@@ -1005,11 +819,12 @@ LEFT JOIN (
 			AND O1.XTYPE = 'U'
 			AND O2.XTYPE = 'U'
 		) M
-) T ON T.m_tab = c. NAME
-AND T.m_clon = a. NAME
+) T ON T.m_tab = c.NAME
+AND T.m_clon = a.NAME
 LEFT JOIN (
 	SELECT
 		c_name,
+    object_id,
 		val = (
 			SELECT
 				i_name + ' '
@@ -1019,16 +834,17 @@ LEFT JOIN (
 						SELECT
 							CASE a1.is_unique
 						WHEN 1 THEN
-							'unique(' + a1. NAME + ')'
+							'unique(' + a1.NAME + ')'
 						ELSE
-							'index(' + a1. NAME + ')'
+							'index(' + a1.NAME + ')'
 						END i_name,
-						c1. NAME c_name
+						c1.NAME c_name,
+            c1.object_id object_id
 					FROM
 						sys.indexes a1
 					INNER JOIN sys.index_columns b1 ON a1.index_id = b1.index_id
-					INNER JOIN sys. COLUMNS c1 ON b1.column_id = c1.column_id
-					INNER JOIN sys. TABLES d1 ON c1.object_id = d1.object_id
+					INNER JOIN sys.COLUMNS c1 ON b1.column_id = c1.column_id and c1.object_id=a1.object_id
+					INNER JOIN sys.TABLES d1 ON c1.object_id = d1.object_id
 					WHERE
 						d1.object_id = a1.object_id
 					AND b1.object_id = d1.object_id
@@ -1036,83 +852,36 @@ LEFT JOIN (
 					)
 				) bb
 			WHERE
-				bb.c_name = aa.c_name FOR XML path ('')
+				bb.c_name = aa.c_name and bb.object_id=aa.object_id FOR XML path ('')
 		),
-		count(*) indexNum
+		COUNT (*) indexNum
 	FROM
 		(
 			SELECT
-				a2. NAME i_name,
-				c2. NAME c_name
+				a2.NAME i_name,
+				c2.NAME c_name,
+        c2.object_id object_id
 			FROM
 				sys.indexes a2
 			INNER JOIN sys.index_columns b2 ON a2.index_id = b2.index_id
-			INNER JOIN sys. COLUMNS c2 ON b2.column_id = c2.column_id
-			INNER JOIN sys. TABLES d2 ON c2.object_id = d2.object_id
+			INNER JOIN sys.COLUMNS c2 ON b2.column_id = c2.column_id and c2.object_id=a2.object_id
+			INNER JOIN sys.TABLES d2 ON c2.object_id = d2.object_id
 			WHERE
 				d2.object_id = a2.object_id
 			AND b2.object_id = d2.object_id
 			AND a2.is_primary_key <> 1
 		) aa
 	GROUP BY
-		c_name
-) g ON g.c_name = a. NAME
+		c_name,object_id
+) g ON g.c_name = a.NAME and g.object_id=a.object_id
 `
-	result := make(map[string]map[string]*core.Column)
-	columnProperties := make(map[string]map[string]map[string]string)
 	rows, err := db.DB().Query(sql)
+
+	if err != nil {
+		panic(err)
+	}
+
 	defer rows.Close()
 
-	if err != nil {
-		panic(err)
-	}
-
-	cols, err := rows.Columns()
-
-	if err != nil {
-		panic(err)
-	}
-
-	for rows.Next() {
-		slice := make([]interface{}, len(cols))
-		err = rows.ScanSlice(&slice)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		tName := slice[1].(string) //表名
-		cName := slice[3].(string) //列明
-		if columnProperties[tName] == nil {
-			columnProperties[tName] = make(map[string]map[string]string)
-			result[tName] = make(map[string]*core.Column)
-		}
-		if columnProperties[tName][cName] == nil {
-			columnProperties[tName][cName] = make(map[string]string)
-			columnProperties[tName][cName]["name"]=cName
-			result[tName][cName] = &core.Column{}
-
-		}
-		for idx, colName := range cols {
-			if idx <= 3 { //object_id tName
-				continue
-			}
-
-			if slice[idx] == nil {
-				columnProperties[tName][cName][colName] = ""
-				continue
-			}
-			colKind := reflect.TypeOf(slice[idx]).Kind()
-			switch colKind {
-			case reflect.String:
-				columnProperties[tName][cName][colName] = slice[idx].(string)
-			case reflect.Int64:
-				columnProperties[tName][cName][colName] = strconv.FormatInt(slice[idx].(int64), 10)
-			default:
-				panic("not except type ")
-			}
-
-		}
-		_, col := TransMapStringColumn(50, columnProperties[tName][cName])
-		result[tName][cName] = col
-	}
-	return result, nil
+	return core.GetStringColumnFormRows(rows), nil
 }

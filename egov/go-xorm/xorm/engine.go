@@ -955,7 +955,6 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 	var idFieldColName string
 	var hasCacheTag, hasNoCacheTag bool
 
-
 	for i := 0; i < t.NumField(); i++ {
 		tag := t.Field(i).Tag
 		//fmt.Println("tag:",tag)
@@ -977,7 +976,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 			col = &core.Column{FieldName: t.Field(i).Name, Nullable: true, IsPrimaryKey: false,
 				IsAutoIncrement: false, MapType: core.TWOSIDES, Indexes: make(map[string]int)}
 			tags := splitTag(ormTagStr)
-			col.XormTag=ormTagStr
+			col.XormTag = ormTagStr
 
 			if len(tags) > 0 {
 				if tags[0] == "-" {
@@ -1000,7 +999,6 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 				}
 
 				for j, key := range tags {
-
 
 					if ctx.ignoreNext {
 						ctx.ignoreNext = false
@@ -1475,30 +1473,27 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 	return false
 }
 
-
-
-func (Engine *Engine)RevertDatabase()(map[string]*core.Table){
-	result:=make(map[string]*core.Table)
-	tables,err:=Engine.dialect.GetTables()
-	if err!=nil{
+func (Engine *Engine) RevertDatabase() (map[string]*core.Table) {
+	result := make(map[string]*core.Table)
+	tables, err := Engine.dialect.GetTables()
+	if err != nil {
 		panic(err)
 	}
-	for _,table:=range tables{
-		_,cols,err:=Engine.dialect.GetColumns(table.Name)
-		if err!=nil{
+	for _, table := range tables {
+		_, cols, err := Engine.dialect.GetColumns(table.Name)
+		if err != nil {
 			panic(err)
 		}
-		for _,cols:=range cols{
+		for _, cols := range cols {
 			table.AddColumn(cols)
 		}
-		result[table.Name]=table
+		result[table.Name] = table
 	}
 	return result
 
 }
 
-
-func (engine *Engine)SyncFast(tableMaps map[string]map[string]*core.Column, beans ...interface{})error{
+func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, beans ...interface{}) error {
 
 	for _, bean := range beans {
 		v := rValue(bean)
@@ -1506,42 +1501,19 @@ func (engine *Engine)SyncFast(tableMaps map[string]map[string]*core.Column, bean
 		table, err := engine.autoMapType(v)
 		s := engine.NewSession()
 		defer s.Close()
-		_,isExist:=tableMaps[tableName]
+		_, isExist := tableMaps[tableName]
 		if !isExist {
 			err = engine.CreateTables(bean)
 			if err != nil {
 				fmt.Println(err)
 				return err
 			}
-			continue
-		} else {
-			///todo 如果表存在，则修改自增长字段起始值
-			//fmt.Sprintln("如果表存在，则修改自增长字段起始值")
-			//engine.AlterAutoIncrement(bean)
-
-		}
-
-		//由于表结构基于数据库建立，不考虑下面的操作 by chaos
-		/*isEmpty, err := engine.IsEmptyTable(bean)
-		  if err != nil {
-		      return err
-		  }*/
-		var isEmpty = false
-		if isEmpty {
-			err = engine.DropTables(bean)
-			if err != nil {
-				return err
-			}
-			err = engine.CreateTables(bean)
-			if err != nil {
-				return err
-			}
 		} else {
 
 			for _, col := range table.Columns() {
-				phyCol,isExist:= tableMaps[tableName][col.Name]
-				if isExist&&col.XormTag!=phyCol.XormTag{
-					fmt.Println(table.Name,col.Name," modify from ",phyCol.XormTag,"to",col.XormTag)
+				phyCol, isExist := tableMaps[tableName][col.Name]
+				if isExist && col.XormTag != phyCol.XormTag {
+					fmt.Println(table.Name, col.Name, " modify from ", phyCol.XormTag, "to", col.XormTag)
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
 				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
@@ -1573,56 +1545,58 @@ func (engine *Engine)SyncFast(tableMaps map[string]map[string]*core.Column, bean
 					}
 				}
 			}
+		}
 
-			for name, index := range table.Indexes {
-				session := engine.NewSession()
-				defer session.Close()
-				if err := session.Statement.setRefValue(v); err != nil {
+		for name, index := range table.Indexes {
+			session := engine.NewSession()
+			defer session.Close()
+			if err := session.Statement.setRefValue(v); err != nil {
+				return err
+			}
+			if index.Type == core.UniqueType {
+				//isExist, err := session.isIndexExist(table.Name, name, true)
+				isExist, err := session.isIndexExist2(tableName, index.Cols, true)
+				if err != nil {
 					return err
 				}
-				if index.Type == core.UniqueType {
-					//isExist, err := session.isIndexExist(table.Name, name, true)
-					isExist, err := session.isIndexExist2(tableName, index.Cols, true)
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+
+					err = session.addUnique(tableName, name)
 					if err != nil {
 						return err
 					}
-					if !isExist {
-						session := engine.NewSession()
-						defer session.Close()
-						if err := session.Statement.setRefValue(v); err != nil {
-							return err
-						}
-
-						err = session.addUnique(tableName, name)
-						if err != nil {
-							return err
-						}
-					}
-				} else if index.Type == core.IndexType {
-					isExist, err := session.isIndexExist2(tableName, index.Cols, false)
-					if err != nil {
-						return err
-					}
-					if !isExist {
-						session := engine.NewSession()
-						defer session.Close()
-						if err := session.Statement.setRefValue(v); err != nil {
-							return err
-						}
-
-						err = session.addIndex(tableName, name)
-						if err != nil {
-							return err
-						}
-					}
-				} else {
-					return errors.New("unknow index type")
 				}
+			} else if index.Type == core.IndexType {
+				isExist, err := session.isIndexExist2(tableName, index.Cols, false)
+				if err != nil {
+					return err
+				}
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+
+					err = session.addIndex(tableName, name)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				return errors.New("unknow index type")
 			}
 		}
 	}
+
 	return nil
 }
+
 // Sync the new struct changes to database, this method will automatically add
 // table, column, index, unique. but will not delete or change anything.
 // If you change some field, you should change the database manually.
@@ -1671,7 +1645,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		} else {
 
 			for _, col := range table.Columns() {
-				isExist, err,_:= engine.dialect.IsColumnExist(table, col)
+				isExist, err, _ := engine.dialect.IsColumnExist(table, col)
 				if err != nil {
 					return err
 				}
