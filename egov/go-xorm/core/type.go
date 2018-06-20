@@ -99,6 +99,7 @@ var (
 	MediumBlob = "MEDIUMBLOB"
 	LongBlob   = "LONGBLOB"
 	Bytea      = "BYTEA"
+	Image      = "IMAGE"
 
 	Bool = "BOOL"
 
@@ -290,7 +291,7 @@ func SQLType2Type(st SQLType) reflect.Type {
 		return reflect.TypeOf(float64(1))
 	case Char, Varchar, NVarchar, TinyText, Text, MediumText, LongText, Enum, Set, Uuid, Clob:
 		return reflect.TypeOf("")
-	case TinyBlob, Blob, LongBlob, Bytea, Binary, MediumBlob, VarBinary:
+	case TinyBlob, Blob, LongBlob, Bytea, Binary, MediumBlob, VarBinary,Image:
 		return reflect.TypeOf([]byte{})
 	case Bool:
 		return reflect.TypeOf(true)

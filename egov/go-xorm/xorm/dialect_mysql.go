@@ -233,14 +233,14 @@ func (db *mysql) SqlType(c *core.Column) string {
 	case core.TinyInt:
 		res = core.TinyInt
 		c.Length = 4
-	case core.Binary:
-		if c.Length > 255 {
-			c.SQLType.Name = core.Blob
+	case core.Image:
+		//if c.Length > 255 {
+		//	c.SQLType.Name = core.Blob
 			res = core.Blob
-			c.Length = 0
-		} else {
-			res = core.Binary
-		}
+		//	c.Length = 0
+		//} else {
+		//	res = core.Binary
+		//}
 	case core.Varchar:
 		if c.Length > 1000 {
 			c.SQLType.Name = core.Text

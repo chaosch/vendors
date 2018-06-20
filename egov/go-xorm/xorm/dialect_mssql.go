@@ -232,11 +232,11 @@ func (db *mssql) SqlType(c *core.Column) string {
 		c.IsPrimaryKey = true
 		c.Nullable = false
 		res = core.BigInt
-	case core.Bytea, core.Blob, core.Binary, core.TinyBlob, core.MediumBlob, core.LongBlob:
-		res = core.Binary
-		if c.Length == 0 {
-			c.Length = 50
-		}
+	case core.Bytea, core.Blob, core.Binary, core.TinyBlob, core.MediumBlob, core.LongBlob,core.Image:
+		res = core.Image
+		//if c.Length == 0 {
+		//	c.Length = 50
+		//}
 	case core.TimeStamp:
 		res = core.DateTime
 	case core.TimeStampz:
@@ -885,3 +885,4 @@ LEFT JOIN (
 
 	return core.GetStringColumnFormRows(rows), nil
 }
+

@@ -368,28 +368,28 @@ func (db *Base) GetPhysicalColumn(table *Table, column *Column) *Column {
 }
 
 func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
-	sql := `select 	
+	sql := `select  	
   1 object_id,
-	table_name tName ,
+	table_name tName  ,
 	'' tComment,
 	column_name NAME,
 	ORDINAL_POSITION  sortcode,
 	0 autoincr,
   case COLUMN_KEY when 'PRI' then 1 else 0 end pk,
   0 fk,
-  '' type,
+  data_type type,
   0 byte,
-  case DATA_TYPE when 'VARCHAR' then CHARACTER_MAXIMUM_LENGTH when 'BINARY' then 0 else 1 end  length,
-  0 %sPRECISION%s,
+  case DATA_TYPE when 'varchar' then CHARACTER_MAXIMUM_LENGTH when 'binary' then 0 else 1 end  length,
+  0 %[1]sPRECISION%[1]s,
   case IS_NULLABLE when  'YES' then 1 else 0 end nullable,
   COLUMN_COMMENT comments,
-  COLUMN_DEFAULT defaultvalue,
+  case DATA_TYPE when 'varchar' then CONCAT('(''',COLUMN_DEFAULT,''')') else CONCAT('((',COLUMN_DEFAULT,'))') end	defaultvalue,
   '' indexes,
   0 indexnum
 from information_schema.COLUMNS where TABLE_SCHEMA=?
 `
-    sql=fmt.Sprintf(sql,"`","`")
-	rows, err := db.DB().Query(sql,db.DbName)
+	sql = fmt.Sprintf(sql, "`")
+	rows, err := db.DB().Query(sql, db.DbName)
 
 	if err != nil {
 		panic(err)
@@ -414,8 +414,30 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		tName := slice[1].(string) //表名
-		cName := slice[3].(string) //列明
+		//var colType reflect.Type
+		//switch dbType {
+		//case MYSQL:
+		//	colType=reflect.TypeOf([]byte)
+		//case MSSQL:
+		//	colType=reflect.TypeOf("")
+		//default:
+		//	colType=reflect.TypeOf([]byte)
+		//}
+		tName := ""
+		cName := ""
+		if x, ok := slice[1].([]byte); !ok {
+			tName = slice[1].(string)
+		} else {
+			tName = string(x)
+		}
+		//tName := string(slice[1].([]byte)) //表名
+		//cName := string(slice[3].([]byte)) //列明
+		if x, ok := slice[3].([]byte); !ok {
+			cName = slice[3].(string)
+		} else {
+			cName = string(x)
+		}
+
 		if columnProperties[tName] == nil {
 			columnProperties[tName] = make(map[string]map[string]string)
 			result[tName] = make(map[string]*Column)
@@ -437,12 +459,12 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 			}
 			colKind := reflect.TypeOf(slice[idx]).Kind()
 			switch colKind {
-			case reflect.String:
-				columnProperties[tName][cName][colName] = slice[idx].(string)
 			case reflect.Int64:
 				columnProperties[tName][cName][colName] = strconv.FormatInt(slice[idx].(int64), 10)
+			case reflect.String:
+				columnProperties[tName][cName][colName] = slice[idx].(string)
 			default:
-				panic("not except type ")
+				columnProperties[tName][cName][colName] = string(slice[idx].([]byte))
 			}
 
 		}
@@ -475,7 +497,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	typeString := ""
 	if !col.IsPrimaryKey {
-		if col.SQLType.Name != Binary {
+		if col.SQLType.Name != Image {
 			if col.SQLType.Name == "TINYINT" {
 				typeString = "*Boolean"
 			} else {
@@ -485,9 +507,8 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 			typeString = SQLType2Type(col.SQLType).String()
 		}
 	} else {
-		if col.SQLType.Name != Binary {
+		if col.SQLType.Name != Image {
 			typeString = "*" + SQLType2Type(col.SQLType).String()
-
 		} else {
 			typeString = SQLType2Type(col.SQLType).String()
 		}
