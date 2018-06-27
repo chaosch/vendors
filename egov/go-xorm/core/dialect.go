@@ -288,7 +288,7 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		sql = sql[:len(sql)-2]
 
 	}
-	sql += ")"
+	sql += ") comment='"+table.comment+"'"
 	//fmt.Println(table.AutoIncrement)
 	///去除自增长字段
 	if len(table.AutoIncrement) > 0 {

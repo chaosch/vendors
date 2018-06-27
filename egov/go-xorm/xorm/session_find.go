@@ -287,6 +287,9 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 	var rawRows *core.Rows
 	var err error
 
+	//if session.Engine.showSQL {
+	//	fmt.Println(sqlStr)
+	//}
 	session.queryPreprocess(&sqlStr, args...)
 	if session.IsAutoCommit {
 		_, rawRows, err = session.innerQuery(sqlStr, args...)
@@ -375,7 +378,7 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 		return session.rows2Beans(rawRows, fields, len(fields), tb, newElemFunc, containerValueSetFunc)
 	}
 
-	rawRows.ColumnTypes=session.Engine.ColumnTypes
+	rawRows.ColumnTypes = session.Engine.ColumnTypes
 
 	for rawRows.Next() {
 		var newValue = newElemFunc(fields)
