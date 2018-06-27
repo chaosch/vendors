@@ -296,13 +296,8 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		sql = sql[:len(sql)-2]
 
 	}
-	if strings.HasPrefix(tableName,"dic_"){
-		if c,ok:=b.Dictionaries[tableName];ok{
-			sql += ") Comment='" + table.Comment + "'"
-		}
-	}else{
+	sql += ") Comment='" + table.Comment + "'"
 
-	}
 	//fmt.Println(table.AutoIncrement)
 	///去除自增长字段
 	if len(table.AutoIncrement) > 0 {
