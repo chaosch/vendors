@@ -280,7 +280,7 @@ func (db *mssql) SqlType(c *core.Column) string {
 
 func (db *mssql) SetTableComment(d map[string]string, t map[string]string) {
 	db.DataTable = t
-	db.Dictionaries = t
+	db.Dictionaries = d
 }
 
 func (db *mssql) SupportInsertMany() bool {

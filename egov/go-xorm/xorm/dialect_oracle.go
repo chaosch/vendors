@@ -505,7 +505,7 @@ type oracle struct {
 
 func (db *oracle) SetTableComment(d map[string]string, t map[string]string) {
 	db.DataTable = t
-	db.Dictionaries = t
+	db.Dictionaries = d
 }
 
 func (db *oracle) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
