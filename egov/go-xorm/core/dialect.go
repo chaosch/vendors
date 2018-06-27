@@ -103,7 +103,7 @@ type Base struct {
 
 func (b *Base) SetTableComment(d map[string]string, t map[string]string) {
 	b.DataTable = t
-	b.Dictionaries = t
+	b.Dictionaries = d
 }
 
 func (b *Base) DB() *DB {
