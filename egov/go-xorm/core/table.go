@@ -22,7 +22,7 @@ type Table struct {
 	Cacher        Cacher
 	StoreEngine   string
 	Charset       string
-	comment string
+	Comment       string
 }
 
 func (table *Table) Columns() []*Column {
@@ -45,7 +45,7 @@ func NewTable(name string, t reflect.Type) *Table {
 		Indexes:     make(map[string]*Index),
 		Created:     make(map[string]bool),
 		PrimaryKeys: make([]string, 0),
-		comment:"",
+		Comment:"",
 	}
 }
 

@@ -62,6 +62,10 @@ func (engine *Engine) GetTagHandlers() map[string]tagHandler {
 	return engine.tagHandlers
 }
 
+func (engine *Engine) SetTableComment() {
+	engine.dialect.SetTableComment(engine.Dictionaries, engine.DataTables)
+}
+
 // ShowSQL show SQL statement or not on logger if log level is great than INFO
 func (engine *Engine) ShowSQL(show ...bool) {
 	engine.logger.ShowSQL(show...)
@@ -1608,6 +1612,15 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		v := rValue(bean)
 		tableName := engine.tbName(v)
 		table, err := engine.autoMapType(v)
+		if strings.HasPrefix(tableName, "dic_") {
+			if c, ok := engine.Dictionaries[tableName]; ok {
+				table.Comment = c
+			}
+		} else {
+			if c, ok := engine.DataTables[tableName]; ok {
+				table.Comment = c
+			}
+		}
 		s := engine.NewSession()
 		defer s.Close()
 		isExist, err := s.Table(bean).isTableExist(tableName)

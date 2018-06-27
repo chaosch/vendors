@@ -277,6 +277,12 @@ func (db *mssql) SqlType(c *core.Column) string {
 	return res
 }
 
+
+func (db *mssql) SetTableComment(d map[string]string, t map[string]string) {
+	db.DataTable = t
+	db.Dictionaries = t
+}
+
 func (db *mssql) SupportInsertMany() bool {
 	return true
 }
@@ -655,7 +661,7 @@ func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 		sql += strings.Join(pkList, ",")
 		sql += " ), "
 	}
-
+	sqlcomment += fmt.Sprintf("sp_addextendedproperty 'MS_Description', '%s', 'user', 'dbo', 'table', '%s'", table.Comment, tableName)
 	sql = sql[:len(sql)-2] + ")"
 	sql += ";" + sqlcomment
 	return sql

@@ -83,6 +83,7 @@ type Dialect interface {
 	//IsColumnDifferent(tableName string,colName string,column Column)
 
 	Filters() []Filter
+	SetTableComment(d map[string]string, t map[string]string)
 }
 
 func OpenDialect(dialect Dialect) (*DB, error) {
@@ -96,6 +97,13 @@ type Base struct {
 	dataSourceName string
 	logger         ILogger
 	*Uri
+	DataTable      map[string]string
+	Dictionaries   map[string]string
+}
+
+func (b *Base) SetTableComment(d map[string]string, t map[string]string) {
+	b.DataTable = t
+	b.Dictionaries = t
 }
 
 func (b *Base) DB() *DB {
@@ -243,7 +251,7 @@ func (db *Base) ModifyColumnSql(tableName string, col *Column) string {
 		//		fmt.Println(sql)
 		return sql
 	} else {
-		return fmt.Sprintf("alter table %s MODIFY COLUMN %s comment '%s'", tableName, col.StringNoPk(db.dialect), col.Comment)
+		return fmt.Sprintf("alter table %s MODIFY COLUMN %s Comment '%s'", tableName, col.StringNoPk(db.dialect), col.Comment)
 	}
 }
 
@@ -270,7 +278,7 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 			}
 			sql = strings.TrimSpace(sql)
 			if len(col.Comment) > 0 {
-				sql += fmt.Sprintf(" comment '%s'", col.Comment)
+				sql += fmt.Sprintf(" Comment '%s'", col.Comment)
 			}
 			sql += ", "
 
@@ -288,7 +296,13 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		sql = sql[:len(sql)-2]
 
 	}
-	sql += ") comment='"+table.comment+"'"
+	if strings.HasPrefix(tableName,"dic_"){
+		if c,ok:=b.Dictionaries[tableName];ok{
+			sql += ") Comment='" + table.Comment + "'"
+		}
+	}else{
+
+	}
 	//fmt.Println(table.AutoIncrement)
 	///去除自增长字段
 	if len(table.AutoIncrement) > 0 {
@@ -626,7 +640,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	content += indexString
 	content += "\""
 
-	content += fmt.Sprintf(" comment:\"%s\"", col.Comment)
+	content += fmt.Sprintf(" Comment:\"%s\"", col.Comment)
 
 	content += fmt.Sprintf(" json:\"%s,omitempty\"", col.FieldName)
 

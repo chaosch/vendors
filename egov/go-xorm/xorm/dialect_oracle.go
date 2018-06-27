@@ -502,6 +502,12 @@ type oracle struct {
 	core.Base
 }
 
+
+func (db *oracle) SetTableComment(d map[string]string, t map[string]string) {
+	db.DataTable = t
+	db.Dictionaries = t
+}
+
 func (db *oracle) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
 	return db.Base.Init(d, db, uri, drivername, dataSourceName)
 }
@@ -663,8 +669,10 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 			sql += " DEFAULT CHARSET " + charset
 		}
 	}
+
+	sqlcomment+=fmt.Sprintf(" comment on column %s is '%s';", table.Name, )
 	//fmt.Println(sql)
-	return sql + ";" + sequencesql + ";" + sqlcomment
+	return sql + ";"  + sqlcomment
 }
 
 func (db *oracle) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string) {
