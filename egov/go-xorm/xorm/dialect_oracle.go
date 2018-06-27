@@ -620,7 +620,6 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 		sql += db.QuoteStr() + col.Name + db.QuoteStr() + " "
 
 		sql += db.SqlType(col) + " "
-
 		if col.Default != "" {
 			sql += "DEFAULT " + col.Default + " "
 		}
@@ -742,9 +741,13 @@ func (db *oracle) IsColumnExist(table *core.Table, column *core.Column) (bool, e
 
 func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
 	args := []interface{}{tableName}
-	s := "SELECT column_name,data_default,data_type,data_length,data_precision,data_scale," +
-		"nullable FROM USER_TAB_COLUMNS WHERE table_name = :1"
+	s := "SELECT lower(a.column_name) column_name,null data_default,data_type,data_length,data_precision,data_scale, " +
+		"nullable,b.comments comments FROM USER_TAB_COLUMNS a ,user_col_comments b where a.table_name=b.table_name and a.column_name=b.column_name and a.table_name = upper( :1) order by a.column_id"
 	db.LogSQL(s, args)
+
+	//x,err:=db.DB().Exec(s,args)
+	//
+	//fmt.Println(x.RowsAffected())
 
 	rows, err := db.DB().Query(s, args...)
 	if err != nil {
@@ -758,19 +761,24 @@ func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Colum
 		col := new(core.Column)
 		col.Indexes = make(map[string]int)
 
-		var colName, colDefault, nullable, dataType, dataPrecision, dataScale *string
+		var colName, colDefault, nullable, dataType, dataPrecision, comments, dataScale *string
 		var dataLen int
 
 		err = rows.Scan(&colName, &colDefault, &dataType, &dataLen, &dataPrecision,
-			&dataScale, &nullable)
+			&dataScale, &nullable, &comments)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		col.Name = strings.Trim(*colName, `" `)
+		if comments != nil {
+			col.Comment = *comments
+		}
+		col.DefaultIsEmpty = true
 		if colDefault != nil {
 			col.Default = *colDefault
-			col.DefaultIsEmpty = false
+			if *colDefault != "''" {
+				col.DefaultIsEmpty = false
+			}
 		}
 
 		if *nullable == "Y" {
@@ -798,18 +806,25 @@ func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Colum
 		switch dt {
 		case "VARCHAR2":
 			col.SQLType = core.SQLType{Name: core.Varchar, DefaultLength: len1, DefaultLength2: len2}
+			col.Length = dataLen
 		case "NVARCHAR2":
-			col.SQLType = core.SQLType{Name: core.NVarchar, DefaultLength: len1, DefaultLength2: len2}
+			col.SQLType = core.SQLType{Name: core.Varchar, DefaultLength: len1, DefaultLength2: len2}
+			col.Length = dataLen
 		case "TIMESTAMP WITH TIME ZONE":
-			col.SQLType = core.SQLType{Name: core.TimeStampz, DefaultLength: 0, DefaultLength2: 0}
+			col.SQLType = core.SQLType{Name: core.DateTime, DefaultLength: 0, DefaultLength2: 0}
 		case "NUMBER":
-			col.SQLType = core.SQLType{Name: core.Double, DefaultLength: len1, DefaultLength2: len2}
+			col.SQLType = core.SQLType{Name: core.BigInt, DefaultLength: len1, DefaultLength2: len2}
+		case "CLOB":
+			col.SQLType = core.SQLType{Name: core.Text, DefaultLength: len1, DefaultLength2: len2}
+		case "DATE":
+			col.SQLType = core.SQLType{Name: core.DateTime, DefaultLength: 0, DefaultLength2: 0}
 		case "LONG", "LONG RAW":
 			col.SQLType = core.SQLType{Name: core.Text, DefaultLength: 0, DefaultLength2: 0}
 		case "RAW":
 			col.SQLType = core.SQLType{Name: core.Binary, DefaultLength: 0, DefaultLength2: 0}
 		case "ROWID":
 			col.SQLType = core.SQLType{Name: core.Varchar, DefaultLength: 18, DefaultLength2: 0}
+			col.Length = 18
 		case "AQ$_SUBSCRIBERS":
 			ignore = true
 		default:
@@ -823,8 +838,6 @@ func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Colum
 		if _, ok := core.SqlTypes[col.SQLType.Name]; !ok {
 			return nil, nil, fmt.Errorf("Unknown colType %v %v", *dataType, col.SQLType)
 		}
-
-		col.Length = dataLen
 
 		if col.SQLType.IsText() || col.SQLType.IsTime() {
 			if !col.DefaultIsEmpty {
@@ -840,7 +853,7 @@ func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Colum
 
 func (db *oracle) GetTables() ([]*core.Table, error) {
 	args := []interface{}{}
-	s := "SELECT table_name FROM user_tables"
+	s := "SELECT lower(table_name) table_name FROM user_tables"
 	db.LogSQL(s, args)
 
 	rows, err := db.DB().Query(s, args...)
@@ -865,7 +878,7 @@ func (db *oracle) GetTables() ([]*core.Table, error) {
 func (db *oracle) GetIndexes(tableName string) (map[string]*core.Index, error) {
 	args := []interface{}{tableName}
 	s := "SELECT t.column_name,i.uniqueness,i.index_name FROM user_ind_columns t,user_indexes i " +
-		"WHERE t.index_name = i.index_name and t.table_name = i.table_name and t.table_name =:1"
+		"WHERE t.index_name = upper(i.index_name) and t.table_name = upper(i.table_name) and t.table_name =upper(:1)"
 	db.LogSQL(s, args)
 
 	rows, err := db.DB().Query(s, args...)

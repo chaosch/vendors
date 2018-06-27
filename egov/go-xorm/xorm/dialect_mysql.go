@@ -326,7 +326,7 @@ func (db *mysql) TableCheckSql(tableName string) (string, []interface{}) {
 func (db *mysql) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
 	args := []interface{}{db.DbName, tableName}
 	s := "SELECT `COLUMN_NAME`, `IS_NULLABLE`, `COLUMN_DEFAULT`, `COLUMN_TYPE`," +
-		" `COLUMN_KEY`, `EXTRA` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
+		" `COLUMN_KEY`, `EXTRA`,`COLUMN_COMMENT` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ? order by ordinal_position"
 	db.LogSQL(s, args)
 
 	rows, err := db.DB().Query(s, args...)
@@ -341,9 +341,9 @@ func (db *mysql) GetColumns(tableName string) ([]string, map[string]*core.Column
 		col := new(core.Column)
 		col.Indexes = make(map[string]int)
 
-		var columnName, isNullable, colType, colKey, extra string
+		var columnName, isNullable, colType, colKey, extra,comments string
 		var colDefault *string
-		err = rows.Scan(&columnName, &isNullable, &colDefault, &colType, &colKey, &extra)
+		err = rows.Scan(&columnName, &isNullable, &colDefault, &colType, &colKey, &extra,&comments)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -354,7 +354,7 @@ func (db *mysql) GetColumns(tableName string) ([]string, map[string]*core.Column
 
 		if colDefault != nil {
 			col.Default = *colDefault
-			if col.Default == "" {
+			if col.Default == "''" {
 				col.DefaultIsEmpty = true
 			}
 		}
@@ -362,6 +362,9 @@ func (db *mysql) GetColumns(tableName string) ([]string, map[string]*core.Column
 		cts := strings.Split(colType, "(")
 		colName := cts[0]
 		colType = strings.ToUpper(colName)
+		if comments!=""{
+			col.Comment=comments
+		}
 		var len1, len2 int
 		if len(cts) == 2 {
 			idx := strings.Index(cts[1], ")")

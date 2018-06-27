@@ -54,6 +54,8 @@ type Engine struct {
 	EngineName         string
 	CurrentSqlMap      map[string]string
 	ColumnTypes        map[string]reflect.Kind
+	Dictionaries       map[string]string
+	DataTables         map[string]string
 }
 
 func (engine *Engine) GetTagHandlers() map[string]tagHandler {
