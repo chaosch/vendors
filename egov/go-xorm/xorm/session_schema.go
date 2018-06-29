@@ -328,6 +328,25 @@ func (session *Session) addColumn(col *core.Column) error {
 	return nil
 }
 
+
+func (session *Session) AddColumn(col *core.Column) error {
+	//	colName:=col.Name
+	defer session.resetStatement()
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+
+	//col := session.Statement.RefTable.GetColumn(colName)
+	sqls, args := session.Statement.genAddColumnStr(col)
+	for _, sql := range sqls {
+		_, err := session.exec(sql, args...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (session *Session) addIndex(tableName, idxName string) error {
 	defer session.resetStatement()
 	if session.IsAutoClose {
