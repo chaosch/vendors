@@ -318,33 +318,27 @@ func (session *Session) addColumn(col *core.Column) error {
 	}
 
 	//col := session.Statement.RefTable.GetColumn(colName)
+	var res error
 	sqls, args := session.Statement.genAddColumnStr(col)
 	for _, sql := range sqls {
+		if session.Engine.dialect.DBType()==core.ORACLE{
+			session=session.Engine.Table(col.TableName)
+		}
 		_, err := session.exec(sql, args...)
 		if err != nil {
-			return err
+			if res != nil {
+				res = errors.New(res.Error() + ":" + err.Error())
+			} else {
+				res = err
+			}
 		}
 	}
-	return nil
+	return res
 }
-
 
 func (session *Session) AddColumn(col *core.Column) error {
 	//	colName:=col.Name
-	defer session.resetStatement()
-	if session.IsAutoClose {
-		defer session.Close()
-	}
-
-	//col := session.Statement.RefTable.GetColumn(colName)
-	sqls, args := session.Statement.genAddColumnStr(col)
-	for _, sql := range sqls {
-		_, err := session.exec(sql, args...)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return session.addColumn(col)
 }
 
 func (session *Session) addIndex(tableName, idxName string) error {

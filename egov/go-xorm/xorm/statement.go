@@ -1134,6 +1134,9 @@ func (statement *Statement) genAddColumnStr(col *core.Column) ([]string, []inter
 	if col.Comment!=""&&statement.Engine.dialect.DBType()==core.MSSQL{
 		sqlComment:=fmt.Sprintf("EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'%s', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'%s', @level2type = N'COLUMN', @level2name = N'%s'",col.Comment,quote(statement.TableName()),col.Name)
 		sql=append(sql,sqlComment)
+	}else if col.Comment!=""&&statement.Engine.dialect.DBType()==core.ORACLE{
+		sqlComment:=fmt.Sprintf("comment on column %s.%s is '%s'",quote(statement.TableName()),col.Name,col.Comment)
+		sql=append(sql,sqlComment)
 	}
 	return sql, []interface{}{}
 }
