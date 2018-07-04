@@ -661,7 +661,7 @@ func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 		sql += strings.Join(pkList, ",")
 		sql += " ), "
 	}
-	sqlcomment += fmt.Sprintf("sp_addextendedproperty 'MS_Description', '%s', 'user', 'dbo', 'table', '%s'", table.Comment, tableName)
+	sqlcomment += fmt.Sprintf("exec sys.sp_addextendedproperty 'MS_Description', '%s', 'user', 'dbo', 'table', '%s'", table.Comment, tableName)
 	sql = sql[:len(sql)-2] + ")"
 	sql += ";" + sqlcomment
 	return sql
