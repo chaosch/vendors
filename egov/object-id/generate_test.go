@@ -25,3 +25,22 @@ func Benchmark_Get_Id(b *testing.B) {
 		}
 	})
 }
+
+
+func BenchmarkDb_engine_Insert2(b *testing.B) {
+	m:=make(map[string]bool)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next(){
+			v:=NewObjectId().Hex()
+			lock.Lock()
+			if _,ok:=m[v];ok{
+				panic("duplication id:"+v)
+			}else {
+				m[v] = true
+			}
+			lock.Unlock()
+		}
+	})
+}
+
+
