@@ -20,7 +20,6 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 	"strings"
-	"time"
 )
 
 // Unmarshal parses the JSON-encoded data and stores the result
@@ -207,21 +206,8 @@ func (n Number) Int64() (int64, error) {
 	return strconv.ParseInt(string(n), 10, 64)
 }
 
-type DateTime time.Time
 
-func (t *DateTime)  UnmarshalJSON(data []byte) error {
-	asString := string(data)
-	asString = strings.Replace(asString,"\"","",-1)
-	//	var tempValue Boolean
-	dt,err:=time.ParseInLocation("2006-01-02 15:04:05",asString,time.Local)
 
-	if err==nil{
-		*t=DateTime(dt)
-	} else {
-		return errors.New(fmt.Sprintf("DateTime unmarshal error: invalid input %s", asString))
-	}
-	return nil
-}
 // isValidNumber reports whether s is a valid JSON number literal.
 func isValidNumber(s string) bool {
 	// This function implements the JSON numbers grammar.
