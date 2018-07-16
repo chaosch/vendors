@@ -1117,14 +1117,19 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 			col = core.NewColumn(engine.ColumnMapper.Obj2Table(t.Field(i).Name),
 				t.Field(i).Name, sqlType, sqlType.DefaultLength,
 				sqlType.DefaultLength2, true)
-			if engine.IdentityInsert {
-				if col.IsAutoIncrement {
-					col.EnumOptions["physical autoincr"] = 0
-				} else {
-					col.EnumOptions["physical autoincr"] = 1
-				}
-			}
 
+		}
+
+		if col.EnumOptions == nil {
+			col.EnumOptions = make(map[string]int)
+		}
+
+		if col.IsAutoIncrement {
+			if !engine.IdentityInsert {
+				col.EnumOptions["physical autoincr"] = 1
+			} else {
+				col.EnumOptions["physical autoincr"] = 0
+			}
 		}
 
 		if indexesTagStr != "" {
