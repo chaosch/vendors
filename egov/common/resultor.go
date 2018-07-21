@@ -121,12 +121,12 @@ func RetErrStr(err ErrContext) string {
 	res := &ResultTemplate{Ok: false}
 	if value, ok := Es[err.Err().ErrCode]; ok {
 		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
-		x, _ := json.Marshal(res.Err)
+		x, _ := json.Marshal(res)
 		log.Println(string(x))
 		return string(x)
 	} else {
 		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
-		x, _ := json.Marshal(res.Err)
+		x, _ := json.Marshal(res)
 		log.Println(string(x))
 		return string(x)
 	}
