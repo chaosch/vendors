@@ -1,0 +1,12 @@
+syntax = "proto3";
+package GrpcService;
+ message Request{
+   string outBuf = 1;
+ }
+ message Response{
+   string outBuf = 2;
+ }
+ // 服务handler
+ service GetSequenceService{
+   rpc GrpcGetSequence (Request) returns (Response){}
+ }
