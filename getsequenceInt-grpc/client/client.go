@@ -3,13 +3,13 @@ package main
 import (
 	"log"
 	"google.golang.org/grpc"
-	pb "getsequence-grpc/proto-api"
+	pb "getsequenceInt-grpc/proto-api"
 	"context"
 	"fmt"
 )
 
 const(
-	address="192.168.5.245: 9025"
+	address="localhost: 9028"
 )
 func main(){
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
@@ -25,4 +25,13 @@ func main(){
 		fmt.Println(err1)
 	}
 	fmt.Println(string(res.OutBuf))
+	cc:=pb.NewGetSequenceIntServiceClient(conn)
+	reqs:=&pb.RequestInt{OutInt:"tab_user"}
+	resint,err2:=cc.GrpcGetSequenceInt(context.Background(),reqs)
+	if err2!=nil{
+		fmt.Println(err2)
+	}else{
+		fmt.Println(resint.OutInt)
+	}
+
 }
