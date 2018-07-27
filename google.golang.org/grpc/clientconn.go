@@ -304,6 +304,7 @@ func WithBlock() DialOption {
 func WithInsecure() DialOption {
 	return func(o *dialOptions) {
 		o.insecure = true
+		
 	}
 }
 
