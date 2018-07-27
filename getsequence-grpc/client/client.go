@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"google.golang.org/grpc"
-	pb "getsequenceInt-grpc/proto-api"
+	pb "getsequence-grpc/proto-api"
 	"context"
 	"fmt"
 )
