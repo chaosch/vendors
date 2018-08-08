@@ -513,6 +513,9 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	col.SQLType.DefaultLength = col.Length
 	col.SQLType.DefaultLength2 = col.Length2
 
+	//if col.Name=="description"{
+	//	fmt.Println(col.Name)
+	//}
 	typeString := ""
 	if !col.IsPrimaryKey {
 		if col.SQLType.Name != Image {
@@ -567,7 +570,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	switch coltype {
 	case "string":
-		if col.SQLType.Name == "TEXT" {
+		if col.SQLType.Name == "TEXT"||col.SQLType.Name == "CLOB" {
 			factString = "text"
 		} else {
 			factString = fmt.Sprintf("varchar(%d)", col.Length)
@@ -644,7 +647,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	content += indexString
 	content += "\""
 
-	content += fmt.Sprintf(" Comment:\"%s\"", col.Comment)
+	content += fmt.Sprintf(" comment:\"%s\"", col.Comment)
 
 	content += fmt.Sprintf(" json:\"%s,omitempty\"", col.FieldName)
 

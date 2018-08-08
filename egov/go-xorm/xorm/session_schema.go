@@ -114,6 +114,7 @@ func (session *Session) createOneTable() error {
 	for _, Sql = range sqls {
 		if len(Sql) > 0 {
 			//fmt.Println(Sql)
+			//session.Tx.Exec()
 			_, err := session.exec(Sql)
 			if err != nil {
 				return err

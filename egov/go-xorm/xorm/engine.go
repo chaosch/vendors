@@ -1788,6 +1788,9 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 		return err
 	}
 
+	//if engine.dialect.DBType()==core.ORACLE{
+	//	session.IsAutoCommit=true
+	//}
 	for _, bean := range beans {
 		err = session.CreateTable(bean)
 		if err != nil {
@@ -1795,7 +1798,10 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 			return err
 		}
 	}
-	return session.Commit()
+//	if engine.dialect.DBType()!=core.ORACLE{
+		return session.Commit()
+//	}
+//	return nil
 }
 
 func (engine *Engine) AlterAutoIncrement(beans ...interface{}) error {

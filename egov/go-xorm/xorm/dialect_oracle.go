@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"egov/go-xorm/core"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 var (
@@ -502,7 +503,6 @@ type oracle struct {
 	core.Base
 }
 
-
 func (db *oracle) SetTableComment(d map[string]string, t map[string]string) {
 	db.DataTable = t
 	db.Dictionaries = d
@@ -536,13 +536,7 @@ func (db *oracle) SqlType(c *core.Column) string {
 	case core.Text, core.MediumText, core.LongText, core.Json:
 		res = "CLOB"
 	case core.Char, core.Varchar, core.TinyText:
-		if c.Length > 1000 {
-			c.SQLType.Name = core.Text
-			res = core.Text
-			c.Length = 0
-		} else {
-			res = "VARCHAR2"
-		}
+		res = "VARCHAR2"
 	default:
 		res = t
 	}
@@ -608,6 +602,8 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 	sql = "CREATE TABLE "
 	sequencesql = "CREATE SEQUENCE "
 
+	x := simplifiedchinese.GBK.NewEncoder()
+
 	if tableName == "" {
 		tableName = table.Name
 	}
@@ -647,7 +643,8 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 		//}
 		sql = strings.TrimSpace(sql)
 		sql += ", "
-		sqlcomment += fmt.Sprintf(" comment on column %s.%s is '%s';", table.Name, col.Name, col.Comment)
+		c, _ := x.String(col.Comment)
+		sqlcomment += fmt.Sprintf(" comment on column %s.%s is '%s';", table.Name, col.Name, c)
 
 	}
 
@@ -661,6 +658,7 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 	if db.SupportEngine() && storeEngine != "" {
 		sql += " ENGINE=" + storeEngine
 	}
+
 	if db.SupportCharset() {
 		if len(charset) == 0 {
 			charset = db.URI().Charset
@@ -670,9 +668,20 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 		}
 	}
 
-	sqlcomment+=fmt.Sprintf(" comment on column %s is '%s';", table.Name, )
+	if strings.HasPrefix(tableName, "dic_") {
+		if c, ok := db.Dictionaries[tableName]; ok {
+			table.Comment = c
+		}
+	} else {
+		if c, ok := db.DataTable[tableName]; ok {
+			table.Comment = c
+		}
+	}
+
+	c, _ := x.String(table.Comment)
+	sqlcomment += fmt.Sprintf(" comment on table %s is '%s';", table.Name, c)
 	//fmt.Println(sql)
-	return sql + ";"  + sqlcomment
+	return sql + ";" + sqlcomment
 }
 
 func (db *oracle) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string) {
@@ -749,7 +758,7 @@ func (db *oracle) IsColumnExist(table *core.Table, column *core.Column) (bool, e
 
 func (db *oracle) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
 	args := []interface{}{tableName}
-	s := "SELECT lower(a.column_name) column_name,null data_default,data_type,data_length,data_precision,data_scale, " +
+	s := "SELECT lower(a.column_name) column_name,long_to_char(a.table_name,a.column_id) data_default,data_type,data_length,data_precision,data_scale, " +
 		"nullable,b.comments comments FROM USER_TAB_COLUMNS a ,user_col_comments b where a.table_name=b.table_name and a.column_name=b.column_name and a.table_name = upper( :1) order by a.column_id"
 	db.LogSQL(s, args)
 
@@ -1032,6 +1041,54 @@ func (db *oracle) GetPhysicalColumn(table *core.Table, column *core.Column) *cor
 }
 
 func (db *oracle) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
-	result := make(map[string]map[string]*core.Column)
-	return result, nil
+	sql := `
+SELECT
+1 "object_id",
+  lower(ucc.table_name) "tName",
+  utcc.COMMENTS "tComment",
+  lower(ustc.COLUMN_NAME) "NAME",
+  ustc.column_id "sortcode",
+  0 "autoincr",
+  case CONSTRAINT_TYPE when 'P' then 1 else 0 end "pk",
+  0 "fk",
+  case data_type when 'VARCHAR2' then 'VARCHAR' when 'TIMESTAMP(6)' then 'DATETIME' when 'NUMBER' then 'BIGINT' else data_type end "type",
+  0 "byte",
+  data_length "length",
+  data_precision "PRECISION",
+  case when nullable='Y' then 1 else  0 end "nullable",
+  ucc.COMMENTS "comments",
+  long_to_char(ustc.table_name,ustc.column_id) "defaultvalue",
+  null "indexes",
+  0 "indexnum"  
+FROM 
+  SYS.USER_COL_COMMENTS ucc
+  
+inner join    sys.user_tables ut on ut.TABLE_NAME=ucc.TABLE_NAME 
+inner join  sys.user_tab_columns ustc on ustc.TABLE_NAME=ucc.TABLE_NAME and ustc.COLUMN_NAME=ucc.COLUMN_NAME
+inner join  sys.user_tab_comments utcc on utcc.TABLE_NAME=ucc.TABLE_NAME
+left join (
+     select con.TABLE_NAME,col.COLUMN_NAME,con.CONSTRAINT_TYPE from   
+     sys.user_constraints con,
+     sys.user_cons_columns col 
+     where con.CONSTRAINT_NAME=col.CONSTRAINT_NAME
+     and con.TABLE_NAME=col.TABLE_NAME
+     and con.CONSTRAINT_TYPE='P'  
+) t on t.table_name=ucc.TABLE_NAME and  t.column_name=ucc.COLUMN_NAME 
+
+
+  order by ucc.table_name,ustc.column_id
+  
+
+`
+
+	rows, err := db.DB().Query(sql)
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	return core.GetStringColumnFormRows(rows), nil
+	//result := make(map[string]map[string]*core.Column)
+	//return result, nil
 }
