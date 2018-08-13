@@ -236,19 +236,19 @@ func (db *mysql) SqlType(c *core.Column) string {
 	case core.Image:
 		//if c.Length > 255 {
 		//	c.SQLType.Name = core.Blob
-			res = core.Blob
+		res = core.Blob
 		//	c.Length = 0
 		//} else {
 		//	res = core.Binary
 		//}
 	case core.Varchar:
-		if c.Length > 1000 {
-			c.SQLType.Name = core.Text
-			res = core.Text
-			c.Length = 0
-		} else {
-			res = core.Varchar
-		}
+		//if c.Length > 1000 {
+		//	c.SQLType.Name = core.Text
+		//	res = core.Text
+		//	c.Length = 0
+		//} else {
+		res = core.Varchar
+		//		}
 	default:
 		res = t
 	}
@@ -341,9 +341,9 @@ func (db *mysql) GetColumns(tableName string) ([]string, map[string]*core.Column
 		col := new(core.Column)
 		col.Indexes = make(map[string]int)
 
-		var columnName, isNullable, colType, colKey, extra,comments string
+		var columnName, isNullable, colType, colKey, extra, comments string
 		var colDefault *string
-		err = rows.Scan(&columnName, &isNullable, &colDefault, &colType, &colKey, &extra,&comments)
+		err = rows.Scan(&columnName, &isNullable, &colDefault, &colType, &colKey, &extra, &comments)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -362,8 +362,8 @@ func (db *mysql) GetColumns(tableName string) ([]string, map[string]*core.Column
 		cts := strings.Split(colType, "(")
 		colName := cts[0]
 		colType = strings.ToUpper(colName)
-		if comments!=""{
-			col.Comment=comments
+		if comments != "" {
+			col.Comment = comments
 		}
 		var len1, len2 int
 		if len(cts) == 2 {
