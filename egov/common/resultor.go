@@ -8,16 +8,6 @@ import (
 	"strings"
 )
 
-type ErrContext interface {
-	err() *errType
-}
-
-type errType struct {
-	ErrCode int `json:"code" msgpack:"code"`
-	ErrMsg  string `json:"msg" msgpack:"msg"`
-	ErrLine int `json:"line" msgpack:"line"`
-	ErrFile string `json:"file" msgpack:"file"`
-}
 
 var Es = map[int]string{
 	//0:    "normal error",
@@ -36,8 +26,52 @@ var Es = map[int]string{
 	9000: "database error",
 	6001: "network error",
 }
+//swagger:model
+type ResultTemplate struct {
+	//成功
+	//example: false
+	Ok          bool        `json:"ok" msgpack:"ok"`
+	//错误对象
+	Err         ErrContext  `json:"err" msgpack:"err"`
+	//影响记录数
+	//example: 0
+	Changes     int64       `json:"changes" msgpack:"changes"`
+	//耗时
+	//example: 1000000
+	Duration    int64       `json:"duration" msgpack:"duration"`
+	//sql语句耗时
+	//example: 1000000
+	SqlDuration int64       `json:"sql_duration" msgpack:"sql_duration"`
+	//返回数据
+	Data        interface{} `json:"data" msgpack:"data"`
+	//成功提示:
+	//example:
+	OKMessage   string      `json:"ok_message"`
+}
 
-func (e *errType) err() *errType {
+
+type ErrContext interface {
+	Err() *ErrType
+}
+
+type ErrType struct {
+	//错误代码
+	//example: 1002
+	ErrCode int `json:"code" msgpack:"code"`
+	//错误消息
+	//example: table null
+	ErrMsg  string `json:"msg" msgpack:"msg"`
+	//出错行号
+	//example: 35
+	ErrLine int `json:"line" msgpack:"line"`
+	//出错文件
+	//example: /usercenter/src/micros/handler_cors_maint.go
+	ErrFile string `json:"file" msgpack:"file"`
+}
+
+
+
+func (e *ErrType) Err() *ErrType {
 	return e
 }
 
@@ -47,7 +81,7 @@ func NewError(errorCode int,errorMsg string) ErrContext {
 		file = "???"
 		line = 0
 	}
-	return &errType{ErrCode: errorCode, ErrMsg: errorMsg,ErrLine:line,ErrFile:file}
+	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg,ErrLine:line,ErrFile:file}
 }
 
 
@@ -68,13 +102,13 @@ func RetChangesStr(changes int64) string {
 
 func RetErr(err ErrContext) *ResultTemplate {
 	res := &ResultTemplate{Ok: false}
-	if value, ok := Es[err.err().ErrCode]; ok {
-		res.Err = NewError(err.err().ErrCode, value+":"+err.err().ErrMsg)
+	if value, ok := Es[err.Err().ErrCode]; ok {
+		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		log.Println(string(x))
 		return res
 	} else {
-		res.Err = NewError(0, value+":"+err.err().ErrMsg)
+		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		log.Println(string(x))
 		return res
@@ -85,26 +119,20 @@ func RetErr(err ErrContext) *ResultTemplate {
 
 func RetErrStr(err ErrContext) string {
 	res := &ResultTemplate{Ok: false}
-	if value, ok := Es[err.err().ErrCode]; ok {
-		res.Err = NewError(err.err().ErrCode, value+":"+err.err().ErrMsg)
-		x, _ := json.Marshal(res.Err)
+	if value, ok := Es[err.Err().ErrCode]; ok {
+		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		x, _ := json.Marshal(res)
 		log.Println(string(x))
 		return string(x)
 	} else {
-		res.Err = NewError(0, value+":"+err.err().ErrMsg)
-		x, _ := json.Marshal(res.Err)
+		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
+		x, _ := json.Marshal(res)
 		log.Println(string(x))
 		return string(x)
 	}
 }
 
 
-type ResultTemplate struct {
-	Ok      bool        `json:"ok" msgpack:"ok"`
-	Err     ErrContext  `json:"err" msgpack:"err"`
-	Changes int64       `json:"changes" msgpack:"changes"`
-	Data    interface{} `json:"data" msgpack:"data"`
-}
 
 func RetOk(result interface{}) *ResultTemplate {
 	res := &ResultTemplate{Ok: true}
@@ -150,9 +178,9 @@ func MixErrContext(errs ...ErrContext) ErrContext {
 	for idx, err := range errs {
 		if err != nil {
 			if idx == 0 {
-				errMessage += err.err().ErrMsg
+				errMessage += err.Err().ErrMsg
 			} else {
-				errMessage += ":" + err.err().ErrMsg
+				errMessage += ":" + err.Err().ErrMsg
 			}
 		} else {
 			if idx == 0 {
@@ -177,6 +205,7 @@ func MixError(errs ...error) ErrContext {
 			if idx == 0 {
 				errMessage += err.Error()
 			} else {
+
 				errMessage += ":" + err.Error()
 			}
 		} else {

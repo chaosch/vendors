@@ -1,0 +1,22 @@
+syntax = "proto3";
+package GrpcServices;
+ message RequestInt{
+   string outInt = 1;
+ }
+ message ResponseInt{
+   int64 outInt = 2;
+ }
+ message Request{
+     string outBuf = 3;
+   }
+ message Response{
+     string outBuf = 4;
+   }
+ // 服务handler
+ service GetSequenceIntService{
+   rpc GrpcGetSequenceInt (RequestInt) returns (ResponseInt){}
+ }
+
+service GetSequenceService{
+    rpc GrpcGetSequence (Request) returns (Response){}
+  }
