@@ -232,7 +232,7 @@ func (db *mssql) SqlType(c *core.Column) string {
 		c.IsPrimaryKey = true
 		c.Nullable = false
 		res = core.BigInt
-	case core.Bytea, core.Blob, core.Binary, core.TinyBlob, core.MediumBlob, core.LongBlob,core.Image:
+	case core.Bytea, core.Blob, core.Binary, core.TinyBlob, core.MediumBlob, core.LongBlob, core.Image:
 		res = core.Image
 		//if c.Length == 0 {
 		//	c.Length = 50
@@ -276,7 +276,6 @@ func (db *mssql) SqlType(c *core.Column) string {
 	}
 	return res
 }
-
 
 func (db *mssql) SetTableComment(d map[string]string, t map[string]string) {
 	db.DataTable = t
@@ -455,8 +454,6 @@ func (db *mssql) GetPhysicalColumn(table *core.Table, column *core.Column) *core
 	return col
 }
 
-
-
 func (db *mssql) IsColumnExist(table *core.Table, column *core.Column) (bool, error, *core.Column) {
 	query := `SELECT "COLUMN_NAME" FROM "INFORMATION_SCHEMA"."COLUMNS" WHERE "TABLE_NAME" = ? AND "COLUMN_NAME" = ?`
 	col := &core.Column{}
@@ -476,11 +473,18 @@ func (db *mssql) TableCheckSql(tableName string) (string, []interface{}) {
 
 func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
 	args := []interface{}{}
-	s := `select a.name as name, b.name as ctype,a.max_length,a.precision,a.scale,a.is_nullable as nullable,
-	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault   
-          from sys.columns a left join sys.types b on a.user_type_id=b.user_type_id 
-          left join  sys.syscomments c  on a.default_object_id=c.id 
-          where a.object_id=object_id('` + tableName + `')`
+	s := `SELECT a.COLUMN_NAME name,
+       data_type ctype,
+       case when character_maximum_length is null then 0 else character_maximum_length end max_length,
+       case when a.NUMERIC_PRECISION is null then 0 else a.NUMERIC_PRECISION end precision,
+       case when a.NUMERIC_SCALE is null then 0 else a.NUMERIC_SCALE  end scale,
+       CASE WHEN a.IS_NULLABLE = 'YES' THEN 1 ELSE 0 END nullable,
+       a.COLUMN_DEFAULT vdefault,  --,       b.CONSTRAINT_TYPE
+       case when b.CONSTRAINT_TYPE='PRIMARY KEY' THEN 1 ELSE 0 END ISPK
+  FROM INFORMATION_SCHEMA.COLUMNS a
+  left join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE c on c.TABLE_NAME = a.TABLE_NAME and c.COLUMN_NAME=a.COLUMN_NAME 
+  left join INFORMATION_SCHEMA.TABLE_CONSTRAINTS b on b.CONSTRAINT_NAME=c.CONSTRAINT_NAME`
+	s = s + "'" + tableName + "'"
 	db.LogSQL(s, args)
 
 	rows, err := db.DB().Query(s, args...)
@@ -493,9 +497,9 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
 	colSeq := make([]string, 0)
 	for rows.Next() {
 		var name, ctype, vdefault string
-		var maxLen, precision, scale int
+		var maxLen, precision, scale, ispk int
 		var nullable bool
-		err = rows.Scan(&name, &ctype, &maxLen, &precision, &scale, &nullable, &vdefault)
+		err = rows.Scan(&name, &ctype, &maxLen, &precision, &scale, &nullable, &vdefault, &ispk)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -505,6 +509,7 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
 		col.Name = strings.Trim(name, "` ")
 		col.Nullable = nullable
 		col.Default = vdefault
+		col.IsPrimaryKey = ispk == 1
 		ct := strings.ToUpper(ctype)
 		if ct == "DECIMAL" {
 			col.Length = precision
@@ -537,6 +542,7 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
 			}
 		}
 		cols[col.Name] = col
+
 		colSeq = append(colSeq, col.Name)
 	}
 	return colSeq, cols, nil
@@ -891,4 +897,3 @@ LEFT JOIN (
 
 	return core.GetStringColumnFormRows(rows), nil
 }
-
