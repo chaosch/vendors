@@ -484,7 +484,7 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
   FROM INFORMATION_SCHEMA.COLUMNS a
   left join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE c on c.TABLE_NAME = a.TABLE_NAME and c.COLUMN_NAME=a.COLUMN_NAME 
   left join INFORMATION_SCHEMA.TABLE_CONSTRAINTS b on b.CONSTRAINT_NAME=c.CONSTRAINT_NAME`
-	s = s + "'" + tableName + "'"
+	s = s + " where a.table_name='" + tableName + "'"
 	db.LogSQL(s, args)
 
 	rows, err := db.DB().Query(s, args...)
