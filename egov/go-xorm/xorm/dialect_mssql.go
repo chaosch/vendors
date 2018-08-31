@@ -479,7 +479,7 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
        case when a.NUMERIC_PRECISION is null then 0 else a.NUMERIC_PRECISION end precision,
        case when a.NUMERIC_SCALE is null then 0 else a.NUMERIC_SCALE  end scale,
        CASE WHEN a.IS_NULLABLE = 'YES' THEN 1 ELSE 0 END nullable,
-       a.COLUMN_DEFAULT vdefault,  --,       b.CONSTRAINT_TYPE
+       case when a.COLUMN_DEFAULT is null then '' else a.COLUMN_DEFAULT  end vdefault, 
        case when b.CONSTRAINT_TYPE='PRIMARY KEY' THEN 1 ELSE 0 END ISPK
   FROM INFORMATION_SCHEMA.COLUMNS a
   left join INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE c on c.TABLE_NAME = a.TABLE_NAME and c.COLUMN_NAME=a.COLUMN_NAME 
@@ -498,7 +498,7 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
 	for rows.Next() {
 		var name, ctype, vdefault string
 		var maxLen, precision, scale, ispk int
-		var nullable bool
+		var nullable int
 		err = rows.Scan(&name, &ctype, &maxLen, &precision, &scale, &nullable, &vdefault, &ispk)
 		if err != nil {
 			return nil, nil, err
@@ -507,7 +507,7 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
 		col := new(core.Column)
 		col.Indexes = make(map[string]int)
 		col.Name = strings.Trim(name, "` ")
-		col.Nullable = nullable
+		col.Nullable = nullable==1
 		col.Default = vdefault
 		col.IsPrimaryKey = ispk == 1
 		ct := strings.ToUpper(ctype)
