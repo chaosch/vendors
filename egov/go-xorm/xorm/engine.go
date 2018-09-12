@@ -1531,9 +1531,9 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				//}
 				//continue
 				//fmt.Println(phyCol.Comment)
-				if err != nil {
-					return err
-				}
+				//if err != nil {
+				//	return err
+				//}
 				if !isExist {
 					session := engine.NewSession()
 					defer session.Close()
@@ -1546,13 +1546,18 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						return err
 					}
 				} else {
-					_, err := engine.Exec(engine.dialect.ModifyColumnSql(table.Name, col))
-					if err != nil {
-						//log.Println("修改字段出错:"+err.Error())
-					}
-					if col.Default != "" {
-						sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
-						engine.Exec(sqlUpdateDefault)
+					if col.XormTag != phyCol.XormTag {
+						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
+						for _, sql := range strings.Split(sqls, ";") {
+							_, err1 := engine.Exec(sql)
+							if err1 != nil {
+								log.Println("修改字段出错:"+err1.Error())
+							}
+						}
+						if col.Default != "" {
+							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
+							engine.Exec(sqlUpdateDefault)
+						}
 					}
 				}
 			}
@@ -1798,10 +1803,10 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 			return err
 		}
 	}
-//	if engine.dialect.DBType()!=core.ORACLE{
-		return session.Commit()
-//	}
-//	return nil
+	//	if engine.dialect.DBType()!=core.ORACLE{
+	return session.Commit()
+	//	}
+	//	return nil
 }
 
 func (engine *Engine) AlterAutoIncrement(beans ...interface{}) error {

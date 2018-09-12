@@ -156,11 +156,14 @@ func (col *Column) StringNoPk(d Dialect) string {
 		sql += "DEFAULT " + col.Default + " "
 	}
 
-	if d.ShowCreateNull() {
-		if col.Nullable {
-			sql += "NULL "
-		} else {
-			sql += "NOT NULL "
+	if d.DBType() != ORACLE {
+
+		if d.ShowCreateNull() {
+			if col.Nullable {
+				sql += "NULL "
+			} else {
+				sql += "NOT NULL "
+			}
 		}
 	}
 
