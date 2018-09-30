@@ -18,6 +18,7 @@ func captchaVerifyHandle(w http.ResponseWriter, r *http.Request) {
 	formData := r.Form
 	captchaId := formData.Get("captchaId")
 	captchaDigits := formData.Get("captchaDigits")
+	fmt.Println(captchaId   ,captchaDigits)
 
 	//verify the captcha
 	//比较图像验证码
@@ -47,6 +48,9 @@ func generateCaptchaHandler(w http.ResponseWriter, r *http.Request) {
 	PngHeight, _ := strconv.Atoi(formData.Get("PngHeight"))
 	DefaultLen, _ := strconv.Atoi(formData.Get("DefaultLen"))
 
+
+
+
 	//create base64 encoding captcha
 	//创建base64图像验证码
 	base64Png := base64Captcha.GenerateCaptchaPngBase64String(captchaId, PngWidth, PngHeight, DotCount, DefaultLen, MaxSkew)
@@ -72,8 +76,8 @@ func main() {
 	//api for verify captcha
 	http.HandleFunc("/api/verifyCaptcha", captchaVerifyHandle)
 
-	fmt.Println("Server is at localhost:777")
-	if err := http.ListenAndServe("localhost:777", nil); err != nil {
+	fmt.Println("Server is at localhost:8080")
+	if err := http.ListenAndServe("192.168.5.245:8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }
