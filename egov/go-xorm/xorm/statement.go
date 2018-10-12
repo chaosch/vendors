@@ -807,7 +807,7 @@ func (statement *Statement) col2NewColsWithQuote(columns ...string) []string {
 			if len(fields) == 1 {
 				newColumns = append(newColumns, statement.Engine.quote(fields[0]))
 			} else if len(fields) == 2 {
-				newColumns = append(newColumns, statement.Engine.quote(fields[0]) + "."+
+				newColumns = append(newColumns, statement.Engine.quote(fields[0])+"."+
 					statement.Engine.quote(fields[1]))
 			} else {
 				panic(errors.New("unwanted colnames"))
@@ -1125,18 +1125,22 @@ func (statement *Statement) genAddColumnStr(col *core.Column) ([]string, []inter
 	var sql = make([]string, 0)
 	if statement.Engine.dialect.DBType() == core.MSSQL && col.Default != "" {
 
-		sql=append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.String(statement.Engine.dialect)))
-		sql=append(sql, fmt.Sprintf("UPDATE %v SET %v='%v' WHERE %v IS NULL", quote(statement.TableName()), col.Name, col.Default, col.Name))
+		sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.String(statement.Engine.dialect)))
+		sql = append(sql, fmt.Sprintf("UPDATE %v SET %v='%v' WHERE %v IS NULL", quote(statement.TableName()), col.Name, col.Default, col.Name))
 	} else {
-		sql=append(sql,fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.String(statement.Engine.dialect)))
+		if statement.Engine.dialect.DBType() == core.MYSQL {
+			sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v comment '%s'", quote(statement.TableName()), col.String(statement.Engine.dialect), col.Comment))
+		} else {
+			sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.String(statement.Engine.dialect)))
+		}
 	}
 	//fmt.Println(sql)
-	if col.Comment!=""&&statement.Engine.dialect.DBType()==core.MSSQL{
-		sqlComment:=fmt.Sprintf("EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'%s', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'%s', @level2type = N'COLUMN', @level2name = N'%s'",col.Comment,quote(statement.TableName()),col.Name)
-		sql=append(sql,sqlComment)
-	}else if col.Comment!=""&&statement.Engine.dialect.DBType()==core.ORACLE{
-		sqlComment:=fmt.Sprintf("comment on column %s.%s is '%s'",quote(statement.TableName()),col.Name,col.Comment)
-		sql=append(sql,sqlComment)
+	if col.Comment != "" && statement.Engine.dialect.DBType() == core.MSSQL {
+		sqlComment := fmt.Sprintf("EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'%s', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'%s', @level2type = N'COLUMN', @level2name = N'%s'", col.Comment, quote(statement.TableName()), col.Name)
+		sql = append(sql, sqlComment)
+	} else if col.Comment != "" && statement.Engine.dialect.DBType() == core.ORACLE {
+		sqlComment := fmt.Sprintf("comment on column %s.%s is '%s'", quote(statement.TableName()), col.Name, col.Comment)
+		sql = append(sql, sqlComment)
 	}
 	return sql, []interface{}{}
 }
