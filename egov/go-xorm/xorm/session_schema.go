@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"golang.org/x/text/encoding/simplifiedchinese"
 	"reflect"
 	"strings"
 
@@ -320,10 +321,12 @@ func (session *Session) addColumn(col *core.Column) error {
 
 	//col := session.Statement.RefTable.GetColumn(colName)
 	var res error
+	x := simplifiedchinese.GBK.NewEncoder()
 	sqls, args := session.Statement.genAddColumnStr(col)
 	for _, sql := range sqls {
-		if session.Engine.dialect.DBType()==core.ORACLE{
-			session=session.Engine.Table(col.TableName)
+		if session.Engine.dialect.DBType() == core.ORACLE {
+			sql, _ = x.String(sql)
+			session = session.Engine.Table(col.TableName)
 		}
 		_, err := session.exec(sql, args...)
 		if err != nil {
