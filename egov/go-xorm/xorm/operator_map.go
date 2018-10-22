@@ -23,6 +23,7 @@ var defaultOperatorMap = map[string]string{
 	"$as":      " %s as %s ",
 	"$if":      "if(%s,%s,%s)",
 	"$isnull":  "%s is null",
+	"$distinct":  "distinct %s",
 	"$notnull": "%s is not null",
 	"$sum":     "sum(%s)",
 	"$max":     "max(%s)",

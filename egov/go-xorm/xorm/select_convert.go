@@ -131,6 +131,7 @@ func (e *Engine) parseTempValue(key string, value interface{}) (string, error) {
 		if !rt{
 			return "", errors.New("has sp words")
 		}
+
 		return fmt.Sprintf(key, value), nil
 	case reflect.Map:
 		if val, err := e.parseTempMap(value.(map[string]interface{})); err == nil {
