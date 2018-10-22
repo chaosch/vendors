@@ -547,7 +547,11 @@ func (db *oracle) SqlType(c *core.Column) string {
 	if hasLen2 {
 		res += "(" + strconv.Itoa(c.Length) + "," + strconv.Itoa(c.Length2) + ")"
 	} else if hasLen1 {
-		res += "(" + strconv.Itoa(c.Length) + ")"
+		if res=="VARCHAR2"{
+			res += "(" + strconv.Itoa(c.Length) + " char)"
+		}else {
+			res += "(" + strconv.Itoa(c.Length) + ")"
+		}
 	}
 	return res
 }
