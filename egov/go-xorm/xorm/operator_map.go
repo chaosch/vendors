@@ -18,10 +18,8 @@ var currentSqlMap map[string]string
  * 参考"$year"指令
  */
 var defaultOperatorMap = map[string]string{
-	"$year":    "year(%s)",
 	"$count":   "count(%s)",
 	"$as":      " %s as %s ",
-	"$if":      "if(%s,%s,%s)",
 	"$isnull":  "%s is null",
 	"$distinct":  "distinct %s",
 	"$notnull": "%s is not null",
@@ -30,8 +28,23 @@ var defaultOperatorMap = map[string]string{
 	"$min":     "min(%s)",
 	"$avg":     "avg(%s)",
 	"$round":     "round(%s,%s)",
-	"$strconcat":"GROUP_CONCAT(%s)",
+}
+
+var MysqlOperatorMap = map[string]string{
+	"$count":   "count(%s)",
+	"$as":      " %s as %s ",
+	"$isnull":  "%s is null",
+	"$distinct":  "distinct %s",
+	"$notnull": "%s is not null",
+	"$sum":     "sum(%s)",
+	"$max":     "max(%s)",
+	"$min":     "min(%s)",
+	"$avg":     "avg(%s)",
+	"$round":     "round(%s,%s)",
+	"$year":    "year(%s)",
 	"$now": "now()",
+	"$if":      "if(%s,%s,%s)",
+	"$strconcat":"GROUP_CONCAT(%s)",
 	"$strgetdatetime":"DATE_FORMAT(%s,'%%Y-%%m-%%d %%H:%%i:%%S')",
 	"$strgethour":"DATE_FORMAT(%s,'%%Y-%%m-%%d %%H')",
 	"$strgetdate":"DATE_FORMAT(%s,'%%Y-%%m-%%d')",
@@ -41,10 +54,17 @@ var defaultOperatorMap = map[string]string{
 	"$concat":"concat(%s,%s,%s,%s,%s)",
 }
 
-var MysqlOperatorMap = map[string]string{
-}
-
 var MssqlOperatorMap = map[string]string{
+	"$count":   "count(%s)",
+	"$as":      " %s as %s ",
+	"$isnull":  "%s is null",
+	"$distinct":  "distinct %s",
+	"$notnull": "%s is not null",
+	"$sum":     "sum(%s)",
+	"$max":     "max(%s)",
+	"$min":     "min(%s)",
+	"$avg":     "avg(%s)",
+	"$round":     "round(%s,%s)",
 	"$year": "Datename(year,%s)",
 	"$now":  "getdate()",
 	"$if":"case when %s then %s else %s end ",
@@ -59,6 +79,16 @@ var MssqlOperatorMap = map[string]string{
 }
 
 var OracleOperatorMap = map[string]string{
+	"$count":   "count(%s)",
+	"$as":      " %s as %s ",
+	"$isnull":  "%s is null",
+	"$distinct":  "distinct %s",
+	"$notnull": "%s is not null",
+	"$sum":     "sum(%s)",
+	"$max":     "max(%s)",
+	"$min":     "min(%s)",
+	"$avg":     "avg(%s)",
+	"$round":     "round(%s,%s)",
 	"$year": "to_char(%s,'YYYY')",
 	"$now":  "sysdate",
 	"$if":"case when %s then %s else %s end ",
