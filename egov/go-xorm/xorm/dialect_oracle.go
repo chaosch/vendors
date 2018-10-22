@@ -1047,42 +1047,84 @@ func (db *oracle) GetPhysicalColumn(table *core.Table, column *core.Column) *cor
 func (db *oracle) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
 	sql := `
 SELECT
-1 "object_id",
-  lower(ucc.table_name) "tName",
-  utcc.COMMENTS "tComment",
-  lower(ustc.COLUMN_NAME) "NAME",
-  ustc.column_id "sortcode",
-  0 "autoincr",
-  case CONSTRAINT_TYPE when 'P' then 1 else 0 end "pk",
-  0 "fk",
-  case data_type when 'VARCHAR2' then 'VARCHAR' when 'TIMESTAMP(6)' then 'DATETIME' when 'NUMBER' then 'BIGINT' else data_type end "type",
-  0 "byte",
-  data_length "length",
-  data_precision "PRECISION",
-  case when nullable='Y' then 1 else  0 end "nullable",
-  ucc.COMMENTS "comments",
-  long_to_char(ustc.table_name,ustc.column_id) "defaultvalue",
-  null "indexes",
-  0 "indexnum"  
-FROM 
-  SYS.USER_COL_COMMENTS ucc
-  
-inner join    sys.user_tables ut on ut.TABLE_NAME=ucc.TABLE_NAME 
-inner join  sys.user_tab_columns ustc on ustc.TABLE_NAME=ucc.TABLE_NAME and ustc.COLUMN_NAME=ucc.COLUMN_NAME
-inner join  sys.user_tab_comments utcc on utcc.TABLE_NAME=ucc.TABLE_NAME
-left join (
-     select con.TABLE_NAME,col.COLUMN_NAME,con.CONSTRAINT_TYPE from   
-     sys.user_constraints con,
-     sys.user_cons_columns col 
-     where con.CONSTRAINT_NAME=col.CONSTRAINT_NAME
-     and con.TABLE_NAME=col.TABLE_NAME
-     and con.CONSTRAINT_TYPE='P'  
-) t on t.table_name=ucc.TABLE_NAME and  t.column_name=ucc.COLUMN_NAME 
-
-
-  order by ucc.table_name,ustc.column_id
-  
-
+	1 "object_id",
+	LOWER (ucc.table_name) "tName",
+	utcc.COMMENTS "tComment",
+	LOWER (ustc.COLUMN_NAME) "NAME",
+	ustc.column_id "sortcode",
+	0 "autoincr",
+	CASE CONSTRAINT_TYPE
+WHEN 'P' THEN
+	1
+ELSE
+	0
+END "pk",
+ 0 "fk",
+ CASE data_type
+WHEN 'VARCHAR2' THEN
+	'VARCHAR'
+WHEN 'TIMESTAMP(6)' THEN
+	'DATETIME'
+WHEN 'NUMBER' THEN
+	'BIGINT'
+ELSE
+	data_type
+END "type",
+ 0 "byte",
+ CASE data_type
+WHEN 'VARCHAR2' THEN
+	FLOOR (
+		char_length * (
+			CASE char_used
+			WHEN 'B' THEN
+				0.5
+			WHEN 'C' THEN
+				1
+			ELSE
+				1
+			END
+		)
+	)
+ELSE
+	data_length
+END "length",
+ data_precision "PRECISION",
+ CASE
+WHEN nullable = 'Y' THEN
+	1
+ELSE
+	0
+END "nullable",
+ ucc.COMMENTS "comments",
+ long_to_char (
+	ustc.table_name,
+	ustc.column_id
+) "defaultvalue",
+ NULL "indexes",
+ 0 "indexnum"
+FROM
+	SYS.USER_COL_COMMENTS ucc
+INNER JOIN sys.user_tables ut ON ut.TABLE_NAME = ucc.TABLE_NAME
+INNER JOIN sys.user_tab_columns ustc ON ustc.TABLE_NAME = ucc.TABLE_NAME
+AND ustc.COLUMN_NAME = ucc.COLUMN_NAME
+INNER JOIN sys.user_tab_comments utcc ON utcc.TABLE_NAME = ucc.TABLE_NAME
+LEFT JOIN (
+	SELECT
+		con.TABLE_NAME,
+		col.COLUMN_NAME,
+		con.CONSTRAINT_TYPE
+	FROM
+		sys.user_constraints con,
+		sys.user_cons_columns col
+	WHERE
+		con.CONSTRAINT_NAME = col.CONSTRAINT_NAME
+	AND con.TABLE_NAME = col.TABLE_NAME
+	AND con.CONSTRAINT_TYPE = 'P'
+) T ON T .table_name = ucc.TABLE_NAME
+AND T .column_name = ucc.COLUMN_NAME
+ORDER BY
+	ucc.table_name,
+	ustc.column_id
 `
 
 	rows, err := db.DB().Query(sql)
