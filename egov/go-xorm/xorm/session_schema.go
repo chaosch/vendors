@@ -32,7 +32,10 @@ func (session *Session) CreateTable(bean interface{}) error {
 	if err := session.Statement.setRefValue(v); err != nil {
 		return err
 	}
-
+	if !session.Engine.IdentityInsert {
+		session.Statement.RefTable.AutoIncrement = session.Statement.RefTable.PKColumns()[0].Name
+		session.Statement.RefTable.PKColumns()[0].IsAutoIncrement=true
+	}
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()

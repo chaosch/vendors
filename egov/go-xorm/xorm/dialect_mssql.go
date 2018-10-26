@@ -642,6 +642,8 @@ func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 	if tableName == "" {
 		tableName = table.Name
 	}
+
+
 	sql = "IF NOT EXISTS (SELECT [name] FROM sys.tables WHERE [name] = '" + tableName + "' ) CREATE TABLE "
 
 	sql += db.QuoteStr() + tableName + db.QuoteStr() + " ("
