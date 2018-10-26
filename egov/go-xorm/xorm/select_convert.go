@@ -1,11 +1,11 @@
 package xorm
 
 import (
+	"errors"
+	"fmt"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
-	"errors"
 	"strings"
-	"fmt"
 )
 
 func (e *Engine) ParseSelectMapToBson(source interface{}) (bson.M, error) {
@@ -31,7 +31,7 @@ func (e *Engine) ParseWhereMapToSql(source interface{}) ([]string, error) {
 			case reflect.String:
 				wd := tempValue.Interface().(string)
 				rt := CheckPs(wd)
-				if !rt{
+				if !rt {
 					return nil, errors.New("has sp words")
 				}
 				resStringSlice = append(resStringSlice, wd)
@@ -67,7 +67,7 @@ func (e *Engine) ParseSelectMapToSql(source interface{}) (string, error) {
 			case reflect.String:
 				wd := tempValue.Interface().(string)
 				rt := CheckPs(wd)
-				if !rt{
+				if !rt {
 					return "", errors.New("has sp words")
 				}
 				resStringSlice = append(resStringSlice, wd)
@@ -87,14 +87,14 @@ func (e *Engine) ParseSelectMapToSql(source interface{}) (string, error) {
 	}
 }
 
-func(e *Engine)  parseTempArray(operator interface{}, argsIn ...interface{}) ([]interface{}, error) {
+func (e *Engine) parseTempArray(operator interface{}, argsIn ...interface{}) ([]interface{}, error) {
 	var argsOut []interface{}
 
 	switch reflect.ValueOf(operator).Kind() {
 	case reflect.String:
 		wd := operator.(string)
 		rt := CheckPs(wd)
-		if !rt{
+		if !rt {
 			return nil, errors.New("has sp words")
 		}
 		argsOut = append(argsOut, wd)
@@ -128,9 +128,10 @@ func (e *Engine) parseTempValue(key string, value interface{}) (string, error) {
 	switch reflect.ValueOf(value).Kind() {
 	case reflect.String:
 		rt := CheckPs(value.(string))
-		if !rt{
+		if !rt {
 			return "", errors.New("has sp words")
 		}
+
 		return fmt.Sprintf(key, value), nil
 	case reflect.Map:
 		if val, err := e.parseTempMap(value.(map[string]interface{})); err == nil {
@@ -159,7 +160,7 @@ func (e *Engine) parseTempMap(temp map[string]interface{}) (string, error) {
 				return "", err
 			}
 		} else {
-			if v, ok = defaultOperatorMap[key]; ok {
+			if v, ok = currentSqlMap[key]; ok {
 				if data, err := e.parseTempValue(v, value); err == nil {
 					return data, nil
 				} else {
