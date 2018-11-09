@@ -269,12 +269,12 @@ func (db *sqlite3) IsColumnExist(table *core.Table, column *core.Column) (bool, 
 	db.LogSQL(query, args)
 	rows, err := db.DB().Query(query, args...)
 	if err != nil {
-		return false, err,nil
+		return false, err, nil
 	}
 	defer rows.Close()
 
 	if rows.Next() {
-		return true, nil,nil
+		return true, nil, nil
 	}
 	return false, nil, nil
 }
@@ -374,6 +374,32 @@ func (db *sqlite3) GetTables() ([]*core.Table, error) {
 	return tables, nil
 }
 
+func (db *sqlite3) GetTablesSingle(tableName string) ([]*core.Table, error) {
+	args := []interface{}{}
+	s := "SELECT name FROM sqlite_master WHERE type='table' and name='" + tableName + "'"
+	db.LogSQL(s, args)
+
+	rows, err := db.DB().Query(s, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tables := make([]*core.Table, 0)
+	for rows.Next() {
+		table := core.NewEmptyTable()
+		err = rows.Scan(&table.Name)
+		if err != nil {
+			return nil, err
+		}
+		if table.Name == "sqlite_sequence" {
+			continue
+		}
+		tables = append(tables, table)
+	}
+	return tables, nil
+}
+
 func (db *sqlite3) GetIndexes(tableName string) (map[string]*core.Index, error) {
 	args := []interface{}{tableName}
 	s := "SELECT sql FROM sqlite_master WHERE type='index' and tbl_name = ?"
@@ -450,8 +476,7 @@ func (db *sqlite3) GetPhysicalColumn(table *core.Table, column *core.Column) *co
 	return &core.Column{}
 }
 
-
-func (db *sqlite3)GetAllTableColumns()(map[string]map[string]*core.Column,error){
-	result:=make(map[string]map[string]*core.Column)
-	return result,nil
+func (db *sqlite3) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
+	result := make(map[string]map[string]*core.Column)
+	return result, nil
 }
