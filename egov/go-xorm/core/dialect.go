@@ -486,7 +486,7 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 			}
 
 		}
-		_, col := TransMapStringColumn(50, columnProperties[tName][cName])
+		_, col := TransMapStringColumn(100, columnProperties[tName][cName])
 		result[tName][cName] = col
 	}
 	return result
@@ -538,6 +538,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	if col.FieldName == "" {
 		fmt.Println("col.FieldName is empty", col.Name, col.FieldName)
 	}
+	//fmt.Println(col.TableName,col.FieldName)
 	content += fmt.Sprintf("	%s", strFirstToUpper(col.FieldName)+strings.Repeat(" ", maxColLen-len(col.FieldName)+1))
 
 	content += fmt.Sprintf("%s", typeString+strings.Repeat(" ", 10-len(typeString)+1))
