@@ -1514,7 +1514,9 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 		defer s.Close()
 		_, isExist := tableMaps[tableName]
 		if !isExist {
+			engine.ShowSQL(true)
 			err = engine.CreateTables(bean)
+			engine.ShowSQL(false)
 			if err != nil {
 				fmt.Println(err)
 				return err
@@ -1540,7 +1542,9 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 					if err := session.Statement.setRefValue(v); err != nil {
 						return err
 					}
+					engine.ShowSQL(true)
 					err = session.addColumn(col)
+					engine.ShowSQL(false)
 					if err != nil {
 						//log.Println("增加字段错:"+err.Error())
 						return err
@@ -1549,14 +1553,18 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 					if col.XormTag != phyCol.XormTag {
 						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
 						for _, sql := range strings.Split(sqls, ";") {
+							engine.ShowSQL(true)
 							_, err1 := engine.Exec(sql)
+							engine.ShowSQL(false)
 							if err1 != nil {
 								log.Println("修改字段出错:"+err1.Error())
 							}
 						}
 						if col.Default != "" {
 							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
+							engine.ShowSQL(true)
 							engine.Exec(sqlUpdateDefault)
+							engine.ShowSQL(false)
 						}
 					}
 				}
