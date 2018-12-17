@@ -1047,6 +1047,32 @@ func (db *postgres) GetTables() ([]*core.Table, error) {
 	return tables, nil
 }
 
+func (db *postgres) GetTablesSingle(tableName string) ([]*core.Table, error) {
+	// FIXME: replace public to user customrize schema
+	args := []interface{}{"public",tableName}
+	s := fmt.Sprintf("SELECT tablename FROM pg_tables WHERE schemaname = $1 and tablename=$2")
+	db.LogSQL(s, args)
+
+	rows, err := db.DB().Query(s, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tables := make([]*core.Table, 0)
+	for rows.Next() {
+		table := core.NewEmptyTable()
+		var name string
+		err = rows.Scan(&name)
+		if err != nil {
+			return nil, err
+		}
+		table.Name = name
+		tables = append(tables, table)
+	}
+	return tables, nil
+}
+
 func (db *postgres) GetIndexes(tableName string) (map[string]*core.Index, error) {
 	// FIXME: replace the public schema to user specify schema
 	args := []interface{}{"public", tableName}

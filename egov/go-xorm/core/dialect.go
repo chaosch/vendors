@@ -76,6 +76,8 @@ type Dialect interface {
 
 	GetColumns(tableName string) ([]string, map[string]*Column, error)
 	GetTables() ([]*Table, error)
+	GetTablesSingle(tableName string) ([]*Table, error)
+
 	GetIndexes(tableName string) (map[string]*Index, error)
 
 	GetAllTableColumns() (map[string]map[string]*Column, error)

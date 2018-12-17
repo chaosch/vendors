@@ -2098,3 +2098,36 @@ func (engine *Engine) Unscoped() *Session {
 	session.IsAutoClose = true
 	return session.Unscoped()
 }
+
+func (engine *Engine) DBMetasSingle(table_name string) ([]*core.Table, error) {
+	tables, err := engine.dialect.GetTablesSingle(table_name)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, table := range tables {
+		colSeq, cols, err := engine.dialect.GetColumns(table.Name)
+		if err != nil {
+			return nil, err
+		}
+		for _, name := range colSeq {
+			table.AddColumn(cols[name])
+		}
+		indexes, err := engine.dialect.GetIndexes(table.Name)
+		if err != nil {
+			return nil, err
+		}
+		table.Indexes = indexes
+
+		for _, index := range indexes {
+			for _, name := range index.Cols {
+				if col := table.GetColumn(name); col != nil {
+					col.Indexes[index.Name] = index.Type
+				} else {
+					return nil, fmt.Errorf("Unknown col %s in index %v of table %v, columns %v", name, index.Name, table.Name, table.ColumnsSeq())
+				}
+			}
+		}
+	}
+	return tables, nil
+}

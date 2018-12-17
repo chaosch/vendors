@@ -148,7 +148,7 @@ func ParseValue(val interface{}) (interface{}, error) {
 		ret,err:=strconv.Atoi(val.(json.Number).String())
 		return int64(ret), err
 	default:
-		return nil, errors.New("it's not singer type")
+		return nil, errors.New("拼接sql语句时解析value获得了null，null值不能使用eq,请使用$isnull 或 $notnull操作")
 	}
 }
 
