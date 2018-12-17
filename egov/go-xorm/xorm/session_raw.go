@@ -6,7 +6,6 @@ package xorm
 
 import (
 	"database/sql"
-
 	"egov/go-xorm/core"
 )
 
@@ -115,20 +114,25 @@ func (session *Session) innerExec(sqlStr string, args ...interface{}) (sql.Resul
 
 //todo 加入记录
 func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, error) {
-	for _, filter := range session.Engine.dialect.Filters() {
+   	for _, filter := range session.Engine.dialect.Filters() {
 		// TODO: for table name, it's no need to RefTable
 		sqlStr = filter.Do(sqlStr, session.Engine.dialect, session.Statement.RefTable)
 	}
 
-	session.saveLastSQL(sqlStr, args...)
 
 	return session.Engine.logSQLExecutionTime(sqlStr, args, func() (sql.Result, error) {
 		if session.IsAutoCommit {
 			// FIXME: oci8 can not auto commit (github.com/mattn/go-oci8)
 			if session.Engine.dialect.DBType() == core.ORACLE {
 				session.Begin()
+				session.saveLastSQL(sqlStr, args...)
 				r, err := session.Tx.Exec(sqlStr, args...)
-				session.Commit()
+				if err!=nil{
+					//fmt.Println(sqlStr,err)
+					session.Rollback()
+				}else{
+					session.Commit()
+				}
 				return r, err
 			}
 
@@ -138,6 +142,8 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 			}
 			return res,err
 		}
+		session.saveLastSQL(sqlStr, args...)
+
 		res,err:= session.Tx.Exec(sqlStr, args...)
 		if err==nil{
 

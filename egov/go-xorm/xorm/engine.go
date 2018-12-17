@@ -1553,7 +1553,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 					if col.XormTag != phyCol.XormTag {
 						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
 						for _, sql := range strings.Split(sqls, ";") {
-							engine.ShowSQL(true)
+ 							engine.ShowSQL(true)
 							_, err1 := engine.Exec(sql)
 							engine.ShowSQL(false)
 							if err1 != nil {
