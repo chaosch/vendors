@@ -1165,6 +1165,6 @@ ORDER BY
 
 func (db *oracle) ModifyColumnSql(tableName string, col *core.Column) string {
 	x := simplifiedchinese.GBK.NewEncoder()
-	sql, _ := x.String(fmt.Sprintf("alter table %s modify %s ;comment on %s.%s is '%s'", tableName, col.StringNoPk(db), tableName, col.Name, col.Comment))
+	sql, _ := x.String(fmt.Sprintf("alter table %s modify %s ;comment on column %s.%s is '%s'", tableName, col.StringNoPk(db), tableName, col.Name, col.Comment))
 	return sql
 }

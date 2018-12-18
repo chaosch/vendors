@@ -450,7 +450,7 @@ func (db *mssql) GetPhysicalColumn(table *core.Table, column *core.Column) *core
 	//	fmt.Println(sqlQuery)
 	//}
 	rows.Close()
-	_, col := core.TransMapStringColumn(50, colRow)
+	_, col := core.TransMapStringColumn(100, colRow)
 	return col
 }
 
