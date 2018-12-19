@@ -42,6 +42,7 @@ type Statement struct {
 	idParam         *core.PK
 	OrderStr        string
 	JoinStr         string
+	UnionStr     string
 	joinArgs        []interface{}
 	GroupByStr      string
 	HavingStr       string
@@ -84,6 +85,7 @@ func (statement *Statement) Init() {
 	statement.OrderStr = ""
 	statement.UseCascade = true
 	statement.JoinStr = ""
+	statement.UnionStr=""
 	statement.joinArgs = make([]interface{}, 0)
 	statement.GroupByStr = ""
 	statement.HavingStr = ""

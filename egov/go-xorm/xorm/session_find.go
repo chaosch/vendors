@@ -128,6 +128,7 @@ func (session *Session) FindRawSql(rowsSlicePtr interface{}, condiBean ...interf
 		if len(args)*2 == qs {
 			args = append(args, args...)
 		}
+		sqlStr+=session.Statement.UnionStr
 		return []byte(sqlStr), nil
 	} else {
 		sqlStr = session.Statement.RawSQL
@@ -261,6 +262,8 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 		if len(args)*2 == qs {
 			args = append(args, args...)
 		}
+		sqlStr+=session.Statement.UnionStr
+
 	} else {
 		sqlStr = session.Statement.RawSQL
 		args = session.Statement.RawParams
