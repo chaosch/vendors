@@ -122,17 +122,18 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 
 
 	return session.Engine.logSQLExecutionTime(sqlStr, args, func() (sql.Result, error) {
+		session.saveLastSQL(sqlStr, args...)
 		if session.IsAutoCommit {
 			// FIXME: oci8 can not auto commit (github.com/mattn/go-oci8)
 			if session.Engine.dialect.DBType() == core.ORACLE {
-				session.Begin()
-				session.saveLastSQL(sqlStr, args...)
-				r, err := session.Tx.Exec(sqlStr, args...)
+				//session.Begin()
+				//r, err := session.Tx.Exec(sqlStr, args...)
+				r,err:=session.innerExec(sqlStr,args...)
 				if err!=nil{
 					fmt.Println(sqlStr,err)
-					session.Rollback()
+//					session.Rollback()
 				}else{
-					session.Commit()
+//					session.Commit()
 				}
 				return r, err
 			}
@@ -143,7 +144,6 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 			}
 			return res,err
 		}
-		session.saveLastSQL(sqlStr, args...)
 
 		res,err:= session.Tx.Exec(sqlStr, args...)
 		if err==nil{
