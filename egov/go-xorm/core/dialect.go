@@ -655,7 +655,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	}
 
 	content += " ' "+col.FieldName+"'"
-	col.XormTag += "' "+ col.FieldName+"'"
+	col.XormTag += "'"+ col.FieldName+"'"
 
 	content += "\""
 
