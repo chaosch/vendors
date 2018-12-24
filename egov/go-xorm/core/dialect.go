@@ -427,7 +427,7 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 	if err != nil {
 		panic(err)
 	}
-
+    var x bool
 	for rows.Next() {
 		slice := make([]interface{}, len(cols))
 		err = rows.ScanSlice(&slice)
@@ -450,12 +450,18 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 		} else {
 			tName = string(x)
 		}
+
 		//tName := string(slice[1].([]byte)) //表名
 		//cName := string(slice[3].([]byte)) //列明
 		if x, ok := slice[3].([]byte); !ok {
 			cName = slice[3].(string)
 		} else {
 			cName = string(x)
+		}
+
+		if cName=="data_interface"{
+			fmt.Println(cName)
+			x=true
 		}
 
 		if columnProperties[tName] == nil {
@@ -490,6 +496,9 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 		}
 		_, col := TransMapStringColumn(100, columnProperties[tName][cName])
 		result[tName][cName] = col
+	}
+	if x {
+		fmt.Println(fmt.Sprintf("%+v",result))
 	}
 	return result
 }

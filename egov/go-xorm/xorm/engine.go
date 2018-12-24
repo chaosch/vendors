@@ -1552,8 +1552,8 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				} else {
 					if strings.Trim(col.XormTag ,"")!=strings.Trim(phyCol.XormTag,""){
 						fmt.Println()
-						fmt.Println(col.XormTag)
-						fmt.Println(phyCol.XormTag)
+						fmt.Println("L:",col.XormTag)
+						fmt.Println("P:",phyCol.XormTag)
 						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
 						for _, sql := range strings.Split(sqls, ";") {
  							engine.ShowSQL(true)
