@@ -620,9 +620,9 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	defaultString := ""
 	if len(col.Default) > 0 {
 		if col.Default == "null" {
-			if col.IsPrimaryKey{
-				defaultString=""
-			}else {
+			if col.IsPrimaryKey {
+				defaultString = ""
+			} else {
 				defaultString = "default null"
 			}
 		} else {
@@ -640,8 +640,11 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	}
 
 	if defaultString != "" {
-		content += " "+ defaultString
-		col.XormTag += " "+ defaultString
+		content += " " + defaultString
+		col.XormTag += " " + defaultString
+	}
+	if col.FieldName == "data_interface" || col.FieldName == "need_dist" {
+		fmt.Print(col.XormTag)
 	}
 
 	if col.FieldName == "create_date" {
@@ -654,8 +657,8 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 		col.XormTag += " updated"
 	}
 
-	content += " '"+col.FieldName+"'"
-	col.XormTag += " '"+ col.FieldName+"'"
+	content += " '" + col.FieldName + "'"
+	col.XormTag += " '" + col.FieldName + "'"
 
 	content += "\""
 
@@ -694,7 +697,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	content += "`\n"
 
 	//if col.FieldName=="data_interface"||col.FieldName=="need_dist"{
-		fmt.Println(col.XormTag)
+	fmt.Println(col.XormTag)
 	//}
 	return content, col
 
