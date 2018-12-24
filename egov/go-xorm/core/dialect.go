@@ -693,7 +693,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	content += "`\n"
 
-	if col.Name=="data_interface"||col.Name=="need_dist"{
+	if col.FieldName=="data_interface"||col.FieldName=="need_dist"{
 		fmt.Sprintf(col.XormTag)
 	}
 	return content, col
