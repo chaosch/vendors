@@ -1525,7 +1525,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
-				if isExist && strings.Trim(col.XormTag ,"")!=strings.Trim(phyCol.XormTag,""){
+				if isExist && col.XormTag !=phyCol.XormTag{
 					fmt.Println(table.Name, col.Name, " modify from ", phyCol.XormTag, " to ", col.XormTag)
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
@@ -1550,7 +1550,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						return err
 					}
 				} else {
-					if strings.Trim(col.XormTag ,"")!=strings.Trim(phyCol.XormTag,""){
+					if col.XormTag !=phyCol.XormTag{
 						fmt.Println()
 						fmt.Println("L:",col.XormTag)
 						fmt.Println("P:",phyCol.XormTag)
