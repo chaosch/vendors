@@ -427,7 +427,6 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 	if err != nil {
 		panic(err)
 	}
-    var x bool
 	for rows.Next() {
 		slice := make([]interface{}, len(cols))
 		err = rows.ScanSlice(&slice)
@@ -459,10 +458,10 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 			cName = string(x)
 		}
 
-		if cName=="data_interface"{
-			fmt.Println(cName)
-			x=true
-		}
+		//if cName=="data_interface"{
+		//	fmt.Println(cName)
+		//	x=true
+		//}
 
 		if columnProperties[tName] == nil {
 			columnProperties[tName] = make(map[string]map[string]string)
@@ -497,9 +496,9 @@ func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 		_, col := TransMapStringColumn(100, columnProperties[tName][cName])
 		result[tName][cName] = col
 	}
-	if x {
-		fmt.Println(fmt.Sprintf("%+v",result))
-	}
+	//if x {
+	//	fmt.Println(fmt.Sprintf("%+v",result))
+	//}
 	return result
 }
 
@@ -694,6 +693,9 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	content += "`\n"
 
+	if col.Name=="data_interface"||col.Name=="need_dist"{
+		fmt.Sprintf(col.XormTag)
+	}
 	return content, col
 
 }
