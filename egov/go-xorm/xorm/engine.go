@@ -1698,7 +1698,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 					if err != nil {
 						//log.Println("修改字段出错:"+err.Error())
 					}
-					if col.Default != "" {
+					if col.Default != ""  &&col.Default != "null" &&col.Default != "NULL"{
 						sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
 						engine.Exec(sqlUpdateDefault)
 					}
