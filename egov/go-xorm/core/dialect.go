@@ -642,6 +642,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	if defaultString != "" {
 		content += " " + defaultString
 		col.XormTag += " " + defaultString
+		col.XormTag=strings.Replace(col.XormTag,"\n","",-1)
 	}
 	if col.FieldName == "data_interface" || col.FieldName == "need_dist" {
 		fmt.Print(col.XormTag)
