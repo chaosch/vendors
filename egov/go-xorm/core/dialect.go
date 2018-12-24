@@ -693,9 +693,9 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	content += "`\n"
 
-	if col.FieldName=="data_interface"||col.FieldName=="need_dist"{
+	//if col.FieldName=="data_interface"||col.FieldName=="need_dist"{
 		fmt.Println(col.XormTag)
-	}
+	//}
 	return content, col
 
 }
