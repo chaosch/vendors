@@ -640,22 +640,22 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	}
 
 	if defaultString != "" {
-		content += fmt.Sprintf(" %s", defaultString)
-		col.XormTag += fmt.Sprintf(" %s", defaultString)
+		content += " "+ defaultString
+		col.XormTag += " "+ defaultString
 	}
 
 	if col.FieldName == "create_date" {
-		content += fmt.Sprintf(" created")
-		col.XormTag += fmt.Sprintf(" created")
+		content += " created"
+		col.XormTag += " created"
 	}
 
 	if col.FieldName == "modify_date" {
-		content += fmt.Sprintf(" updated")
-		col.XormTag += fmt.Sprintf(" updated")
+		content += " updated"
+		col.XormTag += " updated"
 	}
 
-	content += fmt.Sprintf(" '%s'", col.FieldName)
-	col.XormTag += fmt.Sprintf(" '%s'", col.FieldName)
+	content += " ' "+col.FieldName+"'"
+	col.XormTag += "' "+ col.FieldName+"'"
 
 	content += "\""
 
