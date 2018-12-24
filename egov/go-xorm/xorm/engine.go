@@ -1525,7 +1525,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
-				if isExist && col.XormTag != phyCol.XormTag {
+				if isExist && col.XormTag !=strings.Replace(phyCol.XormTag,"default null","",-1){
 					fmt.Println(table.Name, col.Name, " modify from ", phyCol.XormTag, "to", col.XormTag)
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
@@ -1550,7 +1550,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						return err
 					}
 				} else {
-					if col.XormTag != phyCol.XormTag {
+					if col.XormTag !=strings.Replace(phyCol.XormTag,"default null","",-1){
 						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
 						for _, sql := range strings.Split(sqls, ";") {
  							engine.ShowSQL(true)
@@ -1560,7 +1560,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 								log.Println("修改字段出错:"+err1.Error())
 							}
 						}
-						if col.Default != "" {
+						if col.Default != "" &&col.Default != "null" &&col.Default != "NULL" {
 							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
 							engine.ShowSQL(true)
 							engine.Exec(sqlUpdateDefault)
