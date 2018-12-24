@@ -133,14 +133,14 @@ func (col *Column) ModifyString(d Dialect) string {
 	}
 
 	if col.Default != "" {
-		sql += "DEFAULT " + col.Default + " "
+		sql += "default " + col.Default + " "
 	}
 
 	if d.ShowCreateNull() {
 		if col.Nullable {
-			sql += "NULL "
+			sql += "null "
 		} else {
-			sql += "NOT NULL "
+			sql += "not null "
 		}
 	}
 
@@ -152,17 +152,18 @@ func (col *Column) StringNoPk(d Dialect) string {
 
 	sql += d.SqlType(col) + " "
 
-	if col.Default != "" {
-		sql += "DEFAULT " + col.Default + " "
-	}
+	//if col.Default=="null"&&!col.IsPrimaryKey{
+	//	sql += "default null"
+	//}
+
 
 	if d.DBType() != ORACLE {
 
 		if d.ShowCreateNull() {
 			if col.Nullable {
-				sql += "NULL "
+				sql += "null "
 			} else {
-				sql += "NOT NULL "
+				sql += "not null "
 			}
 		}
 	}

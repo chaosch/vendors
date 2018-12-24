@@ -2,10 +2,10 @@ package core
 
 import (
 	"fmt"
-	"strings"
-	"time"
 	"reflect"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type DbType string
@@ -99,8 +99,8 @@ type Base struct {
 	dataSourceName string
 	logger         ILogger
 	*Uri
-	DataTable      map[string]string
-	Dictionaries   map[string]string
+	DataTable    map[string]string
+	Dictionaries map[string]string
 }
 
 func (b *Base) SetTableComment(d map[string]string, t map[string]string) {
@@ -299,12 +299,12 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 
 	}
 	sql += ")"
-	if strings.HasPrefix(tableName,"dic_"){
-		if c,ok:=b.Dictionaries[tableName];ok{
+	if strings.HasPrefix(tableName, "dic_") {
+		if c, ok := b.Dictionaries[tableName]; ok {
 			sql += " Comment='" + c + "'"
 		}
-	}else{
-		if c,ok:=b.DataTable[tableName];ok{
+	} else {
+		if c, ok := b.DataTable[tableName]; ok {
 			sql += " Comment='" + c + "'"
 		}
 	}
@@ -498,8 +498,17 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 	content := ""
 	col := &Column{}
 	col.Name = column["name"]
+	//if col.Name=="data_interface"{
+	//	fmt.Println(col.Name)
+	//}
 	col.Default = strings.Trim(column["defaultvalue"], "(")
 	col.Default = strings.Trim(col.Default, ")")
+	if strings.ToLower(col.Default) == "null" {
+		col.Default = "null"
+	}
+	if col.Default == "" {
+		col.Default = "null"
+	}
 	col.FieldName = column["name"]
 	col.Comment = column["comments"]
 	col.IsAutoIncrement = column["autoincr"] == "1"
@@ -573,7 +582,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	switch coltype {
 	case "string":
-		if col.SQLType.Name == "TEXT"||col.SQLType.Name == "CLOB" {
+		if col.SQLType.Name == "TEXT" || col.SQLType.Name == "CLOB" {
 			factString = "text"
 		} else {
 			factString = fmt.Sprintf("varchar(%d)", col.Length)
@@ -602,15 +611,23 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 
 	defaultString := ""
 	if len(col.Default) > 0 {
-		switch SQLType2Type(col.SQLType).String() {
-		case "string":
-			defaultString = fmt.Sprintf("default '%s'", strings.Replace(col.Default, "'", "", -1))
-		case "time.Time":
-			defaultString = fmt.Sprintf("default '%s'", col.Default)
-		case "tinyint":
-			defaultString = fmt.Sprintf("default %v", col.Default == "1")
-		default:
-			defaultString = fmt.Sprintf("default %s", col.Default)
+		if col.Default == "null" {
+			if col.IsPrimaryKey{
+				defaultString=""
+			}else {
+				defaultString = "default null"
+			}
+		} else {
+			switch SQLType2Type(col.SQLType).String() {
+			case "string":
+				defaultString = fmt.Sprintf("default '%s'", strings.Replace(col.Default, "'", "", -1))
+			case "time.Time":
+				defaultString = fmt.Sprintf("default '%s'", col.Default)
+			case "tinyint":
+				defaultString = fmt.Sprintf("default %v", col.Default == "1")
+			default:
+				defaultString = fmt.Sprintf("default %s", col.Default)
+			}
 		}
 	}
 

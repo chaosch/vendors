@@ -7,7 +7,6 @@ package xorm
 import (
 	"database/sql"
 	"egov/go-xorm/core"
-	"fmt"
 )
 
 func (session *Session) query(sqlStr string, paramStr ...interface{}) ([]map[string][]byte, error) {
@@ -130,7 +129,7 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 				//r, err := session.Tx.Exec(sqlStr, args...)
 				r,err:=session.innerExec(sqlStr,args...)
 				if err!=nil{
-					fmt.Println(sqlStr,err)
+					//fmt.Println(sqlStr,err)
 //					session.Rollback()
 				}else{
 //					session.Commit()
