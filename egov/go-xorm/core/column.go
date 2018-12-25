@@ -155,6 +155,9 @@ func (col *Column) StringNoPk(d Dialect) string {
 	//if col.Default=="null"&&!col.IsPrimaryKey{
 	//	sql += "default null"
 	//}
+	if col.Default != "" {
+		sql += "default " + col.Default + " "
+	}
 
 
 	if d.DBType() != ORACLE {
