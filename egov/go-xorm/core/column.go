@@ -79,7 +79,7 @@ func (col *Column) String(d Dialect) string {
 	sql += d.SqlType(col) + " "
 
 	if col.IsPrimaryKey {
-		sql += "PRIMARY KEY "
+		sql += "primary key "
 		if d.DBType() == MSSQL {
 			if col.IsAutoIncrement {
 				sql += d.AutoIncrStr() + " (" + strconv.FormatInt(col.StartWith, 10) + ",1)"
@@ -92,7 +92,13 @@ func (col *Column) String(d Dialect) string {
 	}
 
 	if col.Default != "" {
-		sql += "DEFAULT " + col.Default + " "
+		if strings.ToLower(col.Default) == "null" {
+			sql += "default null"
+		} else {
+			sql += "default " + col.Default + " "
+		}
+	} else {
+		sql += "default null"
 	}
 
 	if d.ShowCreateNull() {
