@@ -3,13 +3,13 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 )
 
 const (
-	TWOSIDES   = iota + 1
+	TWOSIDES = iota + 1
 	ONLYTODB
 	ONLYFROMDB
 )
@@ -157,8 +157,9 @@ func (col *Column) StringNoPk(d Dialect) string {
 	//}
 	if col.Default != "" {
 		sql += "default " + col.Default + " "
+	} else {
+		sql += "default null "
 	}
-
 
 	if d.DBType() != ORACLE {
 

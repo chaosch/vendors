@@ -1526,7 +1526,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
 				if isExist && col.XormTag !=phyCol.XormTag{
-					fmt.Println(table.Name, col.Name, " modify from ", phyCol.XormTag, " to ", col.XormTag)
+					fmt.Println(table.Name, col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
 				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
@@ -1551,14 +1551,14 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 					}
 				} else {
 					if col.XormTag !=phyCol.XormTag{
-						fmt.Println()
-						fmt.Println("L:",col.XormTag)
-						fmt.Println("P:",phyCol.XormTag)
+						//fmt.Println()
+						//fmt.Println("L:",col.XormTag)
+						//fmt.Println("P:",phyCol.XormTag)
 						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
 						for _, sql := range strings.Split(sqls, ";") {
- 							engine.ShowSQL(true)
+// 							engine.ShowSQL(true)
 							_, err1 := engine.Exec(sql)
-							engine.ShowSQL(false)
+//							engine.ShowSQL(false)
 							if err1 != nil {
 								log.Println("修改字段出错:"+err1.Error())
 							}

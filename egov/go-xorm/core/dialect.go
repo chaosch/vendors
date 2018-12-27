@@ -637,6 +637,8 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 				defaultString = fmt.Sprintf("default %s", col.Default)
 			}
 		}
+	}else{
+		defaultString = "default null"
 	}
 
 	if defaultString != "" {
