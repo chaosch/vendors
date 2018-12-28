@@ -106,10 +106,10 @@ func (col *Column) String(d Dialect) string {
 			//if col.Default!="" {
 			//	sql += "NOT NULL "
 			//}else{
-			sql += "NULL "
+			sql += "null "
 			//			}
 		} else {
-			sql += "NOT NULL "
+			sql += "not  null "
 		}
 	}
 
