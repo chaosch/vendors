@@ -93,12 +93,12 @@ func (col *Column) String(d Dialect) string {
 
 	if col.Default != "" {
 		if strings.ToLower(col.Default) == "null" {
-			sql += "default null"
+			sql += "default null "
 		} else {
 			sql += "default " + col.Default + " "
 		}
 	} else {
-		sql += "default null"
+		sql += "default null "
 	}
 
 	if d.ShowCreateNull() {
@@ -106,10 +106,10 @@ func (col *Column) String(d Dialect) string {
 			//if col.Default!="" {
 			//	sql += "NOT NULL "
 			//}else{
-			sql += "NULL "
+			sql += "null "
 			//			}
 		} else {
-			sql += "NOT NULL "
+			sql += "not  null "
 		}
 	}
 
