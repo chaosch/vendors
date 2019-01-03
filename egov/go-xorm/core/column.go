@@ -91,15 +91,15 @@ func (col *Column) String(d Dialect) string {
 		}
 	}
 
-	if col.Default != "" {
-		if strings.ToLower(col.Default) == "null" {
-			sql += "default null "
-		} else {
-			sql += "default " + col.Default + " "
-		}
-	} else {
-		sql += "default null "
-	}
+	//if col.Default != "" {
+	//	if strings.ToLower(col.Default) == "null" {
+	//		sql += "default null "
+	//	} else {
+	//		sql += "default " + col.Default + " "
+	//	}
+	//} else {
+	//	sql += "default null "
+	//}
 
 	if d.ShowCreateNull() {
 		if col.Nullable {
