@@ -1126,14 +1126,13 @@ func (statement *Statement) genAddColumnStr(col *core.Column) ([]string, []inter
 	quote := statement.Engine.Quote
 	var sql = make([]string, 0)
 	if statement.Engine.dialect.DBType() == core.MSSQL && col.Default != "" {
-
-		sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.String(statement.Engine.dialect)))
+		sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.StringNoPk(statement.Engine.dialect)))
 		sql = append(sql, fmt.Sprintf("UPDATE %v SET %v='%v' WHERE %v IS NULL", quote(statement.TableName()), col.Name, col.Default, col.Name))
 	} else {
 		if statement.Engine.dialect.DBType() == core.MYSQL {
-			sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v comment '%s'", quote(statement.TableName()), col.String(statement.Engine.dialect), col.Comment))
+			sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v comment '%s'", quote(statement.TableName()), col.StringNoPk(statement.Engine.dialect), col.Comment))
 		} else {
-			sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.String(statement.Engine.dialect)))
+			sql = append(sql, fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), col.StringNoPk(statement.Engine.dialect)))
 		}
 	}
 	//fmt.Println(sql)
