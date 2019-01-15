@@ -326,7 +326,7 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 			sql += " DEFAULT CHARSET " + charset
 		}
 	}
-
+	sql = strings.Replace(sql, "default null not null", "not null", -1)
 	return sql
 }
 
@@ -637,14 +637,14 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 				defaultString = fmt.Sprintf("default %s", col.Default)
 			}
 		}
-	}else{
+	} else {
 		defaultString = "default null"
 	}
 
 	if defaultString != "" {
 		content += " " + defaultString
 		col.XormTag += " " + defaultString
-		col.XormTag=strings.Replace(col.XormTag,"\n","",-1)
+		col.XormTag = strings.Replace(col.XormTag, "\n", "", -1)
 	} //todo 为何会有回车换行？
 	//if col.FieldName == "data_interface" || col.FieldName == "need_dist" {
 	//	fmt.Print(col.XormTag)
