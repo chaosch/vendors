@@ -1,6 +1,7 @@
 package consul_api
 
 import (
+	"egov/common"
 	"egov/object-id"
 	"errors"
 	. "github.com/hashicorp/consul/api"
@@ -20,7 +21,7 @@ type ConsulClient struct {
 	AgentClient   *EngineAgent
 	KVClient      *KV
 	Name          string
-	CheckFunction func() string
+	CheckFunction func() *common.ResultTemplate
 	Key           string
 	DefaultValue  []byte
 	CheckRunning  bool
@@ -32,7 +33,7 @@ type EngineAgent struct {
 	TickerStop chan bool
 }
 
-func NewConsulClient(consul_url *string, checkfx func() string, key string, value interface{}) error {
+func NewConsulClient(consul_url *string, checkfx func() *common.ResultTemplate, key string, value interface{}) error {
 	typ := reflect.ValueOf(value).Kind().String()
 	var buffer []byte
 	if typ == "slice" {
@@ -80,7 +81,12 @@ func (CC *ConsulClient) ServiceRegister() error {
 		for {
 			select {
 			case <-ticker.C:
-				CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, CC.CheckFunction(), HealthPassing)
+				res := CC.CheckFunction()
+				if res.Ok {
+					CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetOkStr(res.Data), HealthPassing)
+				} else {
+					CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetErrStr(res.Err), HealthCritical)
+				}
 			case <-CC.AgentClient.TickerStop:
 				return
 			}
