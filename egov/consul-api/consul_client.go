@@ -4,6 +4,7 @@ import (
 	"egov/common"
 	"egov/object-id"
 	"errors"
+	"fmt"
 	. "github.com/hashicorp/consul/api"
 	"github.com/pquerna/ffjson/ffjson"
 	"os"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	CClient = &ConsulClient{}
+	CClient *ConsulClient
 )
 
 type ConsulClient struct {
@@ -25,15 +26,16 @@ type ConsulClient struct {
 	Key           string
 	DefaultValue  []byte
 	CheckRunning  bool
+	Ticker        *time.Ticker
+	TickerStop    chan bool
 }
 
 type EngineAgent struct {
-	Agent      *Agent
-	AgentId    string
-	TickerStop chan bool
+	Agent   *Agent
+	AgentId string
 }
 
-func NewConsulClient(consul_url *string, checkfx func() *common.ResultTemplate, key string, value interface{}) error {
+func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration) error {
 	typ := reflect.ValueOf(value).Kind().String()
 	var buffer []byte
 	if typ == "slice" {
@@ -42,20 +44,23 @@ func NewConsulClient(consul_url *string, checkfx func() *common.ResultTemplate, 
 		buffer, _ = ffjson.Marshal(value)
 	}
 	CClient = &ConsulClient{
-		nil, nil, filepath.Base(os.Args[0]), checkfx, key, buffer, false,
+		nil, nil, filepath.Base(os.Args[0]), checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan  bool,0),
 	}
 	cfg := &Config{}
-	cfg.Address = strings.Split(*consul_url, "://")[1]
-	cfg.Scheme = strings.Split(*consul_url, "://")[0]
+	cfg.Address = strings.Split(*consulUrl, "://")[1]
+	cfg.Scheme = strings.Split(*consulUrl, "://")[0]
 	c, err := NewClient(cfg)
 	if err != nil {
 		return err
 	}
 	CClient.AgentClient = &EngineAgent{
-		c.Agent(), object_id.NewObjectId().Hex(), make(chan bool, 0),
+		c.Agent(), object_id.NewObjectId().Hex(),
 	}
 	CClient.KVClient = c.KV()
-	err = CClient.ServiceRegister()
+
+	if checkfx != nil {
+		err = CClient.ServiceRegister()
+	}
 	return err
 }
 
@@ -69,37 +74,62 @@ func (CC *ConsulClient) ServiceRegister() error {
 			TTL:     "15s",
 			CheckID: CC.AgentClient.AgentId,
 			Status:  HealthPassing,
+			Notes:   "启动成功",
 		},
 	}
 	err := CC.AgentClient.Agent.ServiceRegister(reg)
 	if err != nil {
 		return err
 	}
-	go func() {
-		CC.CheckRunning = true
-		ticker := time.NewTicker(15 * time.Second)
-		for {
-			select {
-			case <-ticker.C:
-				res := CC.CheckFunction()
-				if res.Ok {
-					CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetOkStr(res.Data), HealthPassing)
-				} else {
-					CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetErrStr(res.Err), HealthCritical)
+	if CC.CheckFunction != nil {
+		go func() {
+			CC.CheckRunning = true
+			defer CC.Ticker.Stop()
+			for {
+				select {
+				case <-CC.Ticker.C:
+					res := &common.ResultTemplate{}
+					if CC.CheckFunction != nil {
+						res = CC.CheckFunction()
+					} else {
+						res = CC.DefaultCheckFun()
+					}
+					if res.Ok {
+						CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetOkStr(res.Data), HealthPassing)
+					} else {
+						if res.Err.Err().ErrCode == 0 { //错误代码为0时，返回警告
+							CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetErrStr(res.Err), HealthWarning)
+						} else {
+							CC.AgentClient.Agent.UpdateTTL(CC.AgentClient.AgentId, common.RetErrStr(res.Err), HealthCritical)
+						}
+					}
+				case <-CC.TickerStop:
+					fmt.Println("健康检查已停止！")
+					return
 				}
-			case <-CC.AgentClient.TickerStop:
-				return
 			}
-		}
-	}()
+		}()
+	}
 	return err
 }
 
-func (CC *ConsulClient) ServiceDeRegister() {
-	if CC.CheckRunning {
-		CC.AgentClient.TickerStop <- true
+func (CC *ConsulClient) DefaultCheckFun() *common.ResultTemplate {
+	return common.RetOk("默认健康检查通过!")
+}
+
+func (CC *ConsulClient) SetCheckFun(checkfx func() *common.ResultTemplate) {
+	if checkfx == nil {
+		return
 	}
+	CC.CheckFunction = checkfx
+	CC.ServiceRegister()
+
+}
+
+func (CC *ConsulClient) ServiceDeRegister() {
+	fmt.Println("服务已注销！")
 	CC.AgentClient.Agent.ServiceDeregister(CC.AgentClient.AgentId)
+	CC.TickerStop<-true
 }
 
 //key
