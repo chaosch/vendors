@@ -44,7 +44,7 @@ func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, k
 		buffer, _ = ffjson.Marshal(value)
 	}
 	CClient = &ConsulClient{
-		nil, nil, filepath.Base(os.Args[0]), checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan  bool,0),
+		nil, nil, filepath.Base(os.Args[0]), checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0),
 	}
 	cfg := &Config{}
 	cfg.Address = strings.Split(*consulUrl, "://")[1]
@@ -83,8 +83,11 @@ func (CC *ConsulClient) ServiceRegister() error {
 	}
 	if CC.CheckFunction != nil {
 		go func() {
-			CC.CheckRunning = true
 			defer CC.Ticker.Stop()
+			if CC.CheckRunning {
+				return
+			}
+			CC.CheckRunning = true
 			for {
 				select {
 				case <-CC.Ticker.C:
@@ -105,6 +108,7 @@ func (CC *ConsulClient) ServiceRegister() error {
 					}
 				case <-CC.TickerStop:
 					fmt.Println("健康检查已停止！")
+					CC.CheckRunning = false
 					return
 				}
 			}
@@ -129,7 +133,10 @@ func (CC *ConsulClient) SetCheckFun(checkfx func() *common.ResultTemplate) {
 func (CC *ConsulClient) ServiceDeRegister() {
 	fmt.Println("服务已注销！")
 	CC.AgentClient.Agent.ServiceDeregister(CC.AgentClient.AgentId)
-	CC.TickerStop<-true
+	if CC.CheckRunning {
+		CC.TickerStop <- true
+		CC.CheckRunning = false
+	}
 }
 
 //key
