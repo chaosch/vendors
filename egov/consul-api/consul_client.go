@@ -29,6 +29,7 @@ type ConsulClient struct {
 	Ticker        *time.Ticker
 	TickerStop    chan bool
 	Address       string
+	Port          int
 }
 
 type EngineAgent struct {
@@ -36,7 +37,7 @@ type EngineAgent struct {
 	AgentId string
 }
 
-func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration, serviceName string, address string) error {
+func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration, serviceName string, address string, port int) error {
 	typ := reflect.ValueOf(value).Kind().String()
 	var buffer []byte
 	if typ == "slice" {
@@ -45,7 +46,7 @@ func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, k
 		buffer, _ = ffjson.Marshal(value)
 	}
 	CClient = &ConsulClient{
-		nil, nil, serviceName, checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0), address,
+		nil, nil, serviceName, checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0), address, port,
 	}
 	cfg := &Config{}
 	cfg.Address = strings.Split(*consulUrl, "://")[1]
@@ -70,7 +71,7 @@ func (CC *ConsulClient) ServiceRegister() error {
 		Name: CC.Name,
 		ID:   CC.AgentClient.AgentId,
 		Tags: []string{CC.Name},
-		Port: 9007,
+		Port: CC.Port,
 		Check: &AgentServiceCheck{
 			TTL:     "15s",
 			CheckID: CC.AgentClient.AgentId,
