@@ -7,6 +7,8 @@ import (
 	"fmt"
 	. "github.com/hashicorp/consul/api"
 	"github.com/pquerna/ffjson/ffjson"
+	"net"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -26,6 +28,7 @@ type ConsulClient struct {
 	CheckRunning  bool
 	Ticker        *time.Ticker
 	TickerStop    chan bool
+	Address       string
 }
 
 type EngineAgent struct {
@@ -33,7 +36,7 @@ type EngineAgent struct {
 	AgentId string
 }
 
-func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration, serviceName string) error {
+func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration, serviceName string, address string) error {
 	typ := reflect.ValueOf(value).Kind().String()
 	var buffer []byte
 	if typ == "slice" {
@@ -42,7 +45,7 @@ func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, k
 		buffer, _ = ffjson.Marshal(value)
 	}
 	CClient = &ConsulClient{
-		nil, nil, serviceName, checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0),
+		nil, nil, serviceName, checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0), address,
 	}
 	cfg := &Config{}
 	cfg.Address = strings.Split(*consulUrl, "://")[1]
@@ -74,6 +77,7 @@ func (CC *ConsulClient) ServiceRegister() error {
 			Status:  HealthPassing,
 			Notes:   "启动成功",
 		},
+		Address: CC.Address,
 	}
 	err := CC.AgentClient.Agent.ServiceRegister(reg)
 	if err != nil {
@@ -167,4 +171,25 @@ func (CC *ConsulClient) PutKey(value []byte) error {
 		return errors.New("写入 " + kvPair.Key + "出错:" + err.Error())
 	}
 	return nil
+}
+
+func GetAddress() string {
+	addrs, err := net.InterfaceAddrs()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	for _, address := range addrs {
+
+		// 检查ip地址判断是否回环地址
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+
+		}
+	}
+
 }
