@@ -7,8 +7,6 @@ import (
 	"fmt"
 	. "github.com/hashicorp/consul/api"
 	"github.com/pquerna/ffjson/ffjson"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -35,7 +33,7 @@ type EngineAgent struct {
 	AgentId string
 }
 
-func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration) error {
+func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, key string, value interface{}, checkDuration time.Duration, serviceName string) error {
 	typ := reflect.ValueOf(value).Kind().String()
 	var buffer []byte
 	if typ == "slice" {
@@ -44,7 +42,7 @@ func NewConsulClient(consulUrl *string, checkfx func() *common.ResultTemplate, k
 		buffer, _ = ffjson.Marshal(value)
 	}
 	CClient = &ConsulClient{
-		nil, nil, filepath.Base(os.Args[0]), checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0),
+		nil, nil, serviceName, checkfx, key, buffer, false, time.NewTicker(checkDuration * time.Second), make(chan bool, 0),
 	}
 	cfg := &Config{}
 	cfg.Address = strings.Split(*consulUrl, "://")[1]
