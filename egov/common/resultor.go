@@ -86,8 +86,8 @@ func NewError(errorCode int,errorMsg string) ErrContext {
 }
 
 
-func NewError3(errorCode int,errorMsg string) ErrContext {
-	_, file, line, ok := runtime.Caller(3)
+func NewError0(errorCode int,errorMsg string) ErrContext {
+	_, file, line, ok := runtime.Caller(0)
 	if !ok {
 		file = "???"
 		line = 0
