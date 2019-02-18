@@ -86,6 +86,15 @@ func NewError(errorCode int,errorMsg string) ErrContext {
 }
 
 
+func NewError3(errorCode int,errorMsg string) ErrContext {
+	_, file, line, ok := runtime.Caller(3)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg,ErrLine:line,ErrFile:file}
+}
+
 
 func RetChanges(changes int64) *ResultTemplate {
 	res := &ResultTemplate{Ok: true}
