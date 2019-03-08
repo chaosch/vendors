@@ -200,6 +200,7 @@ type fieldInfo struct {
 	Num       int
 	OmitEmpty bool
 	Flow      bool
+	JsonName  string
 	Comment   string
 	// Inline holds the field index if the field is part of an inlined struct.
 	Inline []int
@@ -229,7 +230,8 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 		info := fieldInfo{Num: i}
 
 		tag := field.Tag.Get("yaml")
-		comment:=field.Tag.Get("comment")
+		comment := field.Tag.Get("comment")
+		json := strings.Split(field.Tag.Get("json"),",")[0]
 		if tag == "" && strings.Index(string(field.Tag), ":") < 0 {
 			tag = string(field.Tag)
 		}
@@ -293,17 +295,18 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 		if tag != "" {
 			info.Key = tag
 		} else {
-			info.Key = strings.ToLower(field.Name)
+			info.Key = json//strings.ToLower(field.Name)
+			//fmt.Println(json)
 		}
 
-		info.Comment=comment
+		info.Comment = comment
 
 		if _, found = fieldsMap[info.Key]; found {
 			msg := "Duplicated key '" + info.Key + "' in struct " + st.String()
 			return nil, errors.New(msg)
 		}
 
-		fieldsList = append(fieldsList, info )
+		fieldsList = append(fieldsList, info)
 		fieldsMap[info.Key] = info
 	}
 
