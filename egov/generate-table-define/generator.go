@@ -49,7 +49,7 @@ func funcGetTabsPk(db_name string) (string) {
 func getAllTables(engine *xorm.Engine, dbName *string) {
 	var allTables []map[string]string
 	var err error
-	if *dbName!= "all" {
+	if *dbName != "all" {
 		allTables, err = engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], '')
 from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
 left join sys.extended_properties g on g.major_id=c.[object_id] and g.minor_id=0 and g.class=1 and g.name='Application'
@@ -588,22 +588,23 @@ func createtabDependencyFast(dbName string) (string) {
 
 func getColumnSimpleInfo(db_name string) (string) {
 	sql := ""
-	//if db_name != "all" {
-	//	sql = `SELECT distinct column_name, data_type
-	// FROM INFORMATION_SCHEMA.columns
-	//WHERE COLUMN_NAME IN (SELECT COLUMN_NAME
-	//                        FROM INFORMATION_SCHEMA.columns
-	//                      GROUP BY COLUMN_NAME
-	//                      HAVING count (DISTINCT data_type) = 1)
-	//                      and INFORMATION_SCHEMA.COLUMNS.TABLE_NAME in (` + outPutMapToSqlString(schemaTableComment[db_name]) + `)`
-	//} else {
-	sql = `SELECT distinct column_name, data_type
+	if db_name != "all" {
+		sql = `SELECT  a.column_name,max( a.data_type) data_type
+  FROM INFORMATION_SCHEMA.columns a
+  where table_name in ( 
+  select TABLE_NAME from  INFORMATION_SCHEMA.TABLES a
+  join sys.extended_properties g on g.major_id=OBJECT_ID(table_name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='` + db_name + `'
+  )
+  group by a.COLUMN_NAME
+`
+	} else {
+		sql = `SELECT distinct column_name, data_type
   FROM INFORMATION_SCHEMA.columns
  WHERE COLUMN_NAME IN (SELECT COLUMN_NAME
                          FROM INFORMATION_SCHEMA.columns
                        GROUP BY COLUMN_NAME
                        HAVING count (DISTINCT data_type) = 1)`
-	//}
+	}
 	engine, err := xorm.NewEngine("mssql", dsn)
 	if err != nil {
 		fmt.Println(err)
