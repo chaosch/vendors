@@ -12,14 +12,12 @@ import (
 //-------------------------------------
 func TestSelect(t *testing.T) {
 	p := sqlparse.NewSQLParser(`
-		select
-			t1.a,
-			t2.b,
-			t3.e ccc,
-			t3.f ddd
-		from
-			(select t2.b as e, t2.d as f from (select a as b, c as d from xx.table1) t2) t1,
-			(select t2.b as e, t2.d as f from (select a as b, c as d from yy.table2) t2) t3
+SELECT
+	t1.city_name a,
+	t2.province_name b
+FROM
+	dic_city t1
+LEFT JOIN dic_province t2 ON t1.province_id = t2.province_id
 	`)
 	r, err := p.DoParser()
 	if err != nil {
