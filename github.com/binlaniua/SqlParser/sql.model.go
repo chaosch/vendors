@@ -80,6 +80,30 @@ type DBTableColumnAlias struct {
 	Alias  *DBTableColumnAlias
 }
 
+func (dbc *DBTableColumn) GetTopAlias() string {
+	if dbc.Alias == nil {
+		return dbc.Name
+	}
+	if dbc.Alias.Name == "" {
+		return dbc.Name
+	}
+	alias := dbc.Alias
+	preAlias := alias
+	for {
+		if alias.Alias == nil {
+			if alias.Name == "" {
+				return preAlias.Name
+			} else {
+				return alias.Name
+			}
+		} else {
+			preAlias = alias
+			alias = alias.Alias
+		}
+	}
+	return ""
+}
+
 //-------------------------------------
 //
 //

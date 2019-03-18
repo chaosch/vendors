@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"github.com/binlaniua/SqlParser"
 	"testing"
 )
@@ -11,20 +12,35 @@ import (
 //
 //-------------------------------------
 func TestSelect(t *testing.T) {
+	//	p := sqlparse.NewSQLParser(`
+	//SELECT
+	//	t1.city_name ,
+	//	t2.province_name b
+	//FROM
+	//	dic_city t1
+	//LEFT JOIN dic_province t2 ON t1.province_id = t2.province_id
+	//	`)
+
 	p := sqlparse.NewSQLParser(`
-SELECT
-	t1.city_name a,
-	t2.province_name b
-FROM
-	dic_city t1
-LEFT JOIN dic_province t2 ON t1.province_id = t2.province_id
-	`)
+  select
+      t1.e1,
+      t2.f1,
+      t3.e ccc,
+      t3.f ddd
+  from
+      (select t2.b1 as e1, t2.d1 as f1 from (select a as b1, c as d1 from xx.table1) t2) t1,
+      (select t2.b as e, t2.d as f from (select a as b, c as d from yy.table2) t2) t3
+`)
 	r, err := p.DoParser()
 	if err != nil {
 		t.Error(err)
 	} else {
 		t.Log(r.String())
 	}
+	fmt.Println(p.GetResult().GetDBUser("xx").TableMap["table1"].GetTopAlias())
+	fmt.Println(p.GetResult().GetDBUser("xx").TableMap["table1"].ColumnMap["a"].GetTopAlias())
+	fmt.Println(p.GetResult().GetDBUser("xx").TableMap["table1"].ColumnMap["c"].GetTopAlias())
+
 }
 
 //-------------------------------------
