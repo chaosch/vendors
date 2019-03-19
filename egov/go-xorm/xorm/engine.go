@@ -8,19 +8,19 @@ import (
 	"bufio"
 	"bytes"
 	"database/sql"
+	"egov/go-xorm/core"
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"io"
+	"log"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"egov/go-xorm/core"
-	"gopkg.in/mgo.v2/bson"
-	"log"
 )
 
 // Engine is the major struct of xorm, it means a database manager.
@@ -1423,7 +1423,7 @@ func (engine *Engine) CheckFK(beans ...interface{}) error {
 	return nil
 }
 
-func (engine *Engine) IsFKExists(column core.Column) (bool) {
+func (engine *Engine) IsFKExists(column core.Column) bool {
 	sql := ""
 	switch engine.dialect.DBType() {
 	case core.ORACLE:
@@ -1484,7 +1484,7 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 	return false
 }
 
-func (Engine *Engine) RevertDatabase() (map[string]*core.Table) {
+func (Engine *Engine) RevertDatabase() map[string]*core.Table {
 	result := make(map[string]*core.Table)
 	tables, err := Engine.dialect.GetTables()
 	if err != nil {
@@ -1525,7 +1525,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
-				if isExist && col.XormTag !=phyCol.XormTag{
+				if isExist && col.XormTag != phyCol.XormTag {
 					fmt.Println(table.Name, col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
@@ -1550,20 +1550,20 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						return err
 					}
 				} else {
-					if col.XormTag !=phyCol.XormTag{
+					if col.XormTag != phyCol.XormTag {
 						//fmt.Println()
 						//fmt.Println("L:",col.XormTag)
 						//fmt.Println("P:",phyCol.XormTag)
 						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
 						for _, sql := range strings.Split(sqls, ";") {
-// 							engine.ShowSQL(true)
+							// 							engine.ShowSQL(true)
 							_, err1 := engine.Exec(sql)
-//							engine.ShowSQL(false)
+							//							engine.ShowSQL(false)
 							if err1 != nil {
-								log.Println("修改字段出错:"+err1.Error())
+								log.Println("修改字段出错:" + err1.Error())
 							}
 						}
-						if col.Default != "" &&col.Default != "null" &&col.Default != "NULL" {
+						if col.Default != "" && col.Default != "null" && col.Default != "NULL" {
 							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
 							engine.ShowSQL(true)
 							engine.Exec(sqlUpdateDefault)
@@ -1701,7 +1701,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 					if err != nil {
 						//log.Println("修改字段出错:"+err.Error())
 					}
-					if col.Default != ""  &&col.Default != "null" &&col.Default != "NULL"{
+					if col.Default != "" && col.Default != "null" && col.Default != "NULL" {
 						sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
 						engine.Exec(sqlUpdateDefault)
 					}
