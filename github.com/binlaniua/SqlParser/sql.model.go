@@ -34,6 +34,9 @@ type DBTable struct {
 //
 //
 func (dbt *DBTable) GetTopAlias() string {
+	if dbt.Alias == nil {
+		return dbt.Name
+	}
 	alias := dbt.Alias
 	preAlias := alias
 	for {
