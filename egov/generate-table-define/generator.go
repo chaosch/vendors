@@ -23,7 +23,7 @@ var schemaTableName = make(map[string]map[string]string)
 var exactSchemaTableComment = make(map[string]map[string]string)
 var exactSchemaTableName = make(map[string]map[string]string)
 var pks = make(map[string]string)
-var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=table_define_20181025;encrypt=disable;"
+var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=tables;encrypt=disable;"
 //var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
 
 func funcGetTabsPk(db_name string) (string) {
