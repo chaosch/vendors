@@ -2440,7 +2440,8 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		//line sql.y:1286
 		{
-			yyVAL.bytes = bytes.ToLower(yyDollar[1].bytes)
+//			yyVAL.bytes = bytes.ToLower(yyDollar[1].bytes)
+			yyVAL.bytes = (yyDollar[1].bytes)
 		}
 	case 253:
 		yyDollar = yyS[yypt-0 : yypt+1]

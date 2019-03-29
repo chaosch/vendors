@@ -237,7 +237,8 @@ func mappingToObject(row *sql.Rows, newValue reflect.Value) {
 	}
 	row.Scan(scanArgs...)
 	for i, col := range values {
-		field, ok := fieldMap[strings.ToLower(columns[i])]
+//		field, ok := fieldMap[strings.ToLower(columns[i])]
+		field, ok := fieldMap[columns[i]]
 		if !ok {
 			continue
 		} else {
