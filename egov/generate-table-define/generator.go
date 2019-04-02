@@ -32,7 +32,7 @@ func funcGetTabsPk(db_name string) (string) {
 	content += "	//所有表的主键 \n"
 	//content += "	Databases[\"" + db_name + "\"].TabsPk=make(map[string]string)  \n"
 	if db_name != "all" {
-		for _, v := range schemaTableName[db_name] {
+		for _, v := range exactSchemaTableName[db_name] {
 			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, v, pks[v])
 			content += "\n"
 		}
@@ -327,7 +327,6 @@ order by a.column_id`
 		content += con
 		content += fmt.Sprintf("}\n")
 		pks[tName] = pk
-
 	}
 
 	return content
