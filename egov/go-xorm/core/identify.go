@@ -3,6 +3,7 @@ package core
 import (
 	"sync"
 	"time"
+	"math"
 )
 var index int64 = 1
 var mutex sync.Mutex
@@ -25,9 +26,10 @@ func (Id *Identify) Construct(pid,cid,did,count uint64){
 	Id.City_id=cid//
 	Id.District_id=did//
 	Id.Idprefix=0
-	Id.Provice_id=Id.Provice_id<<15
-	Id.City_id=Id.City_id<<8
-	Id.Idprefix=int64(Id.Provice_id+Id.City_id+Id.District_id)<<32
+	//Id.Provice_id=Id.Provice_id<<15
+	//Id.City_id=Id.City_id<<8
+	//Id.Idprefix=int64(Id.Provice_id+Id.City_id+Id.District_id)<<32
+	Id.Idprefix=int64(Id.Provice_id*(uint64(math.Pow10(14)))+Id.City_id*uint64(math.Pow10(12))+(Id.District_id*uint64(math.Pow10(10))))
 }
 
 func (ID *Identify)GetId() int64 {
