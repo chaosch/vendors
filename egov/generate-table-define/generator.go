@@ -23,7 +23,7 @@ var schemaTableName = make(map[string]map[string]string)
 var exactSchemaTableComment = make(map[string]map[string]string)
 var exactSchemaTableName = make(map[string]map[string]string)
 var pks = make(map[string]string)
-var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=table_define_20181025;encrypt=disable;"
+var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=tables;encrypt=disable;"
 //var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
 
 func funcGetTabsPk(db_name string) (string) {
@@ -32,7 +32,7 @@ func funcGetTabsPk(db_name string) (string) {
 	content += "	//所有表的主键 \n"
 	//content += "	Databases[\"" + db_name + "\"].TabsPk=make(map[string]string)  \n"
 	if db_name != "all" {
-		for _, v := range schemaTableName[db_name] {
+		for _, v := range exactSchemaTableName[db_name] {
 			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, v, pks[v])
 			content += "\n"
 		}
@@ -49,7 +49,7 @@ func funcGetTabsPk(db_name string) (string) {
 func getAllTables(engine *xorm.Engine, dbName *string) {
 	var allTables []map[string]string
 	var err error
-	if *dbName!= "all" {
+	if *dbName != "all" {
 		allTables, err = engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], '')
 from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
 left join sys.extended_properties g on g.major_id=c.[object_id] and g.minor_id=0 and g.class=1 and g.name='Application'
@@ -327,7 +327,6 @@ order by a.column_id`
 		content += con
 		content += fmt.Sprintf("}\n")
 		pks[tName] = pk
-
 	}
 
 	return content
@@ -588,22 +587,23 @@ func createtabDependencyFast(dbName string) (string) {
 
 func getColumnSimpleInfo(db_name string) (string) {
 	sql := ""
-	//if db_name != "all" {
-	//	sql = `SELECT distinct column_name, data_type
-	// FROM INFORMATION_SCHEMA.columns
-	//WHERE COLUMN_NAME IN (SELECT COLUMN_NAME
-	//                        FROM INFORMATION_SCHEMA.columns
-	//                      GROUP BY COLUMN_NAME
-	//                      HAVING count (DISTINCT data_type) = 1)
-	//                      and INFORMATION_SCHEMA.COLUMNS.TABLE_NAME in (` + outPutMapToSqlString(schemaTableComment[db_name]) + `)`
-	//} else {
-	sql = `SELECT distinct column_name, data_type
+	if db_name != "all" {
+		sql = `SELECT  a.column_name,max( a.data_type) data_type
+  FROM INFORMATION_SCHEMA.columns a
+  where table_name in ( 
+  select TABLE_NAME from  INFORMATION_SCHEMA.TABLES a
+  join sys.extended_properties g on g.major_id=OBJECT_ID(table_name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='` + db_name + `'
+  )
+  group by a.COLUMN_NAME
+`
+	} else {
+		sql = `SELECT distinct column_name, data_type
   FROM INFORMATION_SCHEMA.columns
  WHERE COLUMN_NAME IN (SELECT COLUMN_NAME
                          FROM INFORMATION_SCHEMA.columns
                        GROUP BY COLUMN_NAME
                        HAVING count (DISTINCT data_type) = 1)`
-	//}
+	}
 	engine, err := xorm.NewEngine("mssql", dsn)
 	if err != nil {
 		fmt.Println(err)

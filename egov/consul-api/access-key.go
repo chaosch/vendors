@@ -23,13 +23,13 @@ func GetKey(consulUrl *string, key string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("consul 获取key失败" + ":" + err.Error())
 	}
+	if pair.Value==nil ||len(pair.Value) == 0 {
+		return nil, errors.New("consul 获取" + key + "内容为空")
+	}
 
 	//	fmt.Printf("KV: %v %s\n", pair.Key, pair.Value)
 	buf := pair.Value
 
-	if len(buf) == 0 {
-		return nil, errors.New("consul 获取" + key + "内容为空")
-	}
 	return buf, nil
 }
 
