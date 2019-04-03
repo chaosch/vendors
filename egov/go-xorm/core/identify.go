@@ -20,8 +20,7 @@ type Identify struct {
 }
 
 
-func (Id *Identify) Construct(pid,cid,did,count uint64){
-	Id.Count=1
+func (Id *Identify) Construct(pid,cid,did uint64){
 	Id.Provice_id=pid//
 	Id.City_id=cid//
 	Id.District_id=did//
