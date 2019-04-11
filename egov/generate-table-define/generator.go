@@ -431,7 +431,7 @@ func createTab(db_name string, tablist map[string]string) (string) {
 			return &x
 			},
 		}
-		`, value, value)
+`, value, value)
 
 		}
 	}
@@ -470,7 +470,7 @@ func addTabs(codeString string, dbName string, tableName string, comment string)
 			return &x
 			},
 		}
-		`, tableName, tableName)
+`, tableName, tableName)
 		exactSchemaTableComment[dbName][tableName] = comment
 		exactSchemaTableName[dbName][comment] = tableName
 	}
@@ -588,13 +588,27 @@ func createtabDependencyFast(dbName string) (string) {
 func getColumnSimpleInfo(db_name string) (string) {
 	sql := ""
 	if db_name != "all" {
-		sql = `SELECT  a.column_name,max( a.data_type) data_type
+		sql = `SELECT  a.column_name,max(data_type) data_type
   FROM INFORMATION_SCHEMA.columns a
   where table_name in ( 
-  select TABLE_NAME from  INFORMATION_SCHEMA.TABLES a
-  join sys.extended_properties g on g.major_id=OBJECT_ID(table_name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='` + db_name + `'
-  )
+  (select TABLE_NAME from  INFORMATION_SCHEMA.TABLES a
+  join sys.extended_properties g on g.major_id=OBJECT_ID(table_name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='`+db_name+`')
+  union
+  (SELECT  O2.NAME F_TAB
+          FROM SYSFOREIGNKEYS A,
+               SYSOBJECTS O1,
+               SYSOBJECTS O2,
+               SYSOBJECTS O3,
+			   sys.extended_properties g
+         WHERE     A.CONSTID = O3.ID
+               AND A.FKEYID = O1.ID
+               AND A.RKEYID = O2.ID
+               AND O1.XTYPE = 'U'
+               AND O2.XTYPE = 'U'
+			   and (g.major_id=OBJECT_ID(o1.name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='`+db_name+`'))
+  )  
   group by a.COLUMN_NAME
+ order by a.column_name
 `
 	} else {
 		sql = `SELECT distinct column_name, data_type
