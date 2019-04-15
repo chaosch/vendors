@@ -25,6 +25,7 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type RequestInt struct {
 	OutInt               string   `protobuf:"bytes,1,opt,name=outInt" json:"outInt,omitempty"`
+	BitmapSeq               string   `protobuf:"bytes,5,opt,name=bitmapSeq" json:"bitmapSeq,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -101,7 +102,7 @@ func (m *ResponseInt) GetOutInt() int64 {
 
 type Request struct {
 	OutBuf               string   `protobuf:"bytes,3,opt,name=outBuf" json:"outBuf,omitempty"`
-	IdType				 string   `protobuf:"bytes,3,opt,name=idType" json:"idType,omitempty"`
+	BitmapSeq				 string   `protobuf:"bytes,6,opt,name=bitmapSeq" json:"bitmapSeq,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

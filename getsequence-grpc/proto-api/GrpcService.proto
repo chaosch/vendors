@@ -12,6 +12,13 @@ package GrpcServices;
  message Response{
      string outBuf = 4;
    }
+ message RequestInt{
+   string bitmapSeq = 5;
+ }
+ message Request{
+     string bitmapSeq = 6;
+   }
+
  // 服务handler
  service GetSequenceIntService{
    rpc GrpcGetSequenceInt (RequestInt) returns (ResponseInt){}
