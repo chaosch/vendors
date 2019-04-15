@@ -101,6 +101,7 @@ func (m *ResponseInt) GetOutInt() int64 {
 
 type Request struct {
 	OutBuf               string   `protobuf:"bytes,3,opt,name=outBuf" json:"outBuf,omitempty"`
+	IdType				 string   `protobuf:"bytes,3,opt,name=idType" json:"idType,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
