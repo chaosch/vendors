@@ -19,7 +19,7 @@ func main(){
 	}
 	defer conn.Close()
 	c:=pb.NewGetSequenceServiceClient(conn)
-	rq:=&pb.Request{OutBuf:"tab_affairs"}
+	rq:=&pb.Request{OutBuf:"tab_user"}
 	res,err1:=c.GrpcGetSequence(context.Background(),rq)
 	if err1!=nil{
 		fmt.Println(err1)
