@@ -1573,9 +1573,6 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				}
 
 			}
-			if table.GetColumn("bitmap_seq")!=nil{
-
-			}
 		}
 
 		for name, index := range table.Indexes {
