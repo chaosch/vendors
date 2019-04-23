@@ -1,11 +1,11 @@
 package common
 
 import (
-	"regexp"
-	"time"
-	"strconv"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
+	"time"
 )
 
 func CheckIdCard(idNo string) (error) {
@@ -169,5 +169,4 @@ func PrintGreen(format string, a ...interface{}){
 func Print(format string, a ...interface{}){
 	Println(0,format,a...)
 }
-
 
