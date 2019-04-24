@@ -100,10 +100,22 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 		if len(session.Statement.TableName()) <= 0 {
 			return ErrTableNotFound, ""
 		}
-
 		var columnStr = session.Statement.ColumnStr
 		if len(session.Statement.selectStr) > 0 {
 			columnStr = session.Statement.selectStr
+			if session.Statement.JoinStr == "" {
+				if columnStr =="*"||columnStr==session.Statement.TableAlias+".*"  {
+					if session.Statement.GroupByStr != "" {
+						columnStr = session.Statement.Engine.Quote(strings.Replace(session.Statement.GroupByStr, ",", session.Engine.Quote(","), -1))
+					} else {
+						columnStr = session.Statement.genColumnStr()
+						if session.Statement.TableAlias!=""{
+							columnStr=strings.Replace(columnStr,",",","+session.Statement.TableAlias+".",-1)
+							columnStr=session.Statement.TableAlias+"."+columnStr
+						}
+					}
+				}
+			}
 		} else {
 			if session.Statement.JoinStr == "" {
 				if columnStr == "" {
