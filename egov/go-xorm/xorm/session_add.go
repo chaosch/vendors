@@ -111,6 +111,10 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 						columnStr = session.Statement.Engine.Quote(strings.Replace(session.Statement.GroupByStr, ",", session.Engine.Quote(","), -1))
 					} else {
 						columnStr = session.Statement.genColumnStr()
+						if session.Statement.TableAlias!=""{
+							columnStr=strings.Replace(columnStr,",",","+session.Statement.TableAlias+".",-1)
+							columnStr=session.Statement.TableAlias+"."+columnStr
+						}
 					}
 				}
 			} else {
@@ -119,11 +123,33 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 						columnStr = session.Statement.Engine.Quote(strings.Replace(session.Statement.GroupByStr, ",", session.Engine.Quote(","), -1))
 					} else {
 						columnStr = "*"
+						columnStr=""
+						for i,c:=range session.Statement.RefTable.ColumnsSeq(){
+							if session.Statement.TableAlias!=""{
+								if i==0 {
+									columnStr = columnStr + session.Statement.TableAlias + "." + c
+								}else{
+									columnStr = columnStr +","+ session.Statement.TableAlias + "." + c
+								}
+							}
+
+						}
 					}
 				}
 			}
 			if columnStr == "" {
 				columnStr = "*"
+				columnStr=""
+				for i,c:=range session.Statement.RefTable.ColumnsSeq(){
+					if session.Statement.TableAlias!=""{
+						if i==0 {
+							columnStr = columnStr + session.Statement.TableAlias + "." + c
+						}else{
+							columnStr = columnStr +","+ session.Statement.TableAlias + "." + c
+						}
+					}
+
+				}
 			}
 		}
 
