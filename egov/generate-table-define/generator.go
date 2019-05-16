@@ -186,7 +186,8 @@ func init(){
 	fmt.Println(fmt.Sprintf("生成数据库:%s", "all"))
 	createfunc += createTab("all", allTablesComment)
 	createfunc += getColumnSimpleInfo("all")
-	content = initfunc + createStruct(allTablesComment, engine)
+	//content = initfunc + createStruct(allTablesComment, engine)
+	content = initfunc + createStruct(exactSchemaTableComment["all"], engine)
 	content += createfunc + funcGetTabsPk("all") + "}"
 	for _, db := range dbList {
 		fmt.Println(fmt.Sprintf("生成数据库:%s", db["db_name"]))
