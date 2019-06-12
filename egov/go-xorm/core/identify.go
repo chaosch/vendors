@@ -20,15 +20,21 @@ type Identify struct {
 }
 
 func (Id *Identify) Construct(pid, cid, did uint64) {
-	Id.Provice_id = pid //
-	if Id.Provice_id >= 80 {
-		Id.Provice_id = Id.Provice_id - 55
-	}
+	Id.Provice_id = pid  //
 	Id.City_id = cid     //
 	Id.District_id = did //
 	Id.Idprefix = 0
-	Id.Provice_id = Id.Provice_id << 15
-	Id.City_id = Id.City_id << 8
+
+	if !(pid<127&&pid>0){
+		panic("pid不合法")
+	}
+
+	if cid==0&&did!=0{
+		panic("did非零则cid必须非零")
+	}
+	
+	Id.Provice_id = Id.Provice_id << 14
+	Id.City_id = Id.City_id << 7
 	Id.Idprefix = int64(Id.Provice_id+Id.City_id+Id.District_id) << 32
 	//Id.Idprefix=int64(Id.Provice_id*(uint64(math.Pow10(14)))+Id.City_id*uint64(math.Pow10(12))+(Id.District_id*uint64(math.Pow10(10))))
 }
