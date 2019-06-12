@@ -1574,7 +1574,9 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 
 			}
 		}
-
+		if table.Name=="tab_affairs_mark_result_current"{
+			fmt.Println(table.Name)
+		}
 		for name, index := range table.Indexes {
 			session := engine.NewSession()
 			defer session.Close()
