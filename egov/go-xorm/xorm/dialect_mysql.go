@@ -319,7 +319,7 @@ func (db *mysql) IndexCheckSql(tableName, idxName string) (string, []interface{}
 
 func (db *mysql) TableCheckSql(tableName string) (string, []interface{}) {
 	args := []interface{}{db.DbName, tableName}
-	sql := "SELECT `TABLE_NAME` from `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA`=? and `TABLE_NAME`=?"
+	sql := "SELECT `TABLE_NAME` from `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA`=? and `TABLE_NAME`=? and table_type='BASE TABLE'"
 	return sql, args
 }
 
