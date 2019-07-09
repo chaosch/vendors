@@ -1396,6 +1396,9 @@ func (engine *Engine) CheckFK(beans ...interface{}) error {
 		//tableName := engine.tbName(v)
 		fkColumns, _ := engine.getFK(v)
 		//fmt.Println(fkColumns)
+		if ex,_:=engine.IsTableExist(bean);!ex{
+			continue
+		}
 		sqlCreateFK := ""
 		for _, col := range fkColumns {
 			fkName := "FK_" + bson.NewObjectId().Hex()
@@ -1549,7 +1552,9 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				return err
 			}
 		} else {
-
+			if ex,_:=engine.IsTableExist(bean);!ex{
+				continue
+			}
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
 				if isExist && col.XormTag != phyCol.XormTag {
