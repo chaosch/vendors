@@ -56,6 +56,7 @@ type Engine struct {
 	ColumnTypes        map[string]reflect.Kind
 	Dictionaries       map[string]string
 	DataTables         map[string]string
+	SplitDatabase      map[string]*Engine
 }
 
 func (engine *Engine) GetTagHandlers() map[string]tagHandler {
@@ -277,7 +278,7 @@ func (engine *Engine) Close() error {
 func (engine *Engine) Ping() error {
 	session := engine.NewSession()
 	defer session.Close()
-	engine.logger.Infof("PING DATABASE %v", engine.DriverName())
+	engine.logger.Infof("PING DATABASE %v", engine.DriverName(),engine.EngineName)
 	return session.Ping()
 }
 
@@ -1396,13 +1397,13 @@ func (engine *Engine) CheckFK(beans ...interface{}) error {
 		//tableName := engine.tbName(v)
 		fkColumns, _ := engine.getFK(v)
 		//fmt.Println(fkColumns)
-		if ex,_:=engine.IsTableExist(bean);!ex{
+		if ex, _ := engine.IsTableExist(bean); !ex {
 			continue
 		}
 		sqlCreateFK := ""
 		for _, col := range fkColumns {
 			fkName := "FK_" + bson.NewObjectId().Hex()
-			parentTableName:=strings.Split(col.ForeignKey,"(")[0]
+			parentTableName := strings.Split(col.ForeignKey, "(")[0]
 			colIsTable, _ := engine.IsTableExist(parentTableName)
 			//fmt.Println(col.TableName,col.Name,col.ForeignKey)
 			if !colIsTable {
@@ -1417,11 +1418,11 @@ func (engine *Engine) CheckFK(beans ...interface{}) error {
 					if err := session.Statement.setRefValue(v); err != nil {
 						return err
 					}
-					x:=&core.Index{}
-					x.Name=fkName
-					x.Type=core.IndexType
-					x.Cols=[]string{col.Name}
-					session.Statement.RefTable.Indexes[x.Name]=x
+					x := &core.Index{}
+					x.Name = fkName
+					x.Type = core.IndexType
+					x.Cols = []string{col.Name}
+					session.Statement.RefTable.Indexes[x.Name] = x
 					err = session.addIndex(col.TableName, fkName)
 					if err != nil {
 						return err
@@ -1552,7 +1553,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				return err
 			}
 		} else {
-			if ex,_:=engine.IsTableExist(bean);!ex{
+			if ex, _ := engine.IsTableExist(bean); !ex {
 				continue
 			}
 			for _, col := range table.Columns() {

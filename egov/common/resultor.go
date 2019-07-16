@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"reflect"
 	"runtime"
@@ -220,5 +221,31 @@ func MixError(errs ...error) ErrContext {
 		return nil
 	} else {
 		return NewError(0, errMessage)
+	}
+}
+
+func MixErrors(errs ...error) error {
+	errMessage := ""
+	for idx, err := range errs {
+		if err != nil {
+			if idx == 0 {
+				errMessage += err.Error()
+			} else {
+
+				errMessage += ";" + err.Error()
+			}
+		} else {
+			if idx == 0 {
+				errMessage += ""
+			} else {
+				errMessage += ";"
+			}
+
+		}
+	}
+	if strings.Trim(errMessage, ";") == "" {
+		return nil
+	} else {
+		return errors.New(errMessage)
 	}
 }
