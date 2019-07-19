@@ -50,6 +50,8 @@ type ResultTemplate struct {
 	OKMessage string `json:"ok_message"`
 
 	TransList interface{} `json:"trans_list"`
+
+	PrivateCols interface{} `json:"private_cols"`
 }
 
 type ErrContext interface {
