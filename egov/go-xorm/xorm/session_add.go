@@ -104,14 +104,24 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 		if len(session.Statement.selectStr) > 0 {
 			columnStr = session.Statement.selectStr
 			if session.Statement.JoinStr == "" {
-				if columnStr =="*"||columnStr==session.Statement.TableAlias+".*"  {
+				if columnStr == "*" || columnStr == session.Statement.TableAlias+".*" {
 					if session.Statement.GroupByStr != "" {
 						columnStr = session.Statement.Engine.Quote(strings.Replace(session.Statement.GroupByStr, ",", session.Engine.Quote(","), -1))
 					} else {
+						v := RValue(condiBean[0])
+						t := v.Type()
+						//fmt.Println(v.Type().String())
+						//fmt.Println(v.Type().Name())
+						//fmt.Println(v.Kind().String())
+						//
+						//for x,_:=range session.Engine.Tables{
+						//	fmt.Println(x.Name(),x.Kind().String(),x.String())
+						//}
+						session.Statement.RefTable = session.Engine.Tables[t]
 						columnStr = session.Statement.genColumnStr()
-						if session.Statement.TableAlias!=""{
-							columnStr=strings.Replace(columnStr,",",","+session.Statement.TableAlias+".",-1)
-							columnStr=session.Statement.TableAlias+"."+columnStr
+						if session.Statement.TableAlias != "" {
+							columnStr = strings.Replace(columnStr, ",", ","+session.Statement.TableAlias+".", -1)
+							columnStr = session.Statement.TableAlias + "." + columnStr
 						}
 					}
 				}
@@ -123,9 +133,9 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 						columnStr = session.Statement.Engine.Quote(strings.Replace(session.Statement.GroupByStr, ",", session.Engine.Quote(","), -1))
 					} else {
 						columnStr = session.Statement.genColumnStr()
-						if session.Statement.TableAlias!=""{
-							columnStr=strings.Replace(columnStr,",",","+session.Statement.TableAlias+".",-1)
-							columnStr=session.Statement.TableAlias+"."+columnStr
+						if session.Statement.TableAlias != "" {
+							columnStr = strings.Replace(columnStr, ",", ","+session.Statement.TableAlias+".", -1)
+							columnStr = session.Statement.TableAlias + "." + columnStr
 						}
 					}
 				}
@@ -135,13 +145,13 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 						columnStr = session.Statement.Engine.Quote(strings.Replace(session.Statement.GroupByStr, ",", session.Engine.Quote(","), -1))
 					} else {
 						columnStr = "*"
-						columnStr=""
-						for i,c:=range session.Statement.RefTable.ColumnsSeq(){
-							if session.Statement.TableAlias!=""{
-								if i==0 {
+						columnStr = ""
+						for i, c := range session.Statement.RefTable.ColumnsSeq() {
+							if session.Statement.TableAlias != "" {
+								if i == 0 {
 									columnStr = columnStr + session.Statement.TableAlias + "." + c
-								}else{
-									columnStr = columnStr +","+ session.Statement.TableAlias + "." + c
+								} else {
+									columnStr = columnStr + "," + session.Statement.TableAlias + "." + c
 								}
 							}
 
@@ -151,13 +161,13 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 			}
 			if columnStr == "" {
 				columnStr = "*"
-				columnStr=""
-				for i,c:=range session.Statement.RefTable.ColumnsSeq(){
-					if session.Statement.TableAlias!=""{
-						if i==0 {
+				columnStr = ""
+				for i, c := range session.Statement.RefTable.ColumnsSeq() {
+					if session.Statement.TableAlias != "" {
+						if i == 0 {
 							columnStr = columnStr + session.Statement.TableAlias + "." + c
-						}else{
-							columnStr = columnStr +","+ session.Statement.TableAlias + "." + c
+						} else {
+							columnStr = columnStr + "," + session.Statement.TableAlias + "." + c
 						}
 					}
 
