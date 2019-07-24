@@ -7,7 +7,9 @@ package xorm
 import (
 	"errors"
 	"fmt"
+	"github.com/binlaniua/SqlParser"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -16,7 +18,7 @@ import (
 )
 
 const (
-	tpStruct    = iota
+	tpStruct = iota
 	tpNonStruct
 )
 
@@ -128,7 +130,7 @@ func (session *Session) FindRawSql(rowsSlicePtr interface{}, condiBean ...interf
 		if len(args)*2 == qs {
 			args = append(args, args...)
 		}
-		sqlStr+=session.Statement.UnionStr
+		sqlStr += session.Statement.UnionStr
 		return []byte(sqlStr), nil
 	} else {
 		sqlStr = session.Statement.RawSQL
@@ -262,7 +264,7 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 		if len(args)*2 == qs {
 			args = append(args, args...)
 		}
-		sqlStr+=session.Statement.UnionStr
+		sqlStr += session.Statement.UnionStr
 
 	} else {
 		sqlStr = session.Statement.RawSQL
@@ -283,10 +285,11 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 		}
 	}
 
-	return session.noCacheFind(table, sliceValue, sqlStr, args...)
+	e, _ := session.noCacheFind(table, sliceValue, sqlStr, args...)
+	return e
 }
 
-func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, args ...interface{}) error {
+func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, args ...interface{}) (error, *sqlparse.SQLParserResult) {
 	var rawRows *core.Rows
 	var err error
 
@@ -300,15 +303,20 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 		rawRows, err = session.Tx.Query(sqlStr, args...)
 	}
 	if err != nil {
-		return err
+		return err, nil
 	}
+	reg := regexp.MustCompile(`(?i: offset )\d*$`)
+	sqlStr = reg.ReplaceAllString(sqlStr, "")
+
+	p := sqlparse.NewSQLParser(sqlStr)
+	p.DoParser()
+	rawRows.SQLPR = p.GetResult()
 	defer rawRows.Close()
 
 	fields, err := rawRows.Columns()
 	if err != nil {
-		return err
+		return err, nil
 	}
-
 	var newElemFunc func(fields []string) reflect.Value
 	elemType := containerValue.Type().Elem()
 	var isPointer bool
@@ -317,7 +325,7 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 		elemType = elemType.Elem()
 	}
 	if elemType.Kind() == reflect.Ptr {
-		return errors.New("pointer to pointer is not supported")
+		return errors.New("pointer to pointer is not supported"), nil
 	}
 
 	newElemFunc = func(fields []string) reflect.Value {
@@ -350,10 +358,10 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 	} else {
 		keyType := containerValue.Type().Key()
 		if len(table.PrimaryKeys) == 0 {
-			return errors.New("don't support multiple primary key's map has non-slice key type")
+			return errors.New("don't support multiple primary key's map has non-slice key type"), nil
 		}
 		if len(table.PrimaryKeys) > 1 && keyType.Kind() != reflect.Slice {
-			return errors.New("don't support multiple primary key's map has non-slice key type")
+			return errors.New("don't support multiple primary key's map has non-slice key type"), nil
 		}
 
 		containerValueSetFunc = func(newValue *reflect.Value, pk core.PK) error {
@@ -376,9 +384,9 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 		dataStruct := rValue(newValue.Interface())
 		tb, err := session.Engine.autoMapType(dataStruct)
 		if err != nil {
-			return err
+			return err,nil
 		}
-		return session.rows2Beans(rawRows, fields, len(fields), tb, newElemFunc, containerValueSetFunc)
+		return session.rows2Beans(rawRows, fields, len(fields), tb, newElemFunc, containerValueSetFunc), nil
 	}
 
 	rawRows.ColumnTypes = session.Engine.ColumnTypes
@@ -397,14 +405,14 @@ func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Va
 		}
 
 		if err != nil {
-			return err
+			return err, nil
 		}
 
 		if err := containerValueSetFunc(&newValue, nil); err != nil {
-			return err
+			return err, nil
 		}
 	}
-	return nil
+	return nil, rawRows.SQLPR
 }
 
 func convertPKToValue(table *core.Table, dst interface{}, pk core.PK) error {

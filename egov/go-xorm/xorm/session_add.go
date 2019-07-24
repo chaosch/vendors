@@ -4,7 +4,9 @@ import (
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
+	"github.com/binlaniua/SqlParser"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -14,7 +16,7 @@ func (session *Session) Union(unionType string, subQuery string) *Session {
 	return session
 }
 
-func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ...interface{}) (error, string) {
+func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ...interface{}) (error, *sqlparse.SQLParserResult) {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -22,7 +24,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	if sliceValue.Kind() != reflect.Slice && sliceValue.Kind() != reflect.Map {
-		return errors.New("needs a pointer to a slice or a map"), ""
+		return errors.New("needs a pointer to a slice or a map"), nil
 	}
 
 	sliceElementType := sliceValue.Type().Elem()
@@ -33,7 +35,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 			if sliceElementType.Elem().Kind() == reflect.Struct {
 				pv := reflect.New(sliceElementType.Elem())
 				if err := session.Statement.setRefValue(pv.Elem()); err != nil {
-					return err, ""
+					return err, nil
 				}
 			} else {
 				tp = tpNonStruct
@@ -41,7 +43,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 		} else if sliceElementType.Kind() == reflect.Struct {
 			pv := reflect.New(sliceElementType)
 			if err := session.Statement.setRefValue(pv.Elem()); err != nil {
-				return err, ""
+				return err, nil
 			}
 		} else {
 			tp = tpNonStruct
@@ -98,7 +100,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 	var args []interface{}
 	if session.Statement.RawSQL == "" {
 		if len(session.Statement.TableName()) <= 0 {
-			return ErrTableNotFound, ""
+			return ErrTableNotFound, nil
 		}
 		var columnStr = session.Statement.ColumnStr
 		if len(session.Statement.selectStr) > 0 {
@@ -198,12 +200,139 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 			!session.Statement.unscoped {
 			err = session.cacheFind(sliceElementType, sqlStr, rowsSlicePtr, args...)
 			if err != ErrCacheFailed {
-				return err, ""
+				return err, nil
 			}
 			err = nil // !nashtsai! reset err to nil for ErrCacheFailed
 			session.Engine.logger.Warn("Cache Find Failed")
 		}
 	}
 
-	return session.noCacheFind(table, sliceValue, sqlStr, args...), sqlStr
+	err, parserRes := session.noCacheFind(table, sliceValue, sqlStr, args...)
+	return err, parserRes
+}
+
+func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, args ...interface{}) (error, *sqlparse.SQLParserResult) {
+	var rawRows *core.Rows
+	var err error
+
+	//if session.Engine.showSQL {
+	//	fmt.Println(sqlStr)
+	//}
+	session.queryPreprocess(&sqlStr, args...)
+	if session.IsAutoCommit {
+		_, rawRows, err = session.innerQuery(sqlStr, args...)
+	} else {
+		rawRows, err = session.Tx.Query(sqlStr, args...)
+	}
+	if err != nil {
+		return err, nil
+	}
+	reg := regexp.MustCompile(`(?i: offset )\d*$`)
+	sqlStr = reg.ReplaceAllString(sqlStr, "")
+
+	p := sqlparse.NewSQLParser(sqlStr)
+	p.DoParser()
+	rawRows.SQLPR = p.GetResult()
+	defer rawRows.Close()
+
+	fields, err := rawRows.Columns()
+	if err != nil {
+		return err, nil
+	}
+	var newElemFunc func(fields []string) reflect.Value
+	elemType := containerValue.Type().Elem()
+	var isPointer bool
+	if elemType.Kind() == reflect.Ptr {
+		isPointer = true
+		elemType = elemType.Elem()
+	}
+	if elemType.Kind() == reflect.Ptr {
+		return errors.New("pointer to pointer is not supported"), nil
+	}
+
+	newElemFunc = func(fields []string) reflect.Value {
+		switch elemType.Kind() {
+		case reflect.Slice:
+			slice := reflect.MakeSlice(elemType, len(fields), len(fields))
+			x := reflect.New(slice.Type())
+			x.Elem().Set(slice)
+			return x
+		case reflect.Map:
+			mp := reflect.MakeMap(elemType)
+			x := reflect.New(mp.Type())
+			x.Elem().Set(mp)
+			return x
+		}
+		return reflect.New(elemType)
+	}
+
+	var containerValueSetFunc func(*reflect.Value, core.PK) error
+
+	if containerValue.Kind() == reflect.Slice {
+		containerValueSetFunc = func(newValue *reflect.Value, pk core.PK) error {
+			if isPointer {
+				containerValue.Set(reflect.Append(containerValue, newValue.Elem().Addr()))
+			} else {
+				containerValue.Set(reflect.Append(containerValue, newValue.Elem()))
+			}
+			return nil
+		}
+	} else {
+		keyType := containerValue.Type().Key()
+		if len(table.PrimaryKeys) == 0 {
+			return errors.New("don't support multiple primary key's map has non-slice key type"), nil
+		}
+		if len(table.PrimaryKeys) > 1 && keyType.Kind() != reflect.Slice {
+			return errors.New("don't support multiple primary key's map has non-slice key type"), nil
+		}
+
+		containerValueSetFunc = func(newValue *reflect.Value, pk core.PK) error {
+			keyValue := reflect.New(keyType)
+			err := convertPKToValue(table, keyValue.Interface(), pk)
+			if err != nil {
+				return err
+			}
+			if isPointer {
+				containerValue.SetMapIndex(keyValue.Elem(), newValue.Elem().Addr())
+			} else {
+				containerValue.SetMapIndex(keyValue.Elem(), newValue.Elem())
+			}
+			return nil
+		}
+	}
+
+	if elemType.Kind() == reflect.Struct {
+		var newValue = newElemFunc(fields)
+		dataStruct := rValue(newValue.Interface())
+		tb, err := session.Engine.autoMapType(dataStruct)
+		if err != nil {
+			return err,nil
+		}
+		return session.rows2Beans(rawRows, fields, len(fields), tb, newElemFunc, containerValueSetFunc), nil
+	}
+
+	rawRows.ColumnTypes = session.Engine.ColumnTypes
+
+	for rawRows.Next() {
+		var newValue = newElemFunc(fields)
+		bean := newValue.Interface()
+
+		switch elemType.Kind() {
+		case reflect.Slice:
+			err = rawRows.ScanSlice(bean)
+		case reflect.Map:
+			err = rawRows.ScanMap(bean)
+		default:
+			err = rawRows.Scan(bean)
+		}
+
+		if err != nil {
+			return err, nil
+		}
+
+		if err := containerValueSetFunc(&newValue, nil); err != nil {
+			return err, nil
+		}
+	}
+	return nil, rawRows.SQLPR
 }

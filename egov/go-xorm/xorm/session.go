@@ -6,6 +6,7 @@ package xorm
 
 import (
 	"database/sql"
+	"egov/go-xorm/core"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"reflect"
 	"strings"
 	"time"
-	"egov/go-xorm/core"
 )
 
 // Session keep a pointer to sql.DB and provides all execution of all
@@ -26,6 +26,7 @@ type Session struct {
 	IsAutoCommit           bool
 	IsCommitedOrRollbacked bool
 	IsAutoClose            bool
+	//SqlParseRes            *sqlparse.SQLParserResult
 
 	// Automatically reset the statement after operations that execute a SQL
 	// query such as Count(), Find(), Get(), ...
