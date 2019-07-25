@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"runtime"
@@ -152,6 +153,9 @@ func RetOk(result interface{}) *ResultTemplate {
 	} else {
 		res.Data = []interface{}{result}
 		res.Changes = int64(1)
+	}
+	if res.Data==nil&&res.Changes==1{
+		fmt.Println(res)
 	}
 	return res
 }
