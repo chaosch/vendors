@@ -219,11 +219,11 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 
 	for i, name := range cols {
 		vname := reflect.ValueOf(name)
-		Name:=""
+		Name:=name
 		for _, v := range rs.SQLPR.GetDBUser("*").TableMap {
 			for _,c:=range v.ColumnMap{
-				if c.Name==name{
-					Name=c.GetTopAlias()
+				if c.GetTopAlias()==name{
+					Name=c.Name
 				}
 			}
 		}
