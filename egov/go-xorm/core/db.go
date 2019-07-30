@@ -83,7 +83,7 @@ func (db *DB) Query(query string, args ...interface{}) (*Rows, error) {
 		}
 		return nil, err
 	}
-	return &Rows{rows, db.Mapper,nil}, nil
+	return &Rows{rows, db.Mapper,nil,nil}, nil
 }
 
 func (db *DB) QueryMap(query string, mp interface{}) (*Rows, error) {
@@ -179,7 +179,7 @@ func (s *Stmt) Query(args ...interface{}) (*Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Rows{rows, s.Mapper,nil}, nil
+	return &Rows{rows, s.Mapper,nil,nil}, nil
 }
 
 func (s *Stmt) QueryMap(mp interface{}) (*Rows, error) {
@@ -328,7 +328,7 @@ func (tx *Tx) Query(query string, args ...interface{}) (*Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Rows{rows, tx.Mapper,nil}, nil
+	return &Rows{rows, tx.Mapper,nil,nil}, nil
 }
 
 func (tx *Tx) QueryMap(query string, mp interface{}) (*Rows, error) {

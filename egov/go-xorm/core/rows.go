@@ -3,17 +3,19 @@ package core
 import (
 	"database/sql"
 	"errors"
-	"reflect"
-	"sync"
 	"fmt"
-	"time"
+	"github.com/binlaniua/SqlParser"
+	"reflect"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type Rows struct {
 	*sql.Rows
-	Mapper IMapper
+	Mapper      IMapper
 	ColumnTypes map[string]reflect.Kind
+	SQLPR       *sqlparse.SQLParserResult
 }
 
 func (rs *Rows) ToMapString() ([]map[string]string, error) {
