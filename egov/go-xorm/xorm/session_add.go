@@ -554,7 +554,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 			}
 		}
 
-		if _, ok := t.ColumnMap["split_code"]; !ok { //t.split_code不存在于select
+		if _, ok := t.ColumnMap["split_code"]; !ok && !strings.HasPrefix(t.Name, "dic_") { //t.split_code不存在于select
 			if strings.HasPrefix(*sqlStr, "select") {
 				*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
 			}
