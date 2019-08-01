@@ -83,6 +83,7 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		db:            db,
 		dialect:       dialect,
 		Tables:        make(map[reflect.Type]*core.Table),
+		Tabs:          make(map[string]*core.Table),
 		mutex:         &sync.RWMutex{},
 		TagIdentifier: "xorm",
 		TagComment:    "comment",

@@ -4,6 +4,7 @@ import (
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
+	"fmt"
 	"github.com/binlaniua/SqlParser"
 	"reflect"
 	"regexp"
@@ -412,7 +413,10 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
+	session.ParserSqlAllColumns(&sqlStr)
+
 	session.queryPreprocess(&sqlStr, args...)
+
 	if session.IsAutoCommit {
 		_, rawRows, err = session.innerQuery(sqlStr, args...)
 	} else {
@@ -529,4 +533,51 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 		}
 	}
 	return nil, rawRows.SQLPR
+}
+
+func (session *Session) ParserSqlAllColumns(sqlStr *string) {
+	parser := sqlparse.NewSQLParser(*sqlStr)
+	x, _ := parser.DoParser()
+	p := x.GetDBUser("*")
+	//fmt.Println(p.TableMap)
+	for _, t := range p.TableMap {
+		sqlTab := ""
+		sqlCols := ""
+
+		T := session.Engine.Tabs[t.Name]
+		if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok { //t表主键不存在于select
+			if strings.HasPrefix(*sqlStr, "select") {
+				*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
+			}
+			if strings.HasPrefix(*sqlStr, "SELECT") {
+				*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
+			}
+		}
+
+		if _, ok := t.ColumnMap["split_code"]; !ok { //t.split_code不存在于select
+			if strings.HasPrefix(*sqlStr, "select") {
+				*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
+			}
+			if strings.HasPrefix(*sqlStr, "SELECT") {
+				*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
+			}
+		}
+
+		for _, c := range t.ColumnMap {
+			if c.Name == "*" {
+				fmt.Println(t.GetTopAlias()+"."+"*", t.Name+"."+"*")
+				var xt *core.Table
+				xt = session.Engine.Tabs[t.Name]
+				sqlTab = t.GetTopAlias()
+				for _, col := range xt.Columns() {
+					sqlCols += sqlTab + "." + col.Name + ","
+				}
+				sqlCols += "'x'"
+			}
+		}
+		if sqlCols != "" {
+			*sqlStr = strings.Replace(*sqlStr, sqlTab+".*", sqlCols, -1)
+		}
+
+	}
 }
