@@ -6,6 +6,8 @@ package xorm
 
 import (
 	"database/sql"
+	"egov/go-xorm/core"
+	"egov/object-id"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,12 +15,12 @@ import (
 	"reflect"
 	"strings"
 	"time"
-	"egov/go-xorm/core"
 )
 
 // Session keep a pointer to sql.DB and provides all execution of all
 // kind of database operations.
 type Session struct {
+	SessId                 string
 	db                     *core.DB
 	Engine                 *Engine
 	Tx                     *core.Tx
@@ -76,6 +78,7 @@ func (session *Session) Init() {
 	session.lastSQL = ""
 	session.lastSQLArgs = []interface{}{}
 	session.IdentityInsert = session.Engine.IdentityInsert
+	session.SessId=object_id.NewObjectId().Hex()
 }
 
 // Close release the connection from pool
@@ -797,7 +800,8 @@ func (session *Session) queryPreprocess(sqlStr *string, paramStr ...interface{})
 func (session *Session) saveLastSQL(sql string, args ...interface{}) {
 	session.lastSQL = sql
 	session.lastSQLArgs = args
-	session.Engine.logSQL(sql, args...)
+	//args = append(args, session.SessId)
+	session.Engine.logSQL(sql,session.SessId, args...)
 }
 
 // LastSQL returns last query information

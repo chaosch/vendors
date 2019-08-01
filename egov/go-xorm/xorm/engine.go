@@ -283,13 +283,13 @@ func (engine *Engine) Ping() error {
 }
 
 // logging sql
-func (engine *Engine) logSQL(sqlStr string, sqlArgs ...interface{}) {
+func (engine *Engine) logSQL(sqlStr string,sessionId string, sqlArgs ...interface{}) {
 	if engine.showSQL && !engine.showExecTime {
 		if len(sqlArgs) > 0 {
-			engine.logger.Infof("[%s][SQL] %v %v", engine.EngineName, sqlStr, sqlArgs)
+			engine.logger.Infof("[%s][SQL][%s] %v %v", engine.EngineName,sessionId, sqlStr, sqlArgs)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v %v",engine.EngineName, sqlStr, sqlArgs))
 		} else {
-			engine.logger.Infof("[%s][SQL] %v", engine.EngineName, sqlStr)
+			engine.logger.Infof("[%s][SQL][%s] %v", engine.EngineName,sessionId, sqlStr)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v", engine.EngineName,sqlStr))
 		}
 	}
@@ -2051,7 +2051,7 @@ func (engine *Engine) Import(r io.Reader) ([]sql.Result, error) {
 	for scanner.Scan() {
 		query := strings.Trim(scanner.Text(), " \t\n\r")
 		if len(query) > 0 {
-			engine.logSQL(query)
+			engine.logSQL(query,"")
 			result, err := engine.DB().Exec(query)
 			results = append(results, result)
 			if err != nil {
