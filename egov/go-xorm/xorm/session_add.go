@@ -544,8 +544,8 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 		sqlTab := ""
 		sqlCols := ""
 
-		T := session.Engine.Tabs[t.Name]
-		if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok { //t表主键不存在于select
+		T, Tok := session.Engine.Tabs[t.Name]
+		if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok && Tok { //t表主键不存在于select
 			if strings.HasPrefix(*sqlStr, "select") {
 				*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
 			}
@@ -554,7 +554,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 			}
 		}
 
-		if _, ok := t.ColumnMap["split_code"]; !ok && !strings.HasPrefix(t.Name, "dic_") { //t.split_code不存在于select
+		if _, ok := t.ColumnMap["split_code"]; !ok && Tok && !strings.HasPrefix(t.Name, "dic_") { //t.split_code不存在于select
 			if strings.HasPrefix(*sqlStr, "select") {
 				*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
 			}
