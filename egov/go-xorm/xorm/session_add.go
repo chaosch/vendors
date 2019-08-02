@@ -4,7 +4,6 @@ import (
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
-	"fmt"
 	"github.com/binlaniua/SqlParser"
 	"reflect"
 	"regexp"
@@ -413,7 +412,7 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	session.ParserSqlAllColumns(&sqlStr)
+	//session.ParserSqlAllColumns(&sqlStr)
 
 	session.queryPreprocess(&sqlStr, args...)
 
@@ -588,7 +587,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 
 		for _, c := range t.ColumnMap {
 			if c.Name == "*" {
-				fmt.Println(t.GetTopAlias()+"."+"*", t.Name+"."+"*")
+				//fmt.Println(t.GetTopAlias()+"."+"*", t.Name+"."+"*")
 				var xt *core.Table
 				xt = session.Engine.Tabs[t.Name]
 				sqlTab = t.GetTopAlias()
