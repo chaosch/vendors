@@ -412,7 +412,7 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	//session.ParserSqlAllColumns(&sqlStr)
+	session.ParserSqlAllColumns(&sqlStr)
 
 	session.queryPreprocess(&sqlStr, args...)
 
@@ -558,13 +558,20 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 	//pq.Having.Format(buf)
 	//fmt.Println(buf)
 
-	ps := sqlparse.NewSQLParser(*sqlStr)
+	sql := *sqlStr
+	reg := regexp.MustCompile(`(?i: offset )\d*$`)
+	sql = reg.ReplaceAllString(sql, "")
+
+	ps := sqlparse.NewSQLParser(sql)
 	x, _ := ps.DoParser()
+	//if x == nil {
+	//	return
+	//}
 	p := x.GetDBUser("*")
 
-	if p == nil {
-		return
-	}
+	//if p == nil {
+	//	return
+	//}
 	//fmt.Println(p.TableMap)
 	for _, t := range p.TableMap {
 		sqlTab := ""
