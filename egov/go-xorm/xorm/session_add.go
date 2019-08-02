@@ -561,6 +561,10 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 	ps := sqlparse.NewSQLParser(*sqlStr)
 	x, _ := ps.DoParser()
 	p := x.GetDBUser("*")
+
+	if p == nil {
+		return
+	}
 	//fmt.Println(p.TableMap)
 	for _, t := range p.TableMap {
 		sqlTab := ""
