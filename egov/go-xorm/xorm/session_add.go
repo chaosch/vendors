@@ -536,8 +536,31 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 }
 
 func (session *Session) ParserSqlAllColumns(sqlStr *string) {
-	parser := sqlparse.NewSQLParser(*sqlStr)
-	x, _ := parser.DoParser()
+
+	//var tree xwb.Statement
+	//tree, _ = xwb.Parse(*sqlStr)
+	//pq := tree.(*xwb.Select)
+	//fmt.Println(pq.SelectExprs)
+	//
+	////if err!=nil{
+	////	return
+	////}
+	//
+	////fmt.Println(tree)
+	//buf := xwb.NewTrackedBuffer(nil)
+	//pq.SelectExprs.Format(buf)
+	//fmt.Println(buf)
+	//pq.From.Format(buf)
+	//fmt.Println(buf)
+	//pq.Where.Format(buf)
+	//fmt.Println(buf)
+	//pq.GroupBy.Format(buf)
+	//fmt.Println(buf)
+	//pq.Having.Format(buf)
+	//fmt.Println(buf)
+
+	ps := sqlparse.NewSQLParser(*sqlStr)
+	x, _ := ps.DoParser()
 	p := x.GetDBUser("*")
 	//fmt.Println(p.TableMap)
 	for _, t := range p.TableMap {
@@ -545,7 +568,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 		sqlCols := ""
 
 		//T, Tok := session.Engine.Tabs[t.Name]
-		//if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok && Tok { //t表主键不存在于select
+		//if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok && Tok && len(t.ColumnMap) > 1 && t.Alias.Name == t.GetTopAlias() { //t表主键不存在于select
 		//	if strings.HasPrefix(*sqlStr, "select") {
 		//		*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
 		//	}
@@ -554,7 +577,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) {
 		//	}
 		//}
 		//
-		//if _, ok := t.ColumnMap["split_code"]; !ok && Tok && !strings.HasPrefix(t.Name, "dic_") { //t.split_code不存在于select
+		//if _, ok := t.ColumnMap["split_code"]; !ok && Tok && len(t.ColumnMap) > 1 && Tok && !strings.HasPrefix(t.Name, "dic_") && t.Alias.Name == t.GetTopAlias() { //t.split_code不存在于select
 		//	if strings.HasPrefix(*sqlStr, "select") {
 		//		*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
 		//	}

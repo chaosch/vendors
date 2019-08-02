@@ -440,7 +440,7 @@ func createReadme(out output) {
 
 func TestWhereWithAlias(t *testing.T) {
 	sql := testCase{}
-	sql.SQL = "select * from tab t,cols c where t.a=1 and t.x=c.x"
+	sql.SQL = "select t.a,t.b,t.c from tab t,cols c where t.a=1 and t.x=c.x"
 	x, _ := parse(sql.SQL)
 	fmt.Println(x)
 }
