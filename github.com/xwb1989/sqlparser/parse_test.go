@@ -2081,6 +2081,9 @@ LIMIT 8 OFFSET 8`,
 		}
 		tree, err := Parse(tcase.input)
 		//tree.walkSubtree()
+		x:=tree.(Statement)
+		fmt.Println(x)
+
 		if err != nil {
 			t.Errorf("input: %s, err: %v", tcase.input, err)
 			continue
@@ -2732,8 +2735,26 @@ WHERE
 	)`
 	for i := 0; i < b.N; i++ {
 		ast, err := Parse(sql)
+		x:=ast.(*Select)
+		//fmt.Println(x)
+		for _,c:=range x.SelectExprs{
+			buf:=NewTrackedBuffer(nil)
+			c.Format(buf)
+			fmt.Println(buf)
+		}
 		if err != nil {
 			b.Fatal(err)
+		}
+		for _,t:=range x.From{
+			buf:=NewTrackedBuffer(nil)
+			x:=t.(*JoinTableExpr)
+			x.Format(buf)
+			fmt.Println(buf)
+		}
+
+
+		for _,w:=range x.Where{
+
 		}
 		_ = String(ast)
 	}

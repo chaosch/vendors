@@ -246,8 +246,7 @@ WHERE
 			AND p.primary_proposer = 1
 		)
 		AND ai.delete_mark = 0
-	)
-`)
+	)`)
 	r, err := p.DoParser()
 
 	fmt.Println(r.GetDBUser("*").TableMap["tab_flow_node_info"].Alias.Name,r.GetDBUser("*").TableMap["tab_flow_node_info"].GetTopAlias())
