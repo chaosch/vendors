@@ -4,6 +4,7 @@ import (
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
+	"fmt"
 	"github.com/binlaniua/SqlParser"
 	"reflect"
 	"regexp"
@@ -412,7 +413,11 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	session.ParserSqlAllColumns(&sqlStr)
+	err=session.ParserSqlAllColumns(&sqlStr)
+
+	if err!=nil{
+		return err,nil
+	}
 
 	session.queryPreprocess(&sqlStr, args...)
 
@@ -534,36 +539,18 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	return nil, rawRows.SQLPR
 }
 
-func (session *Session) ParserSqlAllColumns(sqlStr *string) {
-
-	//var tree xwb.Statement
-	//tree, _ = xwb.Parse(*sqlStr)
-	//pq := tree.(*xwb.Select)
-	//fmt.Println(pq.SelectExprs)
-	//
-	////if err!=nil{
-	////	return
-	////}
-	//
-	////fmt.Println(tree)
-	//buf := xwb.NewTrackedBuffer(nil)
-	//pq.SelectExprs.Format(buf)
-	//fmt.Println(buf)
-	//pq.From.Format(buf)
-	//fmt.Println(buf)
-	//pq.Where.Format(buf)
-	//fmt.Println(buf)
-	//pq.GroupBy.Format(buf)
-	//fmt.Println(buf)
-	//pq.Having.Format(buf)
-	//fmt.Println(buf)
+func (session *Session) ParserSqlAllColumns(sqlStr *string) error {
 
 	sql := *sqlStr
 	reg := regexp.MustCompile(`(?i: offset )\d*$`)
 	sql = reg.ReplaceAllString(sql, "")
 
 	ps := sqlparse.NewSQLParser(sql)
-	x, _ := ps.DoParser()
+	x, err := ps.DoParser()
+
+	if err!=nil {
+		return err
+	}
 	//if x == nil {
 	//	return
 	//}
