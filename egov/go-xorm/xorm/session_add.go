@@ -4,7 +4,6 @@ import (
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
-	"fmt"
 	"github.com/binlaniua/SqlParser"
 	"reflect"
 	"regexp"
@@ -600,4 +599,5 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) error {
 		}
 
 	}
+	return nil
 }
