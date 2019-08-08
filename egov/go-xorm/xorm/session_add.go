@@ -412,10 +412,10 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	err=session.ParserSqlAllColumns(&sqlStr)
+	err = session.ParserSqlAllColumns(&sqlStr)
 
-	if err!=nil{
-		return err,nil
+	if err != nil {
+		return err, nil
 	}
 
 	session.queryPreprocess(&sqlStr, args...)
@@ -547,8 +547,8 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) error {
 	ps := sqlparse.NewSQLParser(sql)
 	x, err := ps.DoParser()
 
-	if err!=nil {
-		return err
+	if err != nil {
+		return errors.New("sqlparser says:" + err.Error())
 	}
 	//if x == nil {
 	//	return
