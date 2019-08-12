@@ -1,6 +1,7 @@
 package xorm
 
 import (
+	"database/sql"
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
@@ -600,4 +601,143 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string) error {
 
 	}
 	return nil
+}
+
+func (session *Session) ParserSqlAOnly(sqlStr *string) error {
+
+	sql := *sqlStr
+	reg := regexp.MustCompile(`(?i: offset )\d*$`)
+	sql = reg.ReplaceAllString(sql, "")
+
+	ps := sqlparse.NewSQLParser(sql)
+	x, err := ps.DoParser()
+
+	if err != nil {
+		return errors.New("sqlparser says:" + err.Error())
+	}
+	//if x == nil {
+	//	return
+	//}
+	p := x.GetDBUser("*")
+
+	//if p == nil {
+	//	return
+	//}
+	//fmt.Println(p.TableMap)
+	for _, t := range p.TableMap {
+		sqlTab := ""
+		sqlCols := ""
+
+		//T, Tok := session.Engine.Tabs[t.Name]
+		//if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok && Tok && len(t.ColumnMap) > 1 && t.Alias.Name == t.GetTopAlias() { //t表主键不存在于select
+		//	if strings.HasPrefix(*sqlStr, "select") {
+		//		*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
+		//	}
+		//	if strings.HasPrefix(*sqlStr, "SELECT") {
+		//		*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
+		//	}
+		//}
+		//
+		//if _, ok := t.ColumnMap["split_code"]; !ok && Tok && len(t.ColumnMap) > 1 && Tok && !strings.HasPrefix(t.Name, "dic_") && t.Alias.Name == t.GetTopAlias() { //t.split_code不存在于select
+		//	if strings.HasPrefix(*sqlStr, "select") {
+		//		*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
+		//	}
+		//	if strings.HasPrefix(*sqlStr, "SELECT") {
+		//		*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
+		//	}
+		//}
+
+		for _, c := range t.ColumnMap {
+			if c.Name == "*" {
+				//fmt.Println(t.GetTopAlias()+"."+"*", t.Name+"."+"*")
+				var xt *core.Table
+				xt = session.Engine.Tabs[t.Name]
+				sqlTab = t.GetTopAlias()
+				for _, col := range xt.Columns() {
+					sqlCols += sqlTab + "." + col.Name + ","
+				}
+				sqlCols += "'x'"
+			}
+		}
+		if sqlCols != "" {
+			*sqlStr = strings.Replace(*sqlStr, sqlTab+".*", sqlCols, -1)
+		}
+
+	}
+	return nil
+}
+
+func (session *Session) SumsWithSqlRes(bean interface{}, columnNames ...string) ([]float64, error, *sqlparse.SQLParserResult) {
+	defer session.resetStatement()
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+
+	var sqlStr string
+	var args []interface{}
+	if len(session.Statement.RawSQL) == 0 {
+		sqlStr, args = session.Statement.genSumSQL(bean, columnNames...)
+	} else {
+		sqlStr = session.Statement.RawSQL
+		args = session.Statement.RawParams
+	}
+
+	p := sqlparse.NewSQLParser(sqlStr)
+	sqlParseRes, err := p.DoParser()
+	if err != nil {
+		return nil, err, sqlParseRes
+	}
+
+	session.queryPreprocess(&sqlStr, args...)
+
+	//var err error
+	var res = make([]float64, len(columnNames), len(columnNames))
+	if session.IsAutoCommit {
+		err = session.DB().QueryRow(sqlStr, args...).ScanSlice(&res)
+	} else {
+		err = session.Tx.QueryRow(sqlStr, args...).ScanSlice(&res)
+	}
+
+	if err == sql.ErrNoRows || err == nil {
+		return res, nil, sqlParseRes
+	}
+	return nil, err, sqlParseRes
+}
+
+func (session *Session) CountWithSqlRes(bean interface{}) (int64, error, *sqlparse.SQLParserResult) {
+	defer session.resetStatement()
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+
+	var sqlStr string
+	var args []interface{}
+	if session.Statement.RawSQL == "" {
+		sqlStr, args = session.Statement.genCountSQL(bean)
+	} else {
+		sqlStr = session.Statement.RawSQL
+		args = session.Statement.RawParams
+	}
+
+	p := sqlparse.NewSQLParser(sqlStr)
+	sqlParseRes, err := p.DoParser()
+	if err != nil {
+		return 0, err, sqlParseRes
+	}
+
+	session.queryPreprocess(&sqlStr, args...)
+
+	//var err error
+	var total int64
+	if session.IsAutoCommit {
+		err = session.DB().QueryRow(sqlStr, args...).Scan(&total)
+	} else {
+		err = session.Tx.QueryRow(sqlStr, args...).Scan(&total)
+	}
+
+	if err == sql.ErrNoRows || err == nil {
+		return total, nil, sqlParseRes
+	}
+
+	return 0, err, sqlParseRes
 }
