@@ -1,14 +1,14 @@
 package postlog
 
 import (
-	"fmt"
-	"encoding/json"
 	"bytes"
-	"time"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/pquerna/ffjson/ffjson"
 	"net/http"
 	"reflect"
-	"errors"
-	"github.com/pquerna/ffjson/ffjson"
+	"time"
 )
 
 const (
@@ -261,19 +261,19 @@ type LogStructSlice struct {
 }
 
 type ProcessStatus struct {
-	InBuf string `json:"inbuf"`
+	InBuf         string                 `json:"inbuf"`
 	InBufObject   map[string]interface{} `json:"inBufObject" `
-	Starttime     time.Time   `json:"starttime"`
-	EndTime       time.Time   `json:"endtime"`
-	CreateTime    time.Time   `json:"create_time"` //必须
-	Duration      int64       `json:"duration"`
-	OK            bool        `json:"ok"`
-	Err           interface{} `json:"err"`
-	SqlDuration   int64       `json:"sqlduration"`
-	Changes       int64       `json:"changes"`
-	ChipId        int64       `json:"chipid"`        //唯一标识
-	Version       string      `json:"version"`       //版本
-	IpAddress     string      `json:"ipaddress"`     //ip地址
-	InTransaction bool        `json:"intransaction"` //必须
-	Prompt        string      `json:"prompt"`
+	Starttime     time.Time              `json:"starttime"`
+	EndTime       time.Time              `json:"endtime"`
+	CreateTime    time.Time              `json:"create_time"` //必须
+	Duration      int64                  `json:"duration"`
+	OK            bool                   `json:"ok"`
+	Err           interface{}            `json:"err"`
+	SqlDuration   int64                  `json:"sqlduration"`
+	Changes       int64                  `json:"changes"`
+	ChipId        int64                  `json:"chipid"`        //唯一标识
+	Version       string                 `json:"version"`       //版本
+	IpAddress     string                 `json:"ipaddress"`     //ip地址
+	InTransaction bool                   `json:"intransaction"` //必须
+	Prompt        string                 `json:"prompt"`
 }

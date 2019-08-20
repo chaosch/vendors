@@ -3,16 +3,16 @@ package core
 import (
 	"database/sql"
 	"errors"
-	"reflect"
-	"sync"
 	"fmt"
-	"time"
+	"reflect"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type Rows struct {
 	*sql.Rows
-	Mapper IMapper
+	Mapper      IMapper
 	ColumnTypes map[string]reflect.Kind
 }
 

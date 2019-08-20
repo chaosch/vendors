@@ -16,10 +16,10 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
-	"strings"
 )
 
 // Unmarshal parses the JSON-encoded data and stores the result
@@ -120,7 +120,6 @@ type Unmarshaler interface {
 	UnmarshalJSON([]byte) error
 }
 
-
 // An UnmarshalTypeError describes a JSON value that was
 // not appropriate for a value of a specific Go type.
 type UnmarshalTypeError struct {
@@ -205,8 +204,6 @@ func (n Number) Float64() (float64, error) {
 func (n Number) Int64() (int64, error) {
 	return strconv.ParseInt(string(n), 10, 64)
 }
-
-
 
 // isValidNumber reports whether s is a valid JSON number literal.
 func isValidNumber(s string) bool {
@@ -810,12 +807,12 @@ func (d *decodeState) literal(v reflect.Value) {
 // depending on the setting of d.useNumber.
 func (d *decodeState) convertNumber(s string) (interface{}, error) {
 	if d.useNumber {
-		if strings.Contains(s,"."){
-			ret, _ := strconv.ParseFloat(s,10)
-			return ret,nil
-		}else{
+		if strings.Contains(s, ".") {
+			ret, _ := strconv.ParseFloat(s, 10)
+			return ret, nil
+		} else {
 			ret, _ := strconv.Atoi(s)
-			return int64(ret),nil
+			return int64(ret), nil
 		}
 
 		//return Number(s), nil
@@ -1283,6 +1280,3 @@ func unquoteBytes(s []byte) (t []byte, ok bool) {
 	}
 	return b[0:w], true
 }
-
-
-

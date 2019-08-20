@@ -1,8 +1,8 @@
 package connectionmanager
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 type httpDialect struct {

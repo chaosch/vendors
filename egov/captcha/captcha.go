@@ -1,17 +1,17 @@
 package captcha
 
 import (
+	. "egov/common"
+	"egov/json"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mojocn/base64Captcha"
 	"net/http"
-	"egov/json"
-	. "egov/common"
-	"fmt"
 )
 
 //获取验证码
 // base64Captcha create http handler
-func GetCaptcha(w http.ResponseWriter, r *http.Request,prams httprouter.Params) {
+func GetCaptcha(w http.ResponseWriter, r *http.Request, prams httprouter.Params) {
 	//parse request parameters
 	//接收客户端发送来的请求参数
 	r.ParseForm()
@@ -30,16 +30,16 @@ func GetCaptcha(w http.ResponseWriter, r *http.Request,prams httprouter.Params) 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	body := map[string]interface{}{"code": 1, "data": base64Png, "msg": "success"}
 	//json.NewEncoder(w).Encode(body)
-	bod,err:=json.Marshal(RetOk(body))
-	if err!=nil{
-		fmt.Fprintf(w,"验证码生成错误")
+	bod, err := json.Marshal(RetOk(body))
+	if err != nil {
+		fmt.Fprintf(w, "验证码生成错误")
 	}
-	fmt.Fprint(w,string(bod))
+	fmt.Fprint(w, string(bod))
 }
 
 //校验验证码
 // base64Captcha verify http handler
-func VerifyCaptcha(w http.ResponseWriter, r *http.Request,prams httprouter.Params)*ResultTemplate{
+func VerifyCaptcha(w http.ResponseWriter, r *http.Request, prams httprouter.Params) *ResultTemplate {
 	//parse request parameters
 	//接收客户端发送来的请求参数
 	r.ParseForm()
@@ -58,7 +58,7 @@ func VerifyCaptcha(w http.ResponseWriter, r *http.Request,prams httprouter.Param
 	if verifyResult {
 		body = map[string]interface{}{"code": "success", "data": "验证通过", "msg": "captcha verified", "debug": formData}
 		return RetOk(body)
-	}else{
+	} else {
 		return RetErr(NewError(0, "验证码验证错误"))
 	}
 	//json.NewEncoder(w).Encode(body)

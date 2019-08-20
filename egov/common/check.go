@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func CheckIdCard(idNo string) (error) {
+func CheckIdCard(idNo string) error {
 
 	var id_card [18]byte // 'X' == byte(88)， 'X'在byte中表示为88
 	var id_card_copy [17]byte
@@ -48,19 +48,19 @@ func CheckIdCard(idNo string) (error) {
 
 	if reg.MatchString(idNo) == true {
 		submatch := reg.FindStringSubmatch(idNo)
-		t, err := time.ParseInLocation("20060102", submatch[2],time.Local)
+		t, err := time.ParseInLocation("20060102", submatch[2], time.Local)
 		if err != nil {
 			return err
 		}
-		minDate,err:=time.ParseInLocation("20060102", "19170101",time.Local)
-		if err!=nil{
+		minDate, err := time.ParseInLocation("20060102", "19170101", time.Local)
+		if err != nil {
 			return err
 		}
-		maxDate,err:=time.ParseInLocation("20060102", "20100101",time.Local)
-		if err!=nil{
+		maxDate, err := time.ParseInLocation("20060102", "20100101", time.Local)
+		if err != nil {
 			return err
 		}
-		if t.Before(minDate)||t.After(maxDate){
+		if t.Before(minDate) || t.After(maxDate) {
 			return errors.New("出生日期不合法")
 		}
 		//fmt.Println(submatch)
@@ -78,7 +78,7 @@ func byte2int(x byte) byte {
 	if x == 88 {
 		return 'X'
 	}
-	return (x - 48) // 'X' - 48 = 40;
+	return x - 48 // 'X' - 48 = 40;
 }
 
 func check_id(id [17]byte) int {
@@ -97,7 +97,7 @@ func check_id(id [17]byte) int {
 		}
 	*/
 
-	var wi [17]int = [...]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
+	var wi = [...]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
 	var res int
 	for i := 0; i < 17; i++ {
 		//fmt.Println("id =", i, byte2int(id[i]), wi[i])
@@ -106,7 +106,7 @@ func check_id(id [17]byte) int {
 
 	//fmt.Println("res = ", res)
 
-	return (res % 11)
+	return res % 11
 }
 
 func verify_id(verify int, id_v byte) (bool, string) {
@@ -119,7 +119,7 @@ func verify_id(verify int, id_v byte) (bool, string) {
 			temp = a18[i]
 			//fmt.Println("verify_id id",)
 			// if a18[i] == 'X' ,let convert it to type string
-			if (a18[i] == 88 ) {
+			if a18[i] == 88 {
 				//fmt.Println("计算得到身份证最后一位是 ", string(a18[i]))
 			} else {
 				//fmt.Println("计算得到身份证最后一位是 ", a18[i])
@@ -144,29 +144,28 @@ func verify_id(verify int, id_v byte) (bool, string) {
 }
 
 const (
-	black=30
-	red=31
-	green=32
-	yellow=33
-	blue=34
-	pink=35
-	cyan=36
-	white=37
+	black  = 30
+	red    = 31
+	green  = 32
+	yellow = 33
+	blue   = 34
+	pink   = 35
+	cyan   = 36
+	white  = 37
 )
 
-func Println(foreaground int,format string, a ...interface{}){
-	fmt.Printf("%c[0;0;%dm%s%c[0m\n",0x1B,foreaground,fmt.Sprintf(format,a...), 0x1B)
+func Println(foreaground int, format string, a ...interface{}) {
+	fmt.Printf("%c[0;0;%dm%s%c[0m\n", 0x1B, foreaground, fmt.Sprintf(format, a...), 0x1B)
 }
 
-func PrintRed(format string, a ...interface{}){
-	Println(red,format,a...)
+func PrintRed(format string, a ...interface{}) {
+	Println(red, format, a...)
 }
 
-func PrintGreen(format string, a ...interface{}){
-	Println(green,format,a...)
+func PrintGreen(format string, a ...interface{}) {
+	Println(green, format, a...)
 }
 
-func Print(format string, a ...interface{}){
-	Println(0,format,a...)
+func Print(format string, a ...interface{}) {
+	Println(0, format, a...)
 }
-
