@@ -2,6 +2,8 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"runtime"
@@ -49,6 +51,8 @@ type ResultTemplate struct {
 	OKMessage string `json:"ok_message"`
 
 	TransList interface{} `json:"trans_list"`
+
+	PrivateCols interface{} `json:"private_cols"`
 }
 
 type ErrContext interface {
@@ -150,6 +154,9 @@ func RetOk(result interface{}) *ResultTemplate {
 		res.Data = []interface{}{result}
 		res.Changes = int64(1)
 	}
+	if res.Data==nil&&res.Changes==1{
+		fmt.Println(res)
+	}
 	return res
 }
 
@@ -220,5 +227,31 @@ func MixError(errs ...error) ErrContext {
 		return nil
 	} else {
 		return NewError(0, errMessage)
+	}
+}
+
+func MixErrors(errs ...error) error {
+	errMessage := ""
+	for idx, err := range errs {
+		if err != nil {
+			if idx == 0 {
+				errMessage += err.Error()
+			} else {
+
+				errMessage += ";" + err.Error()
+			}
+		} else {
+			if idx == 0 {
+				errMessage += ""
+			} else {
+				errMessage += ";"
+			}
+
+		}
+	}
+	if strings.Trim(errMessage, ";") == "" {
+		return nil
+	} else {
+		return errors.New(errMessage)
 	}
 }

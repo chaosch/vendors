@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/binlaniua/SqlParser"
 	"reflect"
 	"strconv"
 	"sync"
@@ -14,6 +15,7 @@ type Rows struct {
 	*sql.Rows
 	Mapper      IMapper
 	ColumnTypes map[string]reflect.Kind
+	SQLPR       *sqlparse.SQLParserResult
 }
 
 func (rs *Rows) ToMapString() ([]map[string]string, error) {

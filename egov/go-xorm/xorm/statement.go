@@ -1034,7 +1034,7 @@ func (statement *Statement) genColumnStr() string {
 		}
 
 		if buf.Len() != 0 {
-			buf.WriteString(", ")
+			buf.WriteString(",")
 		}
 
 		if col.IsPrimaryKey && statement.Engine.Dialect().DBType() == "ql" {

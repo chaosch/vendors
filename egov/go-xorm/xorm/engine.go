@@ -37,6 +37,7 @@ type Engine struct {
 	TagFK         string
 	TagIndexes    string
 	Tables        map[reflect.Type]*core.Table
+	Tabs          map[string]*core.Table
 
 	mutex  *sync.RWMutex
 	Cacher core.Cacher
@@ -56,6 +57,7 @@ type Engine struct {
 	ColumnTypes        map[string]reflect.Kind
 	Dictionaries       map[string]string
 	DataTables         map[string]string
+	SplitDatabase      map[string]*Engine
 }
 
 func (engine *Engine) GetTagHandlers() map[string]tagHandler {
@@ -277,18 +279,18 @@ func (engine *Engine) Close() error {
 func (engine *Engine) Ping() error {
 	session := engine.NewSession()
 	defer session.Close()
-	engine.logger.Infof("PING DATABASE %v", engine.DriverName())
+	engine.logger.Infof("PING DATABASE %v", engine.DriverName(), engine.EngineName)
 	return session.Ping()
 }
 
 // logging sql
-func (engine *Engine) logSQL(sqlStr string, sqlArgs ...interface{}) {
+func (engine *Engine) logSQL(sqlStr string, sessionId string, sqlArgs ...interface{}) {
 	if engine.showSQL && !engine.showExecTime {
 		if len(sqlArgs) > 0 {
-			engine.logger.Infof("[%s][SQL] %v %v", engine.EngineName, sqlStr, sqlArgs)
+			engine.logger.Infof("[%s][SQL][%s] %v %v", engine.EngineName, sessionId, sqlStr, sqlArgs)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v %v",engine.EngineName, sqlStr, sqlArgs))
 		} else {
-			engine.logger.Infof("[%s][SQL] %v", engine.EngineName, sqlStr)
+			engine.logger.Infof("[%s][SQL][%s] %v", engine.EngineName, sessionId, sqlStr)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v", engine.EngineName,sqlStr))
 		}
 	}
@@ -815,6 +817,7 @@ func (engine *Engine) autoMapType(v reflect.Value) (*core.Table, error) {
 		}
 
 		engine.Tables[t] = table
+		engine.Tabs[table.Name]=table
 		if engine.Cacher != nil {
 			if v.CanAddr() {
 				engine.GobRegister(v.Addr().Interface())
@@ -840,6 +843,7 @@ func (engine *Engine) AutoMapType(v reflect.Value) (*core.Table, error) {
 		}
 
 		engine.Tables[t] = table
+		engine.Tabs[table.Name]=table
 		if engine.Cacher != nil {
 			if v.CanAddr() {
 				engine.GobRegister(v.Addr().Interface())
@@ -1396,10 +1400,40 @@ func (engine *Engine) CheckFK(beans ...interface{}) error {
 		//tableName := engine.tbName(v)
 		fkColumns, _ := engine.getFK(v)
 		//fmt.Println(fkColumns)
+		if ex, _ := engine.IsTableExist(bean); !ex {
+			continue
+		}
 		sqlCreateFK := ""
 		for _, col := range fkColumns {
-			//fmt.Println(col.TableName,col.Name,col.ForeignKey)
 			fkName := "FK_" + bson.NewObjectId().Hex()
+			parentTableName := strings.Split(col.ForeignKey, "(")[0]
+			colIsTable, _ := engine.IsTableExist(parentTableName)
+			//fmt.Println(col.TableName,col.Name,col.ForeignKey)
+			if !colIsTable {
+				session := engine.NewSession()
+				isExist, err := session.isIndexExist2(col.TableName, []string{col.Name}, false)
+				if err != nil {
+					return err
+				}
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+					x := &core.Index{}
+					x.Name = fkName
+					x.Type = core.IndexType
+					x.Cols = []string{col.Name}
+					session.Statement.RefTable.Indexes[x.Name] = x
+					err = session.addIndex(col.TableName, fkName)
+					if err != nil {
+						return err
+					}
+				}
+				continue
+			}
+			//fkName := "FK_" + bson.NewObjectId().Hex()
 			switch engine.dialect.DBType() {
 			case core.ORACLE:
 				sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
@@ -1522,7 +1556,9 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				return err
 			}
 		} else {
-
+			if ex, _ := engine.IsTableExist(bean); !ex {
+				continue
+			}
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
 				if isExist && col.XormTag != phyCol.XormTag {
@@ -1574,9 +1610,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 
 			}
 		}
-		if table.Name=="tab_affairs_mark_result_current"{
-			fmt.Println(table.Name)
-		}
+
 		for name, index := range table.Indexes {
 			session := engine.NewSession()
 			defer session.Close()
@@ -2020,7 +2054,7 @@ func (engine *Engine) Import(r io.Reader) ([]sql.Result, error) {
 	for scanner.Scan() {
 		query := strings.Trim(scanner.Text(), " \t\n\r")
 		if len(query) > 0 {
-			engine.logSQL(query)
+			engine.logSQL(query, "")
 			result, err := engine.DB().Exec(query)
 			results = append(results, result)
 			if err != nil {

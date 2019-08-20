@@ -406,7 +406,7 @@ func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
   case DATA_TYPE when 'varchar' then CONCAT('(''',COLUMN_DEFAULT,''')') else CONCAT('((',COLUMN_DEFAULT,'))') end	defaultvalue,
   '' indexes,
   0 indexnum
-from information_schema.COLUMNS where TABLE_SCHEMA=?
+from information_schema.COLUMNS where TABLE_SCHEMA=? 
 `
 	sql = fmt.Sprintf(sql, "`")
 	rows, err := db.DB().Query(sql, db.DbName)
