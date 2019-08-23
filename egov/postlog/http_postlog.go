@@ -263,9 +263,9 @@ type LogStructSlice struct {
 type ProcessStatus struct {
 	InBuf         string                 `json:"inbuf,omitempty"`
 	InBufObject   map[string]interface{} `json:"inBufObject,omitempty" `
-	Starttime     *time.Time              `json:"starttime,omitempty"`
-	EndTime       *time.Time              `json:"endtime,omitempty"`
-	CreateTime    *time.Time              `json:"create_time,omitempty"` //必须
+	Starttime     time.Time              `json:"starttime,omitempty"`
+	EndTime       time.Time              `json:"endtime,omitempty"`
+	CreateTime    time.Time              `json:"create_time,omitempty"` //必须
 	Duration      int64                  `json:"duration,omitempty"`
 	OK            bool                   `json:"ok,omitempty"`
 	Err           interface{}            `json:"err,omitempty"`
