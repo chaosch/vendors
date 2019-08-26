@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"runtime"
 	"strings"
@@ -114,12 +113,12 @@ func RetErr(err ErrContext) *ResultTemplate {
 	if value, ok := Es[err.Err().ErrCode]; ok {
 		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return res
 	} else {
 		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return res
 	}
 }
@@ -129,12 +128,12 @@ func RetErrStr(err ErrContext) string {
 	if value, ok := Es[err.Err().ErrCode]; ok {
 		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return string(x)
 	} else {
 		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return string(x)
 	}
 }
