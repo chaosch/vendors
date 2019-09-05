@@ -2524,3 +2524,21 @@ func ExampleQuery_ZipT() {
 	// Output:
 	// [[1 one] [2 two] [3 three]]
 }
+
+func ExampleMapSlice() {
+	m := make([]map[string]interface{}, 0)
+	for i := 0; i < 10; i++ {
+		x := make(map[string]interface{})
+		x["a"] = strings.Repeat("a", i)
+		x["b"] = i
+		x["c"] = 10 - i%2
+		m = append(m, x)
+	}
+	fmt.Println(From(m).OrderBy(func(x interface{}) interface{} {
+		return x.(map[string]interface{})["c"]
+	}).ThenBy(func(x interface{}) interface{} {
+		return x.(map[string]interface{})["b"]
+	}).Results())
+	// Output:
+	// [{10 true}]
+}
