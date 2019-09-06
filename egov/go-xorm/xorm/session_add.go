@@ -406,14 +406,14 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 	return err, parserRes
 }
 
-func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string,args ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, args ...interface{}) (error, *sqlparse.SQLParserResult) {
 	var rawRows *core.Rows
 	var err error
 
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	err = session.ParserSqlAllColumns(&sqlStr,Asc , Desc)
+	err = session.ParserSqlAllColumns(&sqlStr, Asc, Desc)
 
 	if err != nil {
 		return err, nil
@@ -539,7 +539,7 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	return nil, rawRows.SQLPR
 }
 
-func (session *Session) ParserSqlAllColumns(sqlStr *string,Asc []string, Desc []string) error {
+func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc []string) error {
 
 	sql := *sqlStr
 	reg := regexp.MustCompile(`(?i: offset )\d*$`)
@@ -600,6 +600,8 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string,Asc []string, Desc []
 		}
 
 	}
+
+	AddOrderFieldToResultSet(sqlStr, Asc, Desc, x)
 	return nil
 }
 
@@ -742,8 +744,6 @@ func (session *Session) CountWithSqlRes(bean interface{}) (int64, error, *sqlpar
 	return 0, err, sqlParseRes
 }
 
-
-
 func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult) string {
 	var tAlias, cAlias, alias string
 	if strings.Contains(sqlColumnStr, ".") {
@@ -774,18 +774,20 @@ func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParser
 	return alias
 }
 
-func AddOrderFieldToResultSet(sqlStr *string,asc []string,desc []string, parser *sqlparse.SQLParserResult) {
-	addFields:=""
+func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult) {
+	addFields := ""
 	for _, a := range asc {
 		alias := FindColumnNameFromResultSet(a, parser)
 		if alias == "" {
-			addFields+=","+a
+			addFields += a + ","
 		}
 	}
 	for _, a := range desc {
 		alias := FindColumnNameFromResultSet(a, parser)
 		if alias == "" {
-			addFields+=","+a
+			addFields += a + ","
 		}
 	}
+
+	*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+addFields, 1)
 }
