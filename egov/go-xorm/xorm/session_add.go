@@ -211,7 +211,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 	return session.noCacheFind(table, sliceValue, sqlStr, args...), sqlStr
 }
 
-func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, condiBean ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, Asc []string, Desc []string, condiBean ...interface{}) (error, *sqlparse.SQLParserResult) {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -402,18 +402,18 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, c
 		}
 	}
 
-	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, args...)
+	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, args...)
 	return err, parserRes
 }
 
-func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, args ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string,args ...interface{}) (error, *sqlparse.SQLParserResult) {
 	var rawRows *core.Rows
 	var err error
 
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	err = session.ParserSqlAllColumns(&sqlStr)
+	err = session.ParserSqlAllColumns(&sqlStr,Asc , Desc)
 
 	if err != nil {
 		return err, nil
@@ -539,7 +539,7 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	return nil, rawRows.SQLPR
 }
 
-func (session *Session) ParserSqlAllColumns(sqlStr *string) error {
+func (session *Session) ParserSqlAllColumns(sqlStr *string,Asc []string, Desc []string) error {
 
 	sql := *sqlStr
 	reg := regexp.MustCompile(`(?i: offset )\d*$`)
@@ -740,4 +740,52 @@ func (session *Session) CountWithSqlRes(bean interface{}) (int64, error, *sqlpar
 	}
 
 	return 0, err, sqlParseRes
+}
+
+
+
+func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult) string {
+	var tAlias, cAlias, alias string
+	if strings.Contains(sqlColumnStr, ".") {
+		tAlias = strings.Split(sqlColumnStr, ".")[0]
+		cAlias = strings.Split(sqlColumnStr, ".")[1]
+		for _, t := range parser.GetDBUser("*").TableMap {
+			if t.GetTopAlias() == tAlias {
+				for _, c := range t.ColumnMap {
+					if c.GetTopAlias() == cAlias {
+						alias = c.GetTopAlias()
+						return alias
+					}
+				}
+			}
+		}
+	} else {
+		cAlias = sqlColumnStr
+		for _, t := range parser.GetDBUser("*").TableMap {
+			for _, c := range t.ColumnMap {
+				if c.GetTopAlias() == cAlias {
+					alias = c.GetTopAlias()
+					return alias
+				}
+			}
+		}
+
+	}
+	return alias
+}
+
+func AddOrderFieldToResultSet(sqlStr *string,asc []string,desc []string, parser *sqlparse.SQLParserResult) {
+	addFields:=""
+	for _, a := range asc {
+		alias := FindColumnNameFromResultSet(a, parser)
+		if alias == "" {
+			addFields+=","+a
+		}
+	}
+	for _, a := range desc {
+		alias := FindColumnNameFromResultSet(a, parser)
+		if alias == "" {
+			addFields+=","+a
+		}
+	}
 }
