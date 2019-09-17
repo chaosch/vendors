@@ -744,7 +744,9 @@ func (session *Session) CountWithSqlRes(bean interface{}) (int64, error, *sqlpar
 	return 0, err, sqlParseRes
 }
 
-func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult) string {
+func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult,sqlStr string) string {
+	//strings.Index(sqlstr,"SELECT")
+
 	var tAlias, cAlias, alias string
 	if strings.Contains(sqlColumnStr, ".") {
 		tAlias = strings.Split(sqlColumnStr, ".")[0]
@@ -777,13 +779,13 @@ func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParser
 func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult) {
 	addFields := ""
 	for _, a := range asc {
-		alias := FindColumnNameFromResultSet(a, parser)
+		alias := FindColumnNameFromResultSet(a, parser,*sqlStr)
 		if alias == "" {
 			addFields += a + ","
 		}
 	}
 	for _, a := range desc {
-		alias := FindColumnNameFromResultSet(a, parser)
+		alias := FindColumnNameFromResultSet(a, parser,*sqlStr)
 		if alias == "" {
 			addFields += a + ","
 		}
