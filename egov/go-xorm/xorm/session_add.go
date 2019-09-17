@@ -809,13 +809,13 @@ func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parse
 
 	for _, a := range asc {
 		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
-		if alias == "" && !StringContains(AliasCol[a], "'(+-*/") {
+		if alias == "" && !StringContains(AliasCol,a, "'(+-*/") {
 			addFields += a + ","
 		}
 	}
 	for _, a := range desc {
 		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
-		if alias == "" && !StringContains(AliasCol[a], "'(+-*/") {
+		if alias == "" && !StringContains(AliasCol,a, "'(+-*/") {
 			addFields += a + ","
 		}
 	}
@@ -823,9 +823,12 @@ func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parse
 	*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+addFields, 1)
 }
 
-func StringContains(src string, p string) bool {
+func StringContains(m map[string]string, key string, p string) bool {
+	if _, ok := m[key]; !ok {
+		return false
+	}
 	for _, char := range p {
-		c := strings.Contains(src, string(char))
+		c := strings.Contains(m[key], string(char))
 		if c {
 			return true
 		}
