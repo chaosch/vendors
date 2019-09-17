@@ -5,10 +5,12 @@ import (
 	"egov/go-xorm/builder"
 	"egov/go-xorm/core"
 	"errors"
+	"fmt"
 	"github.com/binlaniua/SqlParser"
 	"reflect"
 	"regexp"
 	"strings"
+	"github.com/xwb1989/sqlparser"
 )
 
 // union union_operator should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
@@ -601,7 +603,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 
 	}
 
-	AddOrderFieldToResultSet(sqlStr, Asc, Desc, x)
+	AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
 	return nil
 }
 
@@ -744,7 +746,7 @@ func (session *Session) CountWithSqlRes(bean interface{}) (int64, error, *sqlpar
 	return 0, err, sqlParseRes
 }
 
-func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult,sqlStr string) string {
+func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult, SelectStr string) string {
 	//strings.Index(sqlstr,"SELECT")
 
 	var tAlias, cAlias, alias string
@@ -765,6 +767,7 @@ func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParser
 		cAlias = sqlColumnStr
 		for _, t := range parser.GetDBUser("*").TableMap {
 			for _, c := range t.ColumnMap {
+				//fmt.Println(c.GetTopAlias())
 				if c.GetTopAlias() == cAlias {
 					alias = c.GetTopAlias()
 					return alias
@@ -776,17 +779,43 @@ func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParser
 	return alias
 }
 
-func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult) {
+func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult, SelectStr string) {
 	addFields := ""
+	selectStr:=" select concat(a, b ,c),aaa aa,concat(a,b,c) ,abcd,aa as a,"+SelectStr
+
+	AliasCol:=make(map[string]string)
+
+	ast, _ := sqlparser.Parse(selectStr)
+	x:=ast.(*sqlparser.Select)
+	//fmt.Println(x)
+	for _,c:=range x.SelectExprs{
+		buf:=sqlparser.NewTrackedBuffer(nil)
+		c.Format(buf)
+//		fmt.Println(buf)
+		temp:=fmt.Sprintf("%s",buf)
+//		fmt.Println(temp)
+		temp=strings.Trim(temp," ")
+		if strings.Contains(temp," as "){
+			AliasCol[strings.Split(temp," as ")[1]]=strings.Split(temp," as ")[0]
+		}else{
+			idx:=strings.LastIndex(temp," ")
+			if idx>0 {
+				AliasCol[temp[idx+1:]] = temp[0:idx]
+			}else{
+				AliasCol[temp] = temp
+			}
+		}
+	}
+
 	for _, a := range asc {
-		alias := FindColumnNameFromResultSet(a, parser,*sqlStr)
-		if alias == "" {
+		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
+		if alias == ""&&AliasCol[a]==a {
 			addFields += a + ","
 		}
 	}
 	for _, a := range desc {
-		alias := FindColumnNameFromResultSet(a, parser,*sqlStr)
-		if alias == "" {
+		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
+		if alias == ""&&AliasCol[a]==a {
 			addFields += a + ","
 		}
 	}
