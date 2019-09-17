@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/binlaniua/SqlParser"
+	"github.com/xwb1989/sqlparser"
 	"reflect"
 	"regexp"
 	"strings"
-	"github.com/xwb1989/sqlparser"
 )
 
 // union union_operator should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
@@ -781,27 +781,27 @@ func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParser
 
 func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult, SelectStr string) {
 	addFields := ""
-	selectStr:=" select concat(a, b ,c),aaa aa,concat(a,b,c) ,abcd,aa as a,"+SelectStr
+	selectStr := " select " + SelectStr
 
-	AliasCol:=make(map[string]string)
+	AliasCol := make(map[string]string)
 
 	ast, _ := sqlparser.Parse(selectStr)
-	x:=ast.(*sqlparser.Select)
+	x := ast.(*sqlparser.Select)
 	//fmt.Println(x)
-	for _,c:=range x.SelectExprs{
-		buf:=sqlparser.NewTrackedBuffer(nil)
+	for _, c := range x.SelectExprs {
+		buf := sqlparser.NewTrackedBuffer(nil)
 		c.Format(buf)
-//		fmt.Println(buf)
-		temp:=fmt.Sprintf("%s",buf)
-//		fmt.Println(temp)
-		temp=strings.Trim(temp," ")
-		if strings.Contains(temp," as "){
-			AliasCol[strings.Split(temp," as ")[1]]=strings.Split(temp," as ")[0]
-		}else{
-			idx:=strings.LastIndex(temp," ")
-			if idx>0 {
+		//		fmt.Println(buf)
+		temp := fmt.Sprintf("%s", buf)
+		//		fmt.Println(temp)
+		temp = strings.Trim(temp, " ")
+		if strings.Contains(temp, " as ") {
+			AliasCol[strings.Split(temp, " as ")[1]] = strings.Split(temp, " as ")[0]
+		} else {
+			idx := strings.LastIndex(temp, " ")
+			if idx > 0 {
 				AliasCol[temp[idx+1:]] = temp[0:idx]
-			}else{
+			} else {
 				AliasCol[temp] = temp
 			}
 		}
@@ -809,16 +809,26 @@ func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parse
 
 	for _, a := range asc {
 		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
-		if alias == ""&&AliasCol[a]==a {
+		if alias == "" && !StringContains(AliasCol[a], "'(+-*/") {
 			addFields += a + ","
 		}
 	}
 	for _, a := range desc {
 		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
-		if alias == ""&&AliasCol[a]==a {
+		if alias == "" && !StringContains(AliasCol[a], "'(+-*/") {
 			addFields += a + ","
 		}
 	}
 
 	*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+addFields, 1)
+}
+
+func StringContains(src string, p string) bool {
+	for _, char := range p {
+		c := strings.Contains(src, string(char))
+		if c {
+			return true
+		}
+	}
+	return false
 }
