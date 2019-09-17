@@ -746,7 +746,7 @@ func (session *Session) CountWithSqlRes(bean interface{}) (int64, error, *sqlpar
 	return 0, err, sqlParseRes
 }
 
-func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult, SelectStr string) string {
+func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParserResult) string {
 	//strings.Index(sqlstr,"SELECT")
 
 	var tAlias, cAlias, alias string
@@ -781,41 +781,43 @@ func FindColumnNameFromResultSet(sqlColumnStr string, parser *sqlparse.SQLParser
 
 func AddOrderFieldToResultSet(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult, SelectStr string) {
 	addFields := ""
-	selectStr := " select " + SelectStr
+	selectStr := ""
+	selectStr = " select " + SelectStr
 
 	AliasCol := make(map[string]string)
 
-	ast, _ := sqlparser.Parse(selectStr)
-	x := ast.(*sqlparser.Select)
-	//fmt.Println(x)
-	for _, c := range x.SelectExprs {
-		buf := sqlparser.NewTrackedBuffer(nil)
-		c.Format(buf)
-		//		fmt.Println(buf)
-		temp := fmt.Sprintf("%s", buf)
-		//		fmt.Println(temp)
-		temp = strings.Trim(temp, " ")
-		if strings.Contains(temp, " as ") {
-			AliasCol[strings.Split(temp, " as ")[1]] = strings.Split(temp, " as ")[0]
-		} else {
-			idx := strings.LastIndex(temp, " ")
-			if idx > 0 {
-				AliasCol[temp[idx+1:]] = temp[0:idx]
+	ast, err := sqlparser.Parse(selectStr)
+	if err == nil {
+		x := ast.(*sqlparser.Select)
+		//fmt.Println(x)
+		for _, c := range x.SelectExprs {
+			buf := sqlparser.NewTrackedBuffer(nil)
+			c.Format(buf)
+			//		fmt.Println(buf)
+			temp := fmt.Sprintf("%s", buf)
+			//		fmt.Println(temp)
+			temp = strings.Trim(temp, " ")
+			if strings.Contains(temp, " as ") {
+				AliasCol[strings.Split(temp, " as ")[1]] = strings.Split(temp, " as ")[0]
 			} else {
-				AliasCol[temp] = temp
+				idx := strings.LastIndex(temp, " ")
+				if idx > 0 {
+					AliasCol[temp[idx+1:]] = temp[0:idx]
+				} else {
+					AliasCol[temp] = temp
+				}
 			}
 		}
 	}
-
 	for _, a := range asc {
-		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
-		if alias == "" && !StringContains(AliasCol,a, "'(+-*/") {
+		alias := FindColumnNameFromResultSet(a, parser)
+		if alias == "" && !StringContains(AliasCol, a, "'(+-*/") {
 			addFields += a + ","
 		}
 	}
 	for _, a := range desc {
-		alias := FindColumnNameFromResultSet(a, parser, *sqlStr)
-		if alias == "" && !StringContains(AliasCol,a, "'(+-*/") {
+		alias := FindColumnNameFromResultSet(a, parser)
+		if alias == "" && !StringContains(AliasCol, a, "'(+-*/") {
 			addFields += a + ","
 		}
 	}
