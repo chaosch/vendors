@@ -31,7 +31,7 @@ var MysqlOperatorMap = map[string]string{
 	"$min":     "min(%s)",
 	"$avg":     "avg(%s)",
 	"$round":     "round(%s,%s)",
-	"$year":    "year(%s)",
+	"$year":    "DATE_FORMAT(%s,'%%Y')",
 	"$now": "now()",
 	"$if":      "if(%s,%s,%s)",
 	"$strconcat":"GROUP_CONCAT(%s)",
