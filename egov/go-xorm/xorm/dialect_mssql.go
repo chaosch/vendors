@@ -661,7 +661,7 @@ WHERE IXS.TYPE_DESC='NONCLUSTERED' and OBJECT_NAME(IXS.OBJECT_ID) =?
 	return indexes, nil
 }
 
-func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) (string) {
+func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) string {
 	var sql string
 	var sqlcomment string
 	if tableName == "" {
@@ -703,7 +703,7 @@ func (db *mssql) ModifyColumnSql(tableName string, col *core.Column) string {
 	return fmt.Sprintf("alter table %s alter COLUMN %s", tableName, col.StringNoPk(db))
 }
 
-func (db *mssql) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string) {
+func (db *mssql) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) string {
 	var sql string
 	sql = ""
 	for _, colName := range table.ColumnsSeq() {

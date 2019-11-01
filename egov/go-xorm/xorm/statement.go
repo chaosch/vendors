@@ -42,7 +42,7 @@ type Statement struct {
 	idParam         *core.PK
 	OrderStr        string
 	JoinStr         string
-	UnionStr     string
+	UnionStr        string
 	joinArgs        []interface{}
 	GroupByStr      string
 	HavingStr       string
@@ -85,7 +85,7 @@ func (statement *Statement) Init() {
 	statement.OrderStr = ""
 	statement.UseCascade = true
 	statement.JoinStr = ""
-	statement.UnionStr=""
+	statement.UnionStr = ""
 	statement.joinArgs = make([]interface{}, 0)
 	statement.GroupByStr = ""
 	statement.HavingStr = ""
@@ -1057,7 +1057,7 @@ func (statement *Statement) genColumnStr() string {
 	return buf.String()
 }
 
-func (statement *Statement) genCreateTableSQL() (string) {
+func (statement *Statement) genCreateTableSQL() string {
 	if statement.Engine.IdentityInsert {
 		if statement.RefTable.AutoIncrement != "" {
 			statement.RefTable.AutoIncrColumn().IsAutoIncrement = false
@@ -1068,7 +1068,7 @@ func (statement *Statement) genCreateTableSQL() (string) {
 		statement.StoreEngine, statement.Charset)
 }
 
-func (statement *Statement) genAlterIncrementSQL() (string) {
+func (statement *Statement) genAlterIncrementSQL() string {
 	return statement.Engine.dialect.AlterIncrementSql(statement.RefTable, statement.TableName(),
 		statement.StoreEngine, statement.Charset)
 }

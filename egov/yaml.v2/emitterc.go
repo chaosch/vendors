@@ -873,7 +873,7 @@ func yaml_emitter_process_tag(emitter *yaml_emitter_t) bool {
 		}
 	} else {
 		// [Go] Allocate these slices elsewhere.
-		if emitter.tag_data.suffix[0]!=byte('#') {
+		if emitter.tag_data.suffix[0] != byte('#') {
 			if !yaml_emitter_write_indicator(emitter, []byte("!<"), true, false, false) {
 				return false
 			}
@@ -881,7 +881,7 @@ func yaml_emitter_process_tag(emitter *yaml_emitter_t) bool {
 		if !yaml_emitter_write_tag_content(emitter, emitter.tag_data.suffix, false) {
 			return false
 		}
-		if emitter.tag_data.suffix[0]!=byte('#') {
+		if emitter.tag_data.suffix[0] != byte('#') {
 			if !yaml_emitter_write_indicator(emitter, []byte{'>'}, false, false, false) {
 				return false
 			}
@@ -1231,7 +1231,7 @@ func yaml_emitter_write_indicator(emitter *yaml_emitter_t, indicator []byte, nee
 		return false
 	}
 	emitter.whitespace = is_whitespace
-	emitter.indention = (emitter.indention && is_indention)
+	emitter.indention = emitter.indention && is_indention
 	emitter.open_ended = false
 	return true
 }
@@ -1268,7 +1268,7 @@ func yaml_emitter_write_tag_content(emitter *yaml_emitter_t, value []byte, need_
 	for i := 0; i < len(value); {
 		var must_write bool
 		switch value[i] {
-		case '#',';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '_', '.', '~', '*', '\'', '(', ')', '[', ']':
+		case '#', ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '_', '.', '~', '*', '\'', '(', ')', '[', ']':
 			must_write = true
 		default:
 			must_write = is_alpha(value, i)

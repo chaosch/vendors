@@ -817,7 +817,7 @@ func (engine *Engine) autoMapType(v reflect.Value) (*core.Table, error) {
 		}
 
 		engine.Tables[t] = table
-		engine.Tabs[table.Name]=table
+		engine.Tabs[table.Name] = table
 		if engine.Cacher != nil {
 			if v.CanAddr() {
 				engine.GobRegister(v.Addr().Interface())
@@ -843,7 +843,7 @@ func (engine *Engine) AutoMapType(v reflect.Value) (*core.Table, error) {
 		}
 
 		engine.Tables[t] = table
-		engine.Tabs[table.Name]=table
+		engine.Tabs[table.Name] = table
 		if engine.Cacher != nil {
 			if v.CanAddr() {
 				engine.GobRegister(v.Addr().Interface())
@@ -1394,7 +1394,7 @@ func (engine *Engine) ClearCache(beans ...interface{}) error {
 	return nil
 }
 
-func (engine *Engine) CheckFK(indexInstead bool,beans ...interface{}) error {
+func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 	for _, bean := range beans {
 		v := rValue(bean)
 		//tableName := engine.tbName(v)
@@ -1453,7 +1453,7 @@ func (engine *Engine) CheckFK(indexInstead bool,beans ...interface{}) error {
 						fmt.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
 					}
 				}
-			}else{
+			} else {
 				x := &core.Index{}
 				x.Name = fkName
 				x.Type = core.IndexType
@@ -1465,7 +1465,7 @@ func (engine *Engine) CheckFK(indexInstead bool,beans ...interface{}) error {
 				}
 				session.Statement.RefTable.Indexes[x.Name] = x
 				err := session.addIndex(col.TableName, fkName)
-				if err!=nil{
+				if err != nil {
 					if err != nil {
 						log.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
 						fmt.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)

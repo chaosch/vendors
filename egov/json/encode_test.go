@@ -966,7 +966,7 @@ func TestMarshalRawMessageValue(t *testing.T) {
 
 	for i, tt := range tests {
 		b, err := Marshal(tt.in)
-		if ok := (err == nil); ok != tt.ok {
+		if ok := err == nil; ok != tt.ok {
 			if err != nil {
 				t.Errorf("test %d, unexpected failure: %v", i, err)
 			} else {

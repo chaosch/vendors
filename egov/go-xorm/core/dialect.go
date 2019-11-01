@@ -60,8 +60,8 @@ type Dialect interface {
 
 	IsColumnExist(table *Table, col *Column) (bool, error, *Column)
 
-	CreateTableSql(table *Table, tableName, storeEngine, charset string) (string)
-	AlterIncrementSql(table *Table, tableName, storeEngine, charset string) (string)
+	CreateTableSql(table *Table, tableName, storeEngine, charset string) string
+	AlterIncrementSql(table *Table, tableName, storeEngine, charset string) string
 
 	DropTableSql(tableName string) string
 	CreateIndexSql(tableName string, index *Index) string
@@ -257,7 +257,7 @@ func (db *Base) ModifyColumnSql(tableName string, col *Column) string {
 	}
 }
 
-func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset string) (string) {
+func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset string) string {
 	var sql string
 	var startwith int64
 	sql = "CREATE TABLE IF NOT EXISTS "
@@ -330,7 +330,7 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 	return sql
 }
 
-func (b *Base) AlterIncrementSql(table *Table, tableName, storeEngine, charset string) (string) {
+func (b *Base) AlterIncrementSql(table *Table, tableName, storeEngine, charset string) string {
 	var sql string
 	var startwith int64
 	sql = ""

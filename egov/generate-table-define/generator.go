@@ -24,9 +24,10 @@ var exactSchemaTableComment = make(map[string]map[string]string)
 var exactSchemaTableName = make(map[string]map[string]string)
 var pks = make(map[string]string)
 var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=table_define;encrypt=disable;"
+
 //var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
 
-func funcGetTabsPk(db_name string) (string) {
+func funcGetTabsPk(db_name string) string {
 
 	content := "\n "
 	content += "	//所有表的主键 \n"
@@ -241,7 +242,7 @@ func createFields(columns []map[string]string, noSqlMode int) (string, string) {
 	return content, pk
 }
 
-func createStruct(tablist map[string]string, engine *xorm.Engine) (string) {
+func createStruct(tablist map[string]string, engine *xorm.Engine) string {
 	fmt.Println("正在生成模型……")
 	content := ""
 
@@ -333,7 +334,7 @@ order by a.column_id`
 	return content
 }
 
-func createSubTabMap() (map[string]string) {
+func createSubTabMap() map[string]string {
 	subTab := make(map[string]string)
 	subTab["Tab_affairs_info"] = "tab_affairs_info"             //事项受理
 	subTab["Proposers_info"] = "tab_affairs_proposers"          //事项受理-申请人
@@ -356,7 +357,7 @@ type colTransForm struct {
 	logicName    string
 }
 
-func createSubObjectMap() (map[string]colTransForm) {
+func createSubObjectMap() map[string]colTransForm {
 	subTab := make(map[string]colTransForm)
 	//subTab["affairs_id"] = colTransForm{physicalName: "tab_affairs", logicName: "affairs_info"}
 	//subTab["user_id"] = colTransForm{physicalName: "tab_user", logicName: "user_info"}
@@ -367,7 +368,7 @@ func createSubObjectMap() (map[string]colTransForm) {
 	return subTab
 }
 
-func createTab(db_name string, tablist map[string]string) (string) {
+func createTab(db_name string, tablist map[string]string) string {
 	content := "\n"
 	content += "//将数据库对象存于pool\n"
 	content += fmt.Sprintf(`func ` + db_name + `Create()  {
@@ -446,7 +447,7 @@ func createTab(db_name string, tablist map[string]string) (string) {
 	return content
 }
 
-func addTabs(codeString string, dbName string, tableName string, comment string) (string) {
+func addTabs(codeString string, dbName string, tableName string, comment string) string {
 	//先加入被依赖的表
 	for _, t := range dependency[tableName] {
 		if _, ok := addedTable[t]; !ok {
@@ -520,12 +521,12 @@ GROUP BY M_TAB`
 	}
 	res := make(map[string][]string)
 	for x := 0; x < len(tabList); x++ {
-		res[tabList[x]["M_TAB"] ] = strings.Split(strings.Replace(tabList[x]["F_TAB"], "\"", "", -1), ",")
+		res[tabList[x]["M_TAB"]] = strings.Split(strings.Replace(tabList[x]["F_TAB"], "\"", "", -1), ",")
 	}
 	return res, nil
 }
 
-func createtabDependency(dbName string) (string) {
+func createtabDependency(dbName string) string {
 	sql := `SELECT M_TAB,
        F_TAB =
           (stuff (
@@ -573,7 +574,7 @@ GROUP BY M_TAB`
 	return content
 }
 
-func createtabDependencyFast(dbName string) (string) {
+func createtabDependencyFast(dbName string) string {
 
 	content := "\n "
 	content += "	//表的依赖关系 \n"
@@ -586,14 +587,14 @@ func createtabDependencyFast(dbName string) (string) {
 	return content
 }
 
-func getColumnSimpleInfo(db_name string) (string) {
+func getColumnSimpleInfo(db_name string) string {
 	sql := ""
 	if db_name != "all" {
 		sql = `SELECT  a.column_name,max(data_type) data_type
   FROM INFORMATION_SCHEMA.columns a
   where table_name in ( 
   (select TABLE_NAME from  INFORMATION_SCHEMA.TABLES a
-  join sys.extended_properties g on g.major_id=OBJECT_ID(table_name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='`+db_name+`')
+  join sys.extended_properties g on g.major_id=OBJECT_ID(table_name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='` + db_name + `')
   union
   (SELECT  O2.NAME F_TAB
           FROM SYSFOREIGNKEYS A,
@@ -606,7 +607,7 @@ func getColumnSimpleInfo(db_name string) (string) {
                AND A.RKEYID = O2.ID
                AND O1.XTYPE = 'U'
                AND O2.XTYPE = 'U'
-			   and (g.major_id=OBJECT_ID(o1.name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='`+db_name+`'))
+			   and (g.major_id=OBJECT_ID(o1.name) and g.minor_id=0 and g.class=1 and g.name='Application' and g.[value]='` + db_name + `'))
   )  
   group by a.COLUMN_NAME
  order by a.column_name

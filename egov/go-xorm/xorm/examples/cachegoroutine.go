@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"egov/go-xorm/xorm"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 )
 

@@ -599,7 +599,7 @@ func (db *oracle) DropTableSql(tableName string) string {
 	return fmt.Sprintf("DROP TABLE `%s`", tableName)
 }
 
-func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) (string) {
+func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) string {
 	var sql string
 	var sequencesql string
 	var sqlcomment string
@@ -688,7 +688,7 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 	return sql + ";" + sqlcomment
 }
 
-func (db *oracle) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) (string) {
+func (db *oracle) AlterIncrementSql(table *core.Table, tableName, storeEngine, charset string) string {
 	var sql string
 	sql = ""
 	for _, colName := range table.ColumnsSeq() {

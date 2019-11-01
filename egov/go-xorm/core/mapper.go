@@ -1,9 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"strings"
 	"sync"
-	"fmt"
 )
 
 // name translation between struct, fields names and table, column names

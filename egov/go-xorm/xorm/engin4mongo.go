@@ -1,14 +1,14 @@
 package xorm
 
 import (
-	"reflect"
 	"egov/go-xorm/core"
-	"strings"
-	"time"
 	"errors"
-	"strconv"
 	"fmt"
 	"gopkg.in/mgo.v2"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func (engine *Engine) Sync4Mongo(mgodb *mgo.Database, beans ...interface{}) error {
@@ -134,7 +134,7 @@ func (engine *Engine) mapType4Mongo(mgodb *mgo.Database, v reflect.Value) (*core
 		fieldType := fieldValue.Type()
 		if ormTagStr != "" {
 			col = &core.Column{FieldName: t.Field(i).Name, Nullable: true, IsPrimaryKey: false,
-				IsAutoIncrement:          false, MapType: core.TWOSIDES, Indexes: make(map[string]int)}
+				IsAutoIncrement: false, MapType: core.TWOSIDES, Indexes: make(map[string]int)}
 			tags := splitTag(ormTagStr)
 
 			if len(tags) > 0 {
@@ -194,7 +194,7 @@ func (engine *Engine) mapType4Mongo(mgodb *mgo.Database, v reflect.Value) (*core
 						}
 					} else {
 						if strings.HasPrefix(key, "'") && strings.HasSuffix(key, "'") {
-							col.Name = key[1: len(key)-1]
+							col.Name = key[1 : len(key)-1]
 						} else {
 							col.Name = key
 						}

@@ -1,11 +1,11 @@
 package connectionmanager
 
 import (
-	"net/http"
-	"github.com/gorilla/websocket"
-	"time"
 	"egov/serializer"
+	"github.com/gorilla/websocket"
 	"io"
+	"net/http"
+	"time"
 )
 
 const writeWait = 10 * time.Second
@@ -14,7 +14,6 @@ type websocketDialect struct {
 	ConnectionDialect
 	MessageType map[AcceptType]interface{}
 }
-
 
 //func (jd *jsonDialect) WriteWebSocket(c *WsClient, result *ResultTemplate) {
 //	message, _ := ffjson.Marshal(result)
@@ -30,7 +29,6 @@ type websocketDialect struct {
 //		return
 //	}
 //}
-
 
 func (dialect *websocketDialect) WriteConnection(connection interface{}, buf []byte, accept AcceptType) {
 	conn := connection.(*websocket.Conn)
@@ -48,7 +46,6 @@ func (dialect *websocketDialect) WriteConnection(connection interface{}, buf []b
 	}
 
 	w.Write(buf)
-
 
 	if err := w.Close(); err != nil {
 		return

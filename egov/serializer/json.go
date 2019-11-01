@@ -1,10 +1,10 @@
 package serializer
 
 import (
-	"github.com/tidwall/gjson"
-	"github.com/pquerna/ffjson/ffjson"
-	"errors"
 	"encoding/json"
+	"errors"
+	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tidwall/gjson"
 	//"strings"
 	//"reflect"
 	//"egov/json"
@@ -27,7 +27,7 @@ func (jd *jsonDialect) GetValue(inBuf []byte, path string) (string, error) {
 	return result.String(), e
 }
 
-func (jd *jsonDialect) Unmarshal(inBuf []byte, inObject interface{}) (error) {
+func (jd *jsonDialect) Unmarshal(inBuf []byte, inObject interface{}) error {
 
 	decoder := json.NewDecoder(strings.NewReader(string(inBuf)))
 	//decoder.UseNumber()
@@ -36,7 +36,6 @@ func (jd *jsonDialect) Unmarshal(inBuf []byte, inObject interface{}) (error) {
 	if err != nil {
 		return err
 	}
-
 
 	//inObjectAddr:=ReplaceJsonNumber(inObject)
 	////
@@ -51,7 +50,6 @@ func (jd *jsonDialect) Marshal(inObject interface{}) ([]byte, error) {
 	outBuf, err := ffjson.Marshal(inObject)
 	return outBuf, err
 }
-
 
 //func (jd *jsonDialect) ConvertIntToBool(obj map[string]interface{}) (int64, map[string]interface{}) {
 //	converted := int64(0)

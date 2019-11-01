@@ -2,7 +2,7 @@ package serializer
 
 type ContentType string
 
-func init(){
+func init() {
 	regTransDialects()
 }
 
@@ -17,21 +17,16 @@ func regTransDialects() bool {
 
 	for ct, v := range providedTransDialects {
 		//if td := QueryTransDialect(ct); td == nil {
-			RegisterTransDialect(ct, v.getDialect)
+		RegisterTransDialect(ct, v.getDialect)
 		//}
 	}
 	return true
 }
 
-
-
 const (
 	ContentJson    = "application/json"
 	ContentMsgpack = "application/x-msgpack"
 )
-
-
-
 
 var (
 	transdialects = map[ContentType]func() TransDialect{}
@@ -49,16 +44,15 @@ func RegisterTransDialect(ContentType ContentType, dialectFunc func() TransDiale
 func QueryTransDialect(ContentType ContentType) TransDialect {
 	if d, ok := transdialects[ContentType]; ok {
 		return d()
-	}else{
+	} else {
 		return transdialects[ContentJson]()
 	}
 
 }
 
-
 //实现如下方法
 type TransDialect interface {
-	GetValue([]byte, string) (string,error)
-	Unmarshal([]byte, interface{}) (error)
+	GetValue([]byte, string) (string, error)
+	Unmarshal([]byte, interface{}) error
 	Marshal(interface{}) ([]byte, error)
 }

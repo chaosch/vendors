@@ -1,10 +1,10 @@
 package serializer
 
 import (
-	"gopkg.in/vmihailenco/msgpack.v2"
 	"bytes"
-	"reflect"
 	"errors"
+	"gopkg.in/vmihailenco/msgpack.v2"
+	"reflect"
 )
 
 type msgpackDialect struct {
@@ -21,7 +21,7 @@ func (md *msgpackDialect) GetValue(inBuf []byte, path string) (string, error) {
 		if v.Kind() == reflect.String {
 			operate = ops[0].(string)
 		} else {
-			return "", errors.New("not string value "+path)
+			return "", errors.New("not string value " + path)
 		}
 	} else {
 		return "", err1
@@ -29,8 +29,7 @@ func (md *msgpackDialect) GetValue(inBuf []byte, path string) (string, error) {
 	return operate, nil
 }
 
-
-func (md *msgpackDialect) Unmarshal(inBuf []byte, inObject interface{}) (error) {
+func (md *msgpackDialect) Unmarshal(inBuf []byte, inObject interface{}) error {
 	err := msgpack.Unmarshal(inBuf, inObject)
 	if err != nil {
 		return err
@@ -42,4 +41,3 @@ func (md *msgpackDialect) Marshal(inObject interface{}) ([]byte, error) {
 	outBuf, err := msgpack.Marshal(inObject)
 	return outBuf, err
 }
-

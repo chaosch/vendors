@@ -183,7 +183,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 				session.Statement.mustColumnMap, session.Statement.nullableMap,
 				session.Statement.columnMap, true, session.Statement.unscoped)
 		} else {
-			colNames, args, err = genCols(session.Statement.RefTable, session, bean, true, true,true)
+			colNames, args, err = genCols(session.Statement.RefTable, session, bean, true, true, true)
 			if err != nil {
 				return 0, err
 			}
@@ -304,17 +304,17 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 
 	//处理置空字段
 	for _, cn := range session.Statement.NullFields {
-		done:=false
+		done := false
 		for idx, colname := range colNames {
 			if cn == colname {
 				colNames[idx] = cn + "=null"
-				args=SliceRemove(args,idx)
-				done=true
+				args = SliceRemove(args, idx)
+				done = true
 				break
 			}
 		}
-		if !done{
-			colNames=append(colNames,cn+"=null")
+		if !done {
+			colNames = append(colNames, cn+"=null")
 		}
 	}
 
@@ -595,7 +595,7 @@ func (session *Session) UpdateNull(bean interface{}, condiBean ...interface{}) (
 	return res.RowsAffected()
 }
 
-func SliceRemove(slice []interface{}, index int) ([]interface{}) {
+func SliceRemove(slice []interface{}, index int) []interface{} {
 	var temp []interface{}
 	temp = nil
 	for idx := range slice {
@@ -646,7 +646,7 @@ func (session *Session) UpdateWhere(bean interface{}, WhereString string) (int64
 				session.Statement.mustColumnMap, session.Statement.nullableMap,
 				session.Statement.columnMap, true, session.Statement.unscoped)
 		} else {
-			colNames, args, err = genCols(session.Statement.RefTable, session, bean, true, true,true)
+			colNames, args, err = genCols(session.Statement.RefTable, session, bean, true, true, true)
 			if err != nil {
 				return 0, err
 			}
@@ -735,8 +735,8 @@ func (session *Session) UpdateWhere(bean interface{}, WhereString string) (int64
 		condSQL = "WHERE " + condSQL
 	}
 
-	condSQL=" where "+WhereString
-	condArgs=make([]interface{},0)
+	condSQL = " where " + WhereString
+	condArgs = make([]interface{}, 0)
 
 	if st.OrderStr != "" {
 		condSQL = condSQL + fmt.Sprintf(" ORDER BY %v", st.OrderStr)
@@ -770,17 +770,17 @@ func (session *Session) UpdateWhere(bean interface{}, WhereString string) (int64
 
 	//处理置空字段
 	for _, cn := range session.Statement.NullFields {
-		done:=false
+		done := false
 		for idx, colname := range colNames {
 			if cn == colname {
 				colNames[idx] = cn + "=null"
-				args=SliceRemove(args,idx)
-				done=true
+				args = SliceRemove(args, idx)
+				done = true
 				break
 			}
 		}
-		if !done{
-			colNames=append(colNames,cn+"=null")
+		if !done {
+			colNames = append(colNames, cn+"=null")
 		}
 	}
 

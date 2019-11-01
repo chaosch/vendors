@@ -29,6 +29,7 @@ var Es = map[int]string{
 	6000: "验证码错误",
 	6001: "网络错误",
 }
+
 //swagger:model
 type ResultTemplate struct {
 	//成功
