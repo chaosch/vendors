@@ -1459,6 +1459,10 @@ func (engine *Engine) CheckFK(indexInstead bool,beans ...interface{}) error {
 				x.Type = core.IndexType
 				x.Cols = []string{col.Name}
 				session := engine.NewSession()
+				defer session.Close()
+				if err := session.Statement.setRefValue(v); err != nil {
+					return err
+				}
 				session.Statement.RefTable.Indexes[x.Name] = x
 				err := session.addIndex(col.TableName, fkName)
 				if err!=nil{
