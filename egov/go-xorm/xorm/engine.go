@@ -1460,15 +1460,18 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 				x.Cols = []string{col.Name}
 				session := engine.NewSession()
 				defer session.Close()
-				if err := session.Statement.setRefValue(v); err != nil {
-					return err
-				}
-				session.Statement.RefTable.Indexes[x.Name] = x
-				err := session.addIndex(col.TableName, fkName)
-				if err != nil {
+				ex, err := session.isIndexExist2(col.TableName, x.Cols, false)
+				if !ex {
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+					session.Statement.RefTable.Indexes[x.Name] = x
+					err = session.addIndex(col.TableName, fkName)
 					if err != nil {
-						log.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
-						fmt.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+						if err != nil {
+							log.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+							fmt.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+						}
 					}
 				}
 			}
