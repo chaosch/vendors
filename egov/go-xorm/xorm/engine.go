@@ -1394,7 +1394,7 @@ func (engine *Engine) ClearCache(beans ...interface{}) error {
 	return nil
 }
 
-func (engine *Engine) CheckFK(beans ...interface{}) error {
+func (engine *Engine) CheckFK(indexInstead bool,beans ...interface{}) error {
 	for _, bean := range beans {
 		v := rValue(bean)
 		//tableName := engine.tbName(v)
@@ -1434,22 +1434,38 @@ func (engine *Engine) CheckFK(beans ...interface{}) error {
 				continue
 			}
 			//fkName := "FK_" + bson.NewObjectId().Hex()
-			switch engine.dialect.DBType() {
-			case core.ORACLE:
-				sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
-			case core.MYSQL:
-				sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
-			case core.MSSQL:
-				sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
-			default:
-				sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
-			}
-			//fmt.Println(sqlCreateFK)
-			if !engine.IsFKExists(col) {
-				_, err := engine.Exec(sqlCreateFK)
-				if err != nil {
-					log.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
-					fmt.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+			if !indexInstead {
+				switch engine.dialect.DBType() {
+				case core.ORACLE:
+					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
+				case core.MYSQL:
+					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
+				case core.MSSQL:
+					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
+				default:
+					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
+				}
+				//fmt.Println(sqlCreateFK)
+				if !engine.IsFKExists(col) {
+					_, err := engine.Exec(sqlCreateFK)
+					if err != nil {
+						log.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+						fmt.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+					}
+				}
+			}else{
+				x := &core.Index{}
+				x.Name = fkName
+				x.Type = core.IndexType
+				x.Cols = []string{col.Name}
+				session := engine.NewSession()
+				session.Statement.RefTable.Indexes[x.Name] = x
+				err := session.addIndex(col.TableName, fkName)
+				if err!=nil{
+					if err != nil {
+						log.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+						fmt.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+					}
 				}
 			}
 		}
