@@ -23,7 +23,7 @@ var schemaTableName = make(map[string]map[string]string)
 var exactSchemaTableComment = make(map[string]map[string]string)
 var exactSchemaTableName = make(map[string]map[string]string)
 var pks = make(map[string]string)
-var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=tables;encrypt=disable;"
+var dsn = "server=192.168.4.119;port=1433;user id=sa;password=Qwer1234;database=table_define;encrypt=disable;"
 
 //var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
 
@@ -578,7 +578,7 @@ func createtabDependencyFast(dbName string) string {
 
 	content := "\n "
 	content += "	//表的依赖关系 \n"
-	for tName := range schemaTableComment[dbName] {
+	for tName, _ := range schemaTableComment[dbName] {
 		content += `	Databases["` + dbName + `"]` + ".TabsDependency[\"" + tName + "\"]=" + outPutStringArray(dependency[tName]) + "\n"
 	}
 	//for x := 0; x < len(tabList); x++ {
@@ -657,7 +657,7 @@ func outPutStringArray(strArray []string) string {
 
 func outPutMapToSqlString(m map[string]string) string {
 	result := "'x'"
-	for tName := range m {
+	for tName, _ := range m {
 		result += ",'" + tName + "'"
 	}
 	return result

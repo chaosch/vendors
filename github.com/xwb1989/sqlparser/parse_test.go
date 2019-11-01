@@ -2753,9 +2753,9 @@ WHERE
 		}
 
 
-		for _,w:=range x.Where{
-
-		}
+		//for _,w:=range x.Where{
+		//
+		//}
 		_ = String(ast)
 	}
 }

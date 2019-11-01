@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var Es = map[int]string{
@@ -28,6 +29,7 @@ var Es = map[int]string{
 	6000: "验证码错误",
 	6001: "网络错误",
 }
+
 //swagger:model
 type ResultTemplate struct {
 	//成功
@@ -114,12 +116,12 @@ func RetErr(err ErrContext) *ResultTemplate {
 	if value, ok := Es[err.Err().ErrCode]; ok {
 		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return res
 	} else {
 		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return res
 	}
 }
@@ -129,12 +131,12 @@ func RetErrStr(err ErrContext) string {
 	if value, ok := Es[err.Err().ErrCode]; ok {
 		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return string(x)
 	} else {
 		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res)
-		log.Println(string(x))
+		fmt.Println(string(x))
 		return string(x)
 	}
 }
@@ -154,7 +156,7 @@ func RetOk(result interface{}) *ResultTemplate {
 		res.Data = []interface{}{result}
 		res.Changes = int64(1)
 	}
-	if res.Data==nil&&res.Changes==1{
+	if res.Data == nil && res.Changes == 1 {
 		fmt.Println(res)
 	}
 	return res
@@ -254,4 +256,57 @@ func MixErrors(errs ...error) error {
 	} else {
 		return errors.New(errMessage)
 	}
+}
+
+type ResultSet struct {
+	res       []map[string]interface{}
+	sortField string
+}
+
+func SetResultSet(res []map[string]interface{}, sortFields string) ResultSet {
+	Rs := ResultSet{}
+	Rs.res = res
+	if sortFields != "" {
+		for _, r := range Rs.res {
+			r[sortFields] = ""
+			addStr := ""
+			for _, s := range strings.Split(sortFields, ",") {
+				switch reflect.TypeOf(r[s]).Kind() {
+				case reflect.Int64, reflect.Int, reflect.Int32:
+					val := strconv.FormatInt(r[s].(int64), 10)
+					addStr = strings.Repeat("0", 20-len(val)) + val
+				case reflect.String:
+					val := r[s].(string)
+					addStr = val
+				case reflect.Float64, reflect.Float32:
+					val := strconv.FormatFloat(r[s].(float64), 'f', 6, 64)
+					addStr = strings.Repeat("0", 20-len(val)) + val
+				case reflect.Bool:
+					val := "0"
+					if r[s].(bool) {
+						val = "1"
+					}
+					addStr = val
+				case reflect.Struct:
+					val := r[s].(time.Time)
+					t := val.UnixNano()
+					tStr := strconv.FormatInt(t, 10)
+					addStr = strings.Repeat("0", 20-len(tStr)) + tStr
+				default:
+				}
+				r[sortFields] = r[sortFields].(string) + "|" + addStr
+			}
+		}
+	}
+	return Rs
+}
+
+func (a *ResultSet) Len() int { // 重写 Len() 方法
+	return len(a.res)
+}
+func (a *ResultSet) Swap(i, j int) { // 重写 Swap() 方法
+	a.res[i], a.res[j] = a.res[j], a.res[i]
+}
+func (a *ResultSet) Less(i, j int) bool { // 重写 Less() 方法， 从大到小排序
+	return a.res[i][a.sortField].(string) < a.res[j][a.sortField].(string)
 }
