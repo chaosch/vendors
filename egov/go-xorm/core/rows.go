@@ -269,6 +269,9 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 				if t, ok := v.Interface().(time.Time); ok {
 					vvv.SetMapIndex(vname, reflect.ValueOf(t.Format(time.RFC3339)))
 				}
+			case reflect.Invalid:
+				//var i *string = nil
+				vvv.SetMapIndex(vname, reflect.ValueOf(""))
 			default:
 				continue
 			}
