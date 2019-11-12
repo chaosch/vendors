@@ -250,6 +250,11 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 				case reflect.Bool:
 					it, _ := strconv.ParseInt(str, 10, 64)
 					vvv.SetMapIndex(vname, reflect.ValueOf(it > 0))
+				case reflect.Invalid:
+					ks := rs.ColumnTypes[name]
+					if ks== reflect.String {
+						vvv.SetMapIndex(vname, reflect.ValueOf(""))
+					}
 				default:
 					vvv.SetMapIndex(vname, reflect.ValueOf(str))
 				}
@@ -271,7 +276,10 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 				}
 			case reflect.Invalid:
 				//var i *string = nil
-				vvv.SetMapIndex(vname, reflect.ValueOf(""))
+				ks := rs.ColumnTypes[name]
+				if ks== reflect.String {
+					vvv.SetMapIndex(vname, reflect.ValueOf(""))
+				}
 			default:
 				continue
 			}
