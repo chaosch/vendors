@@ -251,9 +251,10 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 					it, _ := strconv.ParseInt(str, 10, 64)
 					vvv.SetMapIndex(vname, reflect.ValueOf(it > 0))
 				case reflect.Invalid:
-					ks := rs.ColumnTypes[name]
-					if ks == reflect.String {
+					if !v.IsValid() {
 						vvv.SetMapIndex(vname, reflect.ValueOf(""))
+					}else {
+						vvv.SetMapIndex(vname, reflect.ValueOf(str))
 					}
 				default:
 					vvv.SetMapIndex(vname, reflect.ValueOf(str))
@@ -275,14 +276,14 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 					vvv.SetMapIndex(vname, reflect.ValueOf(t.Format(time.RFC3339)))
 				}
 			case reflect.Invalid:
-				//var i *string = nil
-				ks := rs.ColumnTypes[name]
-				var vStr = ""
-				if ks == reflect.String {
-					vvv.SetMapIndex(vname, reflect.ValueOf(vStr))
+				////var i *string = nil
+				if !v.IsValid() {
+					vvv.SetMapIndex(vname, reflect.ValueOf(""))
+				}else {
+					vvv.SetMapIndex(vname, reflect.ValueOf(v.Interface().(string)))
 				}
 			default:
-				continue
+				vvv.SetMapIndex(vname, reflect.ValueOf(v.Interface().(string)))
 			}
 		} else {
 			vvv.SetMapIndex(vname, reflect.ValueOf(newDest[i]).Elem())
