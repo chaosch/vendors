@@ -59,7 +59,7 @@ func VerifyCaptcha(w http.ResponseWriter, r *http.Request, prams httprouter.Para
 		body = map[string]interface{}{"code": "success", "data": "验证通过", "msg": "captcha verified", "debug": formData}
 		return RetOk(body)
 	} else {
-		return RetErr(NewError(0, "验证码验证错误"))
+		return RetErr(NewError(1007, "验证码验证错误"))
 	}
 	//json.NewEncoder(w).Encode(body)
 
