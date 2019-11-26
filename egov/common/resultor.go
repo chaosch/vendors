@@ -1,9 +1,13 @@
 package common
 
 import (
+	"egov/yaml.v2"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -28,6 +32,26 @@ var Es = map[int]string{
 	9000: "数据库错误",
 	6000: "验证码错误",
 	6001: "网络错误",
+}
+
+var ErrorMap = make(map[string]map[int]string)
+
+func init() {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err == nil {
+		files, _ := ioutil.ReadDir(dir + "/localize/")
+		for _, ymlFile := range files {
+			if strings.HasSuffix(ymlFile.Name(), "yaml") {
+				buf, _ := ioutil.ReadFile(dir + "/localize/" + ymlFile.Name())
+				key := strings.TrimRight(ymlFile.Name(), ".yaml")
+				ErrorMap[key] = make(map[int]string)
+				vMap := make(map[int]string)
+				yaml.Unmarshal(buf, &vMap)
+				ErrorMap[key] = vMap
+
+			}
+		}
+	}
 }
 
 //swagger:model
@@ -96,6 +120,32 @@ func NewError0(errorCode int, errorMsg string) ErrContext {
 		line = 0
 	}
 	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg, ErrLine: line, ErrFile: file}
+}
+
+func NewErrorWithParam(errorCode int, param interface{}) ErrContext {
+	_, file, line, ok := runtime.Caller(2)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+	return &ErrType{ErrCode: errorCode, ErrMsg: fmt.Sprintf("%v", param), ErrLine: line, ErrFile: file}
+}
+
+func NewErrorCode(errorCode int, paras ...interface{}) ErrContext {
+	_, file, line, ok := runtime.Caller(2)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+	if len(paras)>0{
+		k:=reflect.TypeOf(paras[0]).Kind()
+		if k==reflect.String{
+			if strings.Contains(%)
+		}
+	}else{
+
+	}
+	return &ErrType{ErrCode: errorCode, ErrMsg: "", ErrLine: line, ErrFile: file}
 }
 
 func RetChanges(changes int64) *ResultTemplate {
