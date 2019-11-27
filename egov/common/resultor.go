@@ -48,7 +48,6 @@ func init() {
 				vMap := make(map[int]string)
 				yaml.Unmarshal(buf, &vMap)
 				ErrorMap[key] = vMap
-
 			}
 		}
 	}
@@ -97,7 +96,8 @@ type ErrType struct {
 	ErrLine int `json:"line" msgpack:"line"`
 	//出错文件
 	//example: /usercenter/src/micros/handler_cors_maint.go
-	ErrFile string `json:"file" msgpack:"file"`
+	ErrFile  string `json:"file" msgpack:"file"`
+	ErrParas []interface{}
 }
 
 func (e *ErrType) Err() *ErrType {
@@ -137,15 +137,23 @@ func NewErrorCode(errorCode int, paras ...interface{}) ErrContext {
 		file = "???"
 		line = 0
 	}
-	if len(paras)>0{
-		k:=reflect.TypeOf(paras[0]).Kind()
-		if k==reflect.String{
-			if strings.Contains(%)
-		}
-	}else{
+	return &ErrType{ErrCode: errorCode, ErrMsg: "", ErrLine: line, ErrFile: file, ErrParas: paras}
+}
 
+func (e *ErrType) ConfirmErr(lanKey string) {
+	if e.ErrCode != 0 {
+		if v, ok := ErrorMap[lanKey][e.ErrCode]; ok {
+			valueCount := strings.Count(v, "%v")
+			if valueCount > 0 {
+				paraArrary := e.ErrParas[0:valueCount]
+				e.ErrMsg = fmt.Sprintf(v, paraArrary...)
+			} else {
+				e.ErrMsg = fmt.Sprintf(v)
+			}
+		} else {
+			e.ErrMsg = ErrorMap[lanKey][9998]
+		}
 	}
-	return &ErrType{ErrCode: errorCode, ErrMsg: "", ErrLine: line, ErrFile: file}
 }
 
 func RetChanges(changes int64) *ResultTemplate {
