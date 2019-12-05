@@ -219,6 +219,14 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 
 	for i, name := range cols {
 		vname := reflect.ValueOf(name)
+		Name:=name
+		for _, v := range rs.SQLPR.GetDBUser("*").TableMap {
+			for _,c:=range v.ColumnMap{
+				if c.GetTopAlias()==name{
+					Name=c.Name
+				}
+			}
+		}
 		if vv.Elem().Kind() == reflect.Map {
 			v := reflect.ValueOf(newDest[i])
 			if v.Kind() == reflect.Ptr {
@@ -232,7 +240,8 @@ func (rs *Rows) ScanMap(dest interface{}) error {
 			case reflect.Slice:
 				//mysql
 				str := string(v.Interface().([]byte))
-				k := rs.ColumnTypes[name]
+
+				k := rs.ColumnTypes[Name]
 				switch k {
 				case reflect.Int64, reflect.Int, reflect.Int32:
 					flt, _ := strconv.ParseInt(str, 10, 64)
@@ -303,32 +312,6 @@ func IsZeroOfUnderlyingType(x interface{}) bool {
 	return x == reflect.Zero(reflect.TypeOf(x)).Interface()
 }
 
-/*func (rs *Rows) ScanMap(dest interface{}) error {
-	vv := reflect.ValueOf(dest)
-	if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
-		return errors.New("dest should be a map's pointer")
-	}
-
-	cols, err := rs.Columns()
-	if err != nil {
-		return err
-	}
-
-	newDest := make([]interface{}, len(cols))
-	err = rs.ScanSlice(newDest)
-	if err != nil {
-		return err
-	}
-
-	vvv := vv.Elem()
-
-	for i, name := range cols {
-		vname := reflect.ValueOf(name)
-		vvv.SetMapIndex(vname, reflect.ValueOf(newDest[i]).Elem())
-	}
-
-	return nil
-}*/
 type Row struct {
 	rows *Rows
 	// One of these two will be non-nil:
