@@ -16,7 +16,7 @@ YIYIDB is a high performace NoSQL database
 
 ## import
 ```
-import "github.com/jacoblai/yiyidb"
+import "egov/localdb"
 ```
 ## KET VALUE LIST
 ## open or create database
