@@ -36,6 +36,26 @@ func(em *EtcdMutex)init()error{
 	return err
 }
 
+
+func(em *EtcdMutex)Init()error{
+	var err error
+	var ctx context.Context
+	client,err := clientv3.New(em.Conf)
+	if err != nil{
+		return err
+	}
+	em.txn = clientv3.NewKV(client).Txn(context.TODO())
+	em.lease = clientv3.NewLease(client)
+	leaseResp,err := em.lease.Grant(context.TODO(),em.Ttl)
+	if err != nil{
+		return err
+	}
+	ctx,em.cancel = context.WithCancel(context.TODO())
+	em.leaseID = leaseResp.ID
+	_,err = em.lease.KeepAlive(ctx,em.leaseID)
+	return err
+}
+
 func(em *EtcdMutex)Lock()error{
 	err := em.init()
 	if err != nil{
