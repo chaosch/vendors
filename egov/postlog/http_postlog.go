@@ -276,4 +276,5 @@ type ProcessStatus struct {
 	IpAddress     string                 `json:"ipaddress,omitempty"`     //ip地址
 	InTransaction bool                   `json:"intransaction,omitempty"` //必须
 	Prompt        string                 `json:"prompt,omitempty"`
+	CorsId        string                 `json:"cors_id,omitempty"`
 }
