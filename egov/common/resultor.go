@@ -172,12 +172,21 @@ func RetChangesStr(changes int64) string {
 func RetErr(err ErrContext) *ResultTemplate {
 	res := &ResultTemplate{Ok: false}
 	if value, ok := Es[err.Err().ErrCode]; ok {
-		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		if value==""{
+			res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
+		}else{
+			res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		}
+		//res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		x, _ := json.Marshal(res.Err)
 		fmt.Println(string(x))
 		return res
 	} else {
-		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
+		if value==""{
+			res.Err = NewError(0, err.Err().ErrMsg)
+		}else{
+			res.Err = NewError(0, value+":"+err.Err().ErrMsg)
+		}
 		x, _ := json.Marshal(res.Err)
 		fmt.Println(string(x))
 		return res
@@ -187,12 +196,20 @@ func RetErr(err ErrContext) *ResultTemplate {
 func RetErrStr(err ErrContext) string {
 	res := &ResultTemplate{Ok: false}
 	if value, ok := Es[err.Err().ErrCode]; ok {
-		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		if value==""{
+			res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
+		}else{
+			res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		}
 		x, _ := json.Marshal(res)
 		fmt.Println(string(x))
 		return string(x)
 	} else {
-		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
+		if value==""{
+			res.Err = NewError(0, err.Err().ErrMsg)
+		}else{
+			res.Err = NewError(0, value+":"+err.Err().ErrMsg)
+		}
 		x, _ := json.Marshal(res)
 		fmt.Println(string(x))
 		return string(x)
