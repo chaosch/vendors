@@ -3,13 +3,13 @@
 
 package GrpcServices
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import "github.com/golang/protobuf/proto"
+import "fmt"
+import "math"
 
 import (
-	context "golang.org/x/net/context"
-	grpc "google.golang.org/grpc"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,7 +25,7 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type RequestInt struct {
 	OutInt               string   `protobuf:"bytes,1,opt,name=outInt" json:"outInt,omitempty"`
-	BitmapSeq               string   `protobuf:"bytes,5,opt,name=bitmapSeq" json:"bitmapSeq,omitempty"`
+	BitmapSeq            string   `protobuf:"bytes,5,opt,name=bitmapSeq" json:"bitmapSeq,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -102,7 +102,8 @@ func (m *ResponseInt) GetOutInt() int64 {
 
 type Request struct {
 	OutBuf               string   `protobuf:"bytes,3,opt,name=outBuf" json:"outBuf,omitempty"`
-	BitmapSeq				 string   `protobuf:"bytes,6,opt,name=bitmapSeq" json:"bitmapSeq,omitempty"`
+	BitmapSeq            string   `protobuf:"bytes,6,opt,name=bitmapSeq" json:"bitmapSeq,omitempty"`
+	Next                 string   `protobuf:"bytes,1,opt,name=next" json:"next,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
