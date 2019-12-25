@@ -122,13 +122,13 @@ func NewError0(errorCode int, errorMsg string) ErrContext {
 	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg, ErrLine: line, ErrFile: file}
 }
 
-func NewErrorWithParam(errorCode int, param interface{}) ErrContext {
+func NewErrorWithParam(errorCode int, param ...interface{}) ErrContext {
 	_, file, line, ok := runtime.Caller(2)
 	if !ok {
 		file = "???"
 		line = 0
 	}
-	return &ErrType{ErrCode: errorCode, ErrMsg: fmt.Sprintf("%v", param), ErrLine: line, ErrFile: file}
+	return &ErrType{ErrCode: errorCode, ErrMsg: "", ErrLine: line, ErrFile: file, ErrParas: param}
 }
 
 func NewErrorCode(errorCode int, paras ...interface{}) ErrContext {
@@ -153,6 +153,7 @@ func (e *ErrType) ConfirmErr(lanKey string) {
 		} else {
 			e.ErrMsg = ErrorMap[lanKey][9998]
 		}
+		//fmt.Println(fmt.Sprintf("%+v", e))
 	}
 }
 
@@ -170,48 +171,49 @@ func RetChangesStr(changes int64) string {
 }
 
 func RetErr(err ErrContext) *ResultTemplate {
-	res := &ResultTemplate{Ok: false}
-	if value, ok := Es[err.Err().ErrCode]; ok {
-		if value==""{
-			res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
-		}else{
-			res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
-		}
-		//res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
-		x, _ := json.Marshal(res.Err)
-		fmt.Println(string(x))
-		return res
-	} else {
-		if value==""{
-			res.Err = NewError(0, err.Err().ErrMsg)
-		}else{
-			res.Err = NewError(0, value+":"+err.Err().ErrMsg)
-		}
-		x, _ := json.Marshal(res.Err)
-		fmt.Println(string(x))
-		return res
-	}
+	res := &ResultTemplate{Ok: false, Err: err}
+	return res
+	//if value, ok := Es[err.Err().ErrCode]; ok {
+	//	if value==""{
+	//		res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
+	//	}else{
+	//		res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+	//	}
+	//	//res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+	//	//x, _ := json.Marshal(res.Err)
+	//	//fmt.Println(string(x))
+	//	return res
+	//} else {
+	//	if value==""{
+	//		res.Err = NewError(0, err.Err().ErrMsg)
+	//	}else{
+	//		res.Err = NewError(0, value+":"+err.Err().ErrMsg)
+	//	}
+	//	//x, _ := json.Marshal(res.Err)
+	//	//fmt.Println(string(x))
+	//	return res
+	//}
 }
 
 func RetErrStr(err ErrContext) string {
 	res := &ResultTemplate{Ok: false}
 	if value, ok := Es[err.Err().ErrCode]; ok {
-		if value==""{
+		if value == "" {
 			res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
-		}else{
+		} else {
 			res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
 		}
 		x, _ := json.Marshal(res)
-		fmt.Println(string(x))
+		//fmt.Println(string(x))
 		return string(x)
 	} else {
-		if value==""{
+		if value == "" {
 			res.Err = NewError(0, err.Err().ErrMsg)
-		}else{
+		} else {
 			res.Err = NewError(0, value+":"+err.Err().ErrMsg)
 		}
 		x, _ := json.Marshal(res)
-		fmt.Println(string(x))
+		//fmt.Println(string(x))
 		return string(x)
 	}
 }
