@@ -262,7 +262,7 @@ type LogStructSlice struct {
 
 type ProcessStatus struct {
 	CorsId        string                 `json:"cors_id"`
-	InBuf         string                 `json:"inbuf"`
+	InBuf         string                 `json:"inbuf,omitempty"`
 	Starttime     time.Time              `json:"starttime"`
 	EndTime       time.Time              `json:"endtime"`
 	CreateTime    time.Time              `json:"create_time"` //必须
