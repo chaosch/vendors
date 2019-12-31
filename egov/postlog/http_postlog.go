@@ -261,20 +261,21 @@ type LogStructSlice struct {
 }
 
 type ProcessStatus struct {
+	CorsId        string                 `json:"cors_id"`
 	InBuf         string                 `json:"inbuf,omitempty"`
-	InBufObject   map[string]interface{} `json:"inBufObject,omitempty" `
-	Starttime     time.Time              `json:"starttime,omitempty"`
-	EndTime       time.Time              `json:"endtime,omitempty"`
-	CreateTime    time.Time              `json:"create_time,omitempty"` //必须
-	Duration      int64                  `json:"duration,omitempty"`
-	OK            bool                   `json:"ok,omitempty"`
-	Err           interface{}            `json:"err,omitempty"`
-	SqlDuration   int64                  `json:"sqlduration,omitempty"`
-	Changes       int64                  `json:"changes,omitempty"`
-	ChipId        int64                  `json:"chipid,omitempty"`        //唯一标识
-	Version       string                 `json:"version,omitempty"`       //版本
-	IpAddress     string                 `json:"ipaddress,omitempty"`     //ip地址
-	InTransaction bool                   `json:"intransaction,omitempty"` //必须
-	Prompt        string                 `json:"prompt,omitempty"`
-	CorsId        string                 `json:"cors_id,omitempty"`
+	Starttime     time.Time              `json:"starttime"`
+	EndTime       time.Time              `json:"endtime"`
+	CreateTime    time.Time              `json:"create_time"` //必须
+	Duration      int64                  `json:"duration"`
+	OK            bool                   `json:"ok"`
+	Err           interface{}            `json:"err"`
+	Data          interface{}            `json:"data"`
+	SqlDuration   int64                  `json:"sqlduration"`
+	Changes       int64                  `json:"changes"`
+	ChipId        int64                  `json:"chipid"`        //唯一标识
+	Version       string                 `json:"version"`       //版本
+	IpAddress     string                 `json:"ipaddress"`     //ip地址
+	InTransaction bool                   `json:"intransaction"` //必须
+	Prompt        string                 `json:"prompt"`
+	InBufObject   map[string]interface{} `json:"inBufObject" `
 }
