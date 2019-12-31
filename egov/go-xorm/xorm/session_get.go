@@ -61,7 +61,8 @@ func (session *Session) Get(bean interface{}) (bool, error) {
 func (session *Session) nocacheGet(beanKind reflect.Kind, bean interface{}, sqlStr string, args ...interface{}) (bool, error) {
 	session.queryPreprocess(&sqlStr, args...)
 
-	var rawRows *core.Rows
+	rawRows:= &core.Rows{}
+	//rawRows.ColumnTypes=make(map[string]reflect.Kind)
 	rawRows.ColumnTypes=session.Engine.ColumnTypes
 	var err error
 	if session.IsAutoCommit {
