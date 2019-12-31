@@ -516,6 +516,7 @@ func (l *lessor) recvKeepAlive(resp *pb.LeaseKeepAliveResponse) {
 	// send update to all channels
 	nextKeepAlive := time.Now().Add((time.Duration(karesp.TTL) * time.Second) / 3.0)
 	ka.deadline = time.Now().Add(time.Duration(karesp.TTL) * time.Second)
+	ka.nextKeepAlive = nextKeepAlive
 	for _, ch := range ka.chs {
 		select {
 		case ch <- karesp:
@@ -528,7 +529,7 @@ func (l *lessor) recvKeepAlive(resp *pb.LeaseKeepAliveResponse) {
 			}
 		}
 		// still advance in order to rate-limit keep-alive sends
-		ka.nextKeepAlive = nextKeepAlive
+		//ka.nextKeepAlive = nextKeepAlive
 	}
 }
 
