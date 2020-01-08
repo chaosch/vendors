@@ -11,26 +11,15 @@ import (
 )
 
 const (
-	INFO  = "INFO"
-	WARN  = "WARN"
-	ERROR = "ERROR"
-	DEBUG = "DEBUG"
+	INFO  LogType= "INFO "
+	WARN  LogType= "WARN "
+	ERROR LogType= "ERROR"
+	DEBUG LogType= "DEBUG"
 )
 
 type SystemLogLevel int
 
-const (
-	// !nashtsai! following level also match syslog.Priority value
-	LOG_SQL SystemLogLevel = iota
-	LOG_DEBUG
-	LOG_INFO
-	LOG_WARNING
-	LOG_ERR
-	LOG_OFF
-	LOG_UNKNOWN
-)
-
-type LogLevel string
+type LogType string
 
 func PrintScreen(LogLevel LogLevel, LogContent string) {
 	var LogTime, Pid, Pname string
@@ -40,7 +29,7 @@ func PrintScreen(LogLevel LogLevel, LogContent string) {
 	fmt.Printf("%s %s %s [%s]: /*%s*/\n", LogTime, LogLevel, Pid, Pname, LogContent)
 }
 
-func ScreenLog(SystemLogLeveL SystemLogLevel, LogLevel LogLevel, LogContent string, paras ...interface{}) {
+func ScreenLog(SystemLogLeveL LogLevel, LogLevel LogType, LogContent string, paras ...interface{}) {
 	pCount := strings.Count(LogContent, "%s")
 
 	var LogContentString string
@@ -54,26 +43,27 @@ func ScreenLog(SystemLogLeveL SystemLogLevel, LogLevel LogLevel, LogContent stri
 	} else {
 		LogContentString = fmt.Sprintf(LogContent, paras...)
 	}
-	switch SystemLogLevel(SystemLogLeveL) {
-	case LOG_OFF:
-		return
-	case LOG_INFO:
-		if LogLevel == ERROR || LogLevel == WARN || LogLevel == INFO {
-			PrintScreen(LogLevel, LogContentString)
-		}
-	case LOG_WARNING:
-		if LogLevel == ERROR || LogLevel == WARN {
-			PrintScreen(LogLevel, LogContentString)
-		}
-	case LOG_ERR:
-		if LogLevel == ERROR {
-			PrintScreen(LogLevel, LogContentString)
-		}
-	case LOG_DEBUG:
-		if LogLevel == ERROR || LogLevel == WARN || LogLevel == INFO || LogLevel == DEBUG {
-			PrintScreen(LogLevel, LogContentString)
-		}
-	default:
-		PrintScreen(LogLevel, LogContentString)
-	}
+	fmt.Println(LogContentString)
+	//switch SystemLogLevel(SystemLogLeveL) {
+	//case LOG_OFF:
+	//	return
+	//case LOG_INFO:
+	//	if LogLevel == ERROR || LogLevel == WARN || LogLevel == INFO {
+	//		PrintScreen(LogLevel, LogContentString)
+	//	}
+	//case LOG_WARNING:
+	//	if LogLevel == ERROR || LogLevel == WARN {
+	//		PrintScreen(LogLevel, LogContentString)
+	//	}
+	//case LOG_ERR:
+	//	if LogLevel == ERROR {
+	//		PrintScreen(LogLevel, LogContentString)
+	//	}
+	//case LOG_DEBUG:
+	//	if LogLevel == ERROR || LogLevel == WARN || LogLevel == INFO || LogLevel == DEBUG {
+	//		PrintScreen(LogLevel, LogContentString)
+	//	}
+	//default:
+	//	PrintScreen(LogLevel, LogContentString)
+	//}
 }
