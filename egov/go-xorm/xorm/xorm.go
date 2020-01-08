@@ -5,6 +5,7 @@
 package xorm
 
 import (
+	"egov/common"
 	"fmt"
 	"os"
 	"reflect"
@@ -96,7 +97,7 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 	}
 
 	logger := NewSimpleLogger(os.Stdout)
-	logger.SetLevel(core.LOG_INFO)
+	logger.SetLevel(common.LOG_INFO)
 	engine.SetLogger(logger)
 	engine.SetMapper(core.NewCacheMapper(new(core.SnakeMapper)))
 	engine.IdentityInsert = false

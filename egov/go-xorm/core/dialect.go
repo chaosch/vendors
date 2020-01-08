@@ -1,6 +1,7 @@
 package core
 
 import (
+	"egov/common"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -28,7 +29,7 @@ type Uri struct {
 
 // a dialect is a driver's wrapper
 type Dialect interface {
-	SetLogger(logger ILogger)
+	SetLogger(logger common.ILogger)
 	Init(*DB, *Uri, string, string) error
 	URI() *Uri
 	DB() *DB
@@ -97,7 +98,7 @@ type Base struct {
 	dialect        Dialect
 	driverName     string
 	dataSourceName string
-	logger         ILogger
+	logger         common.ILogger
 	*Uri
 	DataTable    map[string]string
 	Dictionaries map[string]string
@@ -112,7 +113,7 @@ func (b *Base) DB() *DB {
 	return b.db
 }
 
-func (b *Base) SetLogger(logger ILogger) {
+func (b *Base) SetLogger(logger common.ILogger) {
 	b.logger = logger
 }
 

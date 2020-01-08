@@ -29,7 +29,7 @@ func PrintScreen(LogLevel LogLevel, LogContent string) {
 	fmt.Printf("%s %s %s [%s]: /*%s*/\n", LogTime, LogLevel, Pid, Pname, LogContent)
 }
 
-func ScreenLog(SystemLogLeveL LogLevel, LogLevel LogType, LogContent string, paras ...interface{}) {
+func ScreenLog1(SystemLogLeveL LogLevel, LogLevel LogType, LogContent string, paras ...interface{}) {
 	pCount := strings.Count(LogContent, "%s")
 
 	var LogContentString string

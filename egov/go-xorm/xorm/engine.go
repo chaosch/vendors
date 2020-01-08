@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"database/sql"
+	"egov/common"
 	"egov/go-xorm/core"
 	"encoding/gob"
 	"errors"
@@ -45,7 +46,7 @@ type Engine struct {
 	showSQL      bool
 	showExecTime bool
 
-	logger     core.ILogger
+	logger     common.ILogger
 	TZLocation *time.Location
 	DatabaseTZ *time.Location // The timezone of the database
 
@@ -88,12 +89,12 @@ func (engine *Engine) ShowExecTime(show ...bool) {
 }
 
 // Logger return the logger interface
-func (engine *Engine) Logger() core.ILogger {
+func (engine *Engine) Logger() common.ILogger {
 	return engine.logger
 }
 
 // SetLogger set the new logger
-func (engine *Engine) SetLogger(logger core.ILogger) {
+func (engine *Engine) SetLogger(logger common.ILogger) {
 	engine.logger = logger
 	engine.dialect.SetLogger(logger)
 }

@@ -1,20 +1,30 @@
 package common
 
 import (
+	"egov/log"
 	"fmt"
 	"io"
-	"log"
-	"time"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 // Copyright 2015 The Xorm Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-
 // default log options
 
+var Logger ILogger
 
+func init() {
+	pId := strconv.FormatInt(int64(os.Getpid()), 10)
+	pId = fmt.Sprintf("%5s", pId)
+	_, pName := filepath.Split(os.Args[0])
+	pName = fmt.Sprintf("%s", pName)
+	Logger = NewSimpleLogger2(os.Stdout, pId+" ["+pName+"]", log.Ldate|log.Ltime|log.Lmicroseconds)
+
+}
 
 type LogLevel int
 
@@ -45,7 +55,6 @@ type ILogger interface {
 	ShowSQL(show ...bool)
 	IsShowSQL() bool
 }
-
 
 const (
 	DEFAULT_LOG_PREFIX = "[xorm]"
@@ -123,10 +132,10 @@ func NewSimpleLogger2(out io.Writer, prefix string, flag int) *SimpleLogger {
 // NewSimpleLogger3 let you customrize your logger prefix and flag and logLevel
 func NewSimpleLogger3(out io.Writer, prefix string, flag int, l LogLevel) *SimpleLogger {
 	return &SimpleLogger{
-		DEBUG: log.New(out, fmt.Sprintf(time.Now().Local().Format("2006-01-02 15:04:05 ")+"DEBUG %s ",prefix), flag),
-		ERR:   log.New(out, fmt.Sprintf(time.Now().Local().Format("2006-01-02 15:04:05 ")+"ERROR %s ", prefix), flag),
-		INFO:  log.New(out, fmt.Sprintf(time.Now().Local().Format("2006-01-02 15:04:05 ")+"INFO  %s ", prefix), flag),
-		WARN:  log.New(out, fmt.Sprintf(time.Now().Local().Format("2006-01-02 15:04:05 ")+"WARN  %s ", prefix), flag),
+		DEBUG: log.New(out, fmt.Sprintf("DEBUG %s ", prefix), flag),
+		ERR:   log.New(out, fmt.Sprintf("ERROR %s ", prefix), flag),
+		INFO:  log.New(out, fmt.Sprintf("INFO  %s ", prefix), flag),
+		WARN:  log.New(out, fmt.Sprintf("WARN  %s ", prefix), flag),
 		level: l,
 	}
 }
