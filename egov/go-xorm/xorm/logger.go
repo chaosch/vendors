@@ -89,10 +89,10 @@ func NewSimpleLogger2(out io.Writer, prefix string, flag int) *SimpleLogger {
 // NewSimpleLogger3 let you customrize your logger prefix and flag and logLevel
 func NewSimpleLogger3(out io.Writer, prefix string, flag int, l core.LogLevel) *SimpleLogger {
 	return &SimpleLogger{
-		DEBUG: log.New(out, fmt.Sprintf("%s [debug] ", prefix), flag),
-		ERR:   log.New(out, fmt.Sprintf("%s [error] ", prefix), flag),
-		INFO:  log.New(out, fmt.Sprintf("%s [info]  ", prefix), flag),
-		WARN:  log.New(out, fmt.Sprintf("%s [warn]  ", prefix), flag),
+		DEBUG: log.New(out, fmt.Sprintf("%s [DEBUG] ", prefix), flag),
+		ERR:   log.New(out, fmt.Sprintf("%s [ERROR] ", prefix), flag),
+		INFO:  log.New(out, fmt.Sprintf("%s [INFO]  ", prefix), flag),
+		WARN:  log.New(out, fmt.Sprintf("%s [WARN]  ", prefix), flag),
 		level: l,
 	}
 }

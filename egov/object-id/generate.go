@@ -44,7 +44,7 @@ func readMachineId() []byte {
 	hw := md5.New()
 	hw.Write([]byte(hostname))
 	copy(id, hw.Sum(nil))
-	fmt.Println("readMachineId:" + string(id))
+	//fmt.Println("readMachineId:" + string(id))
 	return id
 }
 
