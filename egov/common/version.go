@@ -7,9 +7,9 @@ func MakeVersion(branch, build string) string {
 	branch = strings.ToLower(branch)
 	if strings.HasPrefix(branch, "release/") {
 		version = strings.TrimPrefix(branch, "release/")
-		version = "beta" + ":" + version + ":" + build
+		version = "beta" + ":" + version + "." + build
 	} else if strings.HasPrefix(branch, "master") {
-		version = "rel" + ":" + version + ":" + build
+		version = "rel" + ":" + version + "." + build
 	} else {
 		version = "dev" + ":" + build
 	}
