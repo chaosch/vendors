@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
 	"io"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -280,7 +279,7 @@ func (engine *Engine) Close() error {
 func (engine *Engine) Ping() error {
 	session := engine.NewSession()
 	defer session.Close()
-	engine.logger.Infof("PING DATABASE %v", engine.DriverName(), engine.EngineName)
+	engine.logger.Infof("PING DATABASE %v %v", engine.DriverName(), engine.EngineName)
 	return session.Ping()
 }
 
@@ -1450,8 +1449,7 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 				if !engine.IsFKExists(col) {
 					_, err := engine.Exec(sqlCreateFK)
 					if err != nil {
-						log.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
-						fmt.Println(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+						engine.logger.Error(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
 					}
 				}
 			} else {
@@ -1470,8 +1468,7 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 					err = session.addIndex(col.TableName, fkName)
 					if err != nil {
 						if err != nil {
-							log.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
-							fmt.Println(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+							engine.logger.Error(fmt.Sprintf("cant not create index on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
 						}
 					}
 				}
@@ -1522,7 +1519,7 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
        .RKEY = L2.COLID AND O1.XTYPE = 'U' AND O2.XTYPE = 'U' and o1.name = '%s' and l1.name
        = '%s' and o2.name = '%s'  and l2.name = '%s'`
 	default:
-		fmt.Println("no supported database type!")
+		engine.logger.Error("no supported database type!")
 		return true
 	}
 	f_table_name := ""
@@ -1533,7 +1530,7 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 	sqlQuery := fmt.Sprintf(sql, column.TableName, column.Name, f_table_name, f_column_name)
 	result, err := engine.Query(sqlQuery)
 	if err != nil {
-		fmt.Println(err)
+		engine.logger.Error(err)
 		return true
 	}
 	if len(result) > 0 {
@@ -1572,9 +1569,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 		defer s.Close()
 		_, isExist := tableMaps[tableName]
 		if !isExist {
-			engine.ShowSQL(true)
 			err = engine.CreateTables(bean)
-			engine.ShowSQL(false)
 			if err != nil {
 				fmt.Println(err)
 				return err
@@ -1586,7 +1581,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
 				if isExist && col.XormTag != phyCol.XormTag {
-					fmt.Println(table.Name, col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
+					engine.logger.Debug(table.Name, col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
 				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
@@ -1620,7 +1615,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 							_, err1 := engine.Exec(sql)
 							//							engine.ShowSQL(false)
 							if err1 != nil {
-								log.Println("修改字段出错:" + err1.Error())
+								engine.logger.Error("修改字段出错:" + err1.Error())
 							}
 						}
 						if col.Default != "" && col.Default != "null" && col.Default != "NULL" {
@@ -1707,13 +1702,13 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		defer s.Close()
 		isExist, err := s.Table(bean).isTableExist(tableName)
 		if err != nil {
-			fmt.Println(err)
+			engine.logger.Error(err)
 			return err
 		}
 		if !isExist {
 			err = engine.CreateTables(bean)
 			if err != nil {
-				fmt.Println(err)
+				engine.logger.Error(err)
 				return err
 			}
 			continue

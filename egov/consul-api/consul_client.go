@@ -110,7 +110,7 @@ func (CC *ConsulClient) ServiceRegister() error {
 						}
 					}
 				case <-CC.TickerStop:
-					fmt.Println("健康检查已停止！")
+					common.Logger.Info("健康检查已停止！")
 					CC.CheckRunning = false
 					return
 				}
@@ -134,7 +134,7 @@ func (CC *ConsulClient) SetCheckFun(checkfx func() *common.ResultTemplate) {
 }
 
 func (CC *ConsulClient) ServiceDeRegister() {
-	fmt.Println("服务已注销！")
+	common.Logger.Info("服务已注销！")
 	CC.AgentClient.Agent.ServiceDeregister(CC.AgentClient.AgentId)
 	if CC.CheckRunning {
 		CC.TickerStop <- true

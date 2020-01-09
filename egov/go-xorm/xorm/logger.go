@@ -50,7 +50,7 @@ func (DiscardLogger) Warnf(format string, v ...interface{}) {}
 
 // Level empty implementation
 func (DiscardLogger) Level() common.LogLevel {
-	return common.LOG_UNKNOWN
+	return common.LOG_OFF
 }
 
 // SetLevel empty implementation
