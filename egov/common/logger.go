@@ -180,7 +180,7 @@ func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
 
 // Info implement core.ILogger
 func (s *SimpleLogger) Info(v ...interface{}) {
-	s.OpenExtreme(&v)
+	s.IfOpenExtreme(&v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprint(v...))
 	}
@@ -189,7 +189,7 @@ func (s *SimpleLogger) Info(v ...interface{}) {
 
 // Infof implement core.ILogger
 func (s *SimpleLogger) Infof(format string, v ...interface{}) {
-	s.OpenExtremeF(&format, &v)
+	s.IfOpenExtremeF(&format, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprintf(format, v...))
 	}
@@ -198,7 +198,7 @@ func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 
 // Warn implement core.ILogger
 func (s *SimpleLogger) Warn(v ...interface{}) {
-	s.OpenExtreme(&v)
+	s.IfOpenExtreme(&v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprint(v...))
 	}
@@ -207,7 +207,7 @@ func (s *SimpleLogger) Warn(v ...interface{}) {
 
 // Warnf implement core.ILogger
 func (s *SimpleLogger) Warnf(format string, v ...interface{}) {
-	s.OpenExtremeF(&format, &v)
+	s.IfOpenExtremeF(&format, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprintf(format, v...))
 	}
@@ -240,30 +240,38 @@ func (s *SimpleLogger) IsShowSQL() bool {
 }
 
 func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{}) {
-	if s.level <= LOG_EXTREME {
-		_, file, line, _ := runtime.Caller(2)
-		if idx := strings.Index(file, "/src/"); idx >= 0 {
-			file = file[idx+5:]
-		}
-		//vr := make([]interface{}, 0)
-		//vr = append(vr, file)
-		//vr = append(vr, line)
-		*v = append(*v, file)
-		*v = append(*v, line)
-		*format = *format + " <--file:%s line:%d-->"
+	_, file, line, _ := runtime.Caller(2)
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file = file[idx+5:]
 	}
+	//vr := make([]interface{}, 0)
+	//vr = append(vr, file)
+	//vr = append(vr, line)
+	*v = append(*v, file)
+	*v = append(*v, line)
+	*format = *format + " <--file:%s line:%d-->"
 }
 
 func (s *SimpleLogger) OpenExtreme(v *[]interface{}) {
+	_, file, line, _ := runtime.Caller(2)
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file = file[idx+5:]
+	}
+	//vr := make([]interface{}, 0)
+	//vr = append(vr, fmt.Sprintf("file:%s ",file))
+	//vr = append(vr, fmt.Sprintf("line:%d ",line))
+	*v = append(*v, fmt.Sprintf(" <--file:%s ", file))
+	*v = append(*v, fmt.Sprintf("line:%d-->", line))
+}
+
+func (s *SimpleLogger) IfOpenExtremeF(format *string, v *[]interface{}) {
 	if s.level <= LOG_EXTREME {
-		_, file, line, _ := runtime.Caller(2)
-		if idx := strings.Index(file, "/src/"); idx >= 0 {
-			file = file[idx+5:]
-		}
-		//vr := make([]interface{}, 0)
-		//vr = append(vr, fmt.Sprintf("file:%s ",file))
-		//vr = append(vr, fmt.Sprintf("line:%d ",line))
-		*v = append(*v, fmt.Sprintf(" <--file:%s ", file))
-		*v = append(*v, fmt.Sprintf("line:%d-->", line))
+		s.OpenExtremeF(format, v)
+	}
+}
+
+func (s *SimpleLogger) IfOpenExtreme(v *[]interface{}) {
+	if s.level <= LOG_EXTREME {
+		s.OpenExtreme(v)
 	}
 }
