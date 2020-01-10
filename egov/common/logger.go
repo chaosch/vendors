@@ -61,7 +61,7 @@ type ILogger interface {
 const (
 	DEFAULT_LOG_PREFIX = ""
 	DEFAULT_LOG_FLAG   = log.Ldate | log.Lmicroseconds
-	DEFAULT_LOG_LEVEL  = LOG_INFO
+	DEFAULT_LOG_LEVEL  = LOG_EXTREME
 )
 
 var _ ILogger = DiscardLogger{}
@@ -144,7 +144,7 @@ func NewSimpleLogger3(out io.Writer, prefix string, flag int, l LogLevel) *Simpl
 
 // Error implement core.ILogger
 func (s *SimpleLogger) Error(v ...interface{}) {
-	s.OpenExtreme(&v)
+	s.OpenExtreme(&v,2)
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprint(v...))
 	}
@@ -153,7 +153,7 @@ func (s *SimpleLogger) Error(v ...interface{}) {
 
 // Errorf implement core.ILogger
 func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
-	s.OpenExtremeF(&format, &v)
+	s.OpenExtremeF(&format, &v,2)
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprintf(format, v...))
 	}
@@ -162,7 +162,7 @@ func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
 
 // Debug implement core.ILogger
 func (s *SimpleLogger) Debug(v ...interface{}) {
-	s.OpenExtreme(&v)
+	s.OpenExtreme(&v,2)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprint(v...))
 	}
@@ -171,7 +171,7 @@ func (s *SimpleLogger) Debug(v ...interface{}) {
 
 // Debugf implement core.ILogger
 func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
-	s.OpenExtremeF(&format, &v)
+	s.OpenExtremeF(&format, &v,2)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprintf(format, v...))
 	}
@@ -242,8 +242,8 @@ func (s *SimpleLogger) IsShowSQL() bool {
 	return s.showSQL
 }
 
-func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{}) {
-	_, file, line, _ := runtime.Caller(3)
+func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{},skip int) {
+	_, file, line, _ := runtime.Caller(skip)
 	if idx := strings.Index(file, "/src/"); idx >= 0 {
 		file = file[idx+5:]
 	}
@@ -255,8 +255,8 @@ func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{}) {
 	*format = *format + " <--file:%s line:%d-->"
 }
 
-func (s *SimpleLogger) OpenExtreme(v *[]interface{}) {
-	_, file, line, _ := runtime.Caller(3)
+func (s *SimpleLogger) OpenExtreme(v *[]interface{},skip int) {
+	_, file, line, _ := runtime.Caller(skip)
 	if idx := strings.Index(file, "/src/"); idx >= 0 {
 		file = file[idx+5:]
 	}
@@ -269,12 +269,12 @@ func (s *SimpleLogger) OpenExtreme(v *[]interface{}) {
 
 func (s *SimpleLogger) IfOpenExtremeF(format *string, v *[]interface{}) {
 	if s.level <= LOG_EXTREME {
-		s.OpenExtremeF(format, v)
+		s.OpenExtremeF(format, v,3)
 	}
 }
 
 func (s *SimpleLogger) IfOpenExtreme(v *[]interface{}) {
 	if s.level <= LOG_EXTREME {
-		s.OpenExtreme(v)
+		s.OpenExtreme(v,3)
 	}
 }
