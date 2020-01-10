@@ -243,7 +243,7 @@ func (s *SimpleLogger) IsShowSQL() bool {
 }
 
 func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{}) {
-	_, file, line, _ := runtime.Caller(2)
+	_, file, line, _ := runtime.Caller(3)
 	if idx := strings.Index(file, "/src/"); idx >= 0 {
 		file = file[idx+5:]
 	}
@@ -256,7 +256,7 @@ func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{}) {
 }
 
 func (s *SimpleLogger) OpenExtreme(v *[]interface{}) {
-	_, file, line, _ := runtime.Caller(2)
+	_, file, line, _ := runtime.Caller(3)
 	if idx := strings.Index(file, "/src/"); idx >= 0 {
 		file = file[idx+5:]
 	}
