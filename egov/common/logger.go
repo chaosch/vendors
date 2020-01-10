@@ -221,6 +221,9 @@ func (s *SimpleLogger) Level() LogLevel {
 
 // SetLevel implement core.ILogger
 func (s *SimpleLogger) SetLevel(l LogLevel) {
+	if l > LOG_INFO {
+		l = LOG_INFO
+	}
 	s.level = l
 	return
 }
