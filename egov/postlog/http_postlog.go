@@ -164,7 +164,7 @@ type simpleContent struct {
 	Message interface{} `json:"message"`
 }
 
-func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
+func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) error {
 	//var cBytes []byte
 	//if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
 	//	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
@@ -182,9 +182,8 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) {
 	}
 	msg := map[string]interface{}{"system": s, "kind": k, "content": c}
 	err := p.HttpPostLog(msg, logsUrl)
-	if err != nil {
-		fmt.Println("log send fail", err.Error())
-	}
+	return err
+
 }
 
 func (p *Pool) SendLogSlice(s LogStructSlice, logsUrl string) error {

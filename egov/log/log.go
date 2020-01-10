@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -124,19 +125,20 @@ func (l *Logger) formatHeader(buf *[]byte, t time.Time, file string, line int) {
 	*buf = append(*buf, l.prefix...)
 	if l.flag&(Lshortfile|Llongfile) != 0 {
 		if l.flag&Lshortfile != 0 {
-			short := file
-			for i := len(file) - 1; i > 0; i-- {
-				if file[i] == '/' {
-					short = file[i+1:]
-					break
-				}
-			}
-			file = short
+			//short := file
+			//for i := len(file) - 1; i > 0; i-- {
+			//	if file[i] == '/' {
+			//		short = file[i+1:]
+			//		break
+			//	}
+			//}
+			//file = short
+			_,file=filepath.Split(file)
 		}
 		*buf = append(*buf, file...)
 		*buf = append(*buf, ':')
 		itoa(buf, line, -1)
-		*buf = append(*buf, ": "...)
+		*buf = append(*buf, ":"...)
 	}
 }
 
@@ -165,7 +167,7 @@ func (l *Logger) Output(calldepth int, s string) error {
 	}
 	l.buf = l.buf[:0]
 	l.formatHeader(&l.buf, now, file, line)
-	l.buf = append(l.buf, "/* "...)
+	l.buf = append(l.buf, "] /* "...)
 	l.buf = append(l.buf, s...)
 	l.buf = append(l.buf, " */"...)
 	if len(s) == 0 || s[len(s)-1] != '\n' {

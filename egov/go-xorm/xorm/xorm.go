@@ -96,8 +96,8 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		EngineName:    "ORN",
 	}
 
-	logger := NewSimpleLogger(os.Stdout)
-	logger.SetLevel(common.LOG_INFO)
+	logger := common.NewSimpleLogger(os.Stdout)
+	logger.SetLevel(common.LOG_INFO, "", "")
 	engine.SetLogger(logger)
 	engine.SetMapper(core.NewCacheMapper(new(core.SnakeMapper)))
 	engine.IdentityInsert = false
