@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -54,6 +53,8 @@ type Logger struct {
 	flag   int        // properties
 	out    io.Writer  // destination for output
 	buf    []byte     // for accumulating text to write
+	logUrl string
+	system string
 }
 
 // New creates a new Logger. The out variable sets the
@@ -125,15 +126,15 @@ func (l *Logger) formatHeader(buf *[]byte, t time.Time, file string, line int) {
 	*buf = append(*buf, l.prefix...)
 	if l.flag&(Lshortfile|Llongfile) != 0 {
 		if l.flag&Lshortfile != 0 {
-			//short := file
-			//for i := len(file) - 1; i > 0; i-- {
-			//	if file[i] == '/' {
-			//		short = file[i+1:]
-			//		break
-			//	}
-			//}
-			//file = short
-			_,file=filepath.Split(file)
+			short := file
+			for i := len(file) - 1; i > 0; i-- {
+				if file[i] == '/' {
+					short = file[i+1:]
+					break
+				}
+			}
+			file = short
+			//			_,file=filepath.Split(file)
 		}
 		*buf = append(*buf, file...)
 		*buf = append(*buf, ':')
@@ -167,13 +168,15 @@ func (l *Logger) Output(calldepth int, s string) error {
 	}
 	l.buf = l.buf[:0]
 	l.formatHeader(&l.buf, now, file, line)
-	l.buf = append(l.buf, "] /* "...)
+	l.buf = append(l.buf, " "...)
 	l.buf = append(l.buf, s...)
 	l.buf = append(l.buf, " */"...)
 	if len(s) == 0 || s[len(s)-1] != '\n' {
 		l.buf = append(l.buf, '\n')
 	}
 	_, err := l.out.Write(l.buf)
+
+
 	return err
 }
 
@@ -353,4 +356,9 @@ func Panicln(v ...interface{}) {
 // for the caller of Output.
 func Output(calldepth int, s string) error {
 	return std.Output(calldepth+1, s) // +1 for this frame.
+}
+
+func (l *Logger) SetParas(system string, logUrl string) {
+	l.system = system
+	l.logUrl = logUrl
 }

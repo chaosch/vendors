@@ -4,10 +4,11 @@ import (
 	"egov/log"
 	"egov/postlog"
 	"fmt"
+	"github.com/pquerna/ffjson/ffjson"
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
+	"reflect"
 	"strconv"
 )
 
@@ -24,7 +25,7 @@ func init() {
 	pId = fmt.Sprintf("%5s", pId)
 	_, pName := filepath.Split(os.Args[0])
 	pName = fmt.Sprintf("%s", pName)
-	Logger = NewSimpleLogger2(os.Stdout, pId+" [", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
+	Logger = NewSimpleLogger2(os.Stdout, pId+" ["+pName+"] /*", log.Ldate|log.Ltime|log.Lmicroseconds|log.Llongfile)
 
 }
 
@@ -60,7 +61,7 @@ type ILogger interface {
 
 const (
 	DEFAULT_LOG_PREFIX = ""
-	DEFAULT_LOG_FLAG   = log.Ldate | log.Lmicroseconds|log.Lshortfile
+	DEFAULT_LOG_FLAG   = log.Ldate | log.Lmicroseconds | log.Lshortfile
 	DEFAULT_LOG_LEVEL  = LOG_EXTREME
 )
 
@@ -109,7 +110,6 @@ func (DiscardLogger) IsShowSQL() bool {
 	return false
 }
 
-
 // SimpleLogger is the default implment of core.ILogger
 type SimpleLogger struct {
 	DEBUG         *log.Logger
@@ -149,7 +149,18 @@ func NewSimpleLogger3(out io.Writer, prefix string, flag int, l LogLevel) *Simpl
 
 // Error implement core.ILogger
 func (s *SimpleLogger) Error(v ...interface{}) {
-	s.OpenExtreme(&v, 2)
+	s.IfOpenExtreme(LOG_ERR, &v)
+	if s.level <= LOG_ERR {
+		s.ERR.Output(2, fmt.Sprint(v...))
+		s.SendLog(LOG_ERR, fmt.Sprint(v...))
+	}
+	if s.ExtraFunction != nil {
+		s.ExtraFunction()
+	}
+	return
+}
+
+func (s *SimpleLogger) ErrorNoPost(v ...interface{}) {
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprint(v...))
 	}
@@ -161,9 +172,9 @@ func (s *SimpleLogger) Error(v ...interface{}) {
 
 // Errorf implement core.ILogger
 func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
-	s.OpenExtremeF(&format, &v, 2)
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprintf(format, v...))
+		s.SendLog(LOG_ERR, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -173,9 +184,10 @@ func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
 
 // Debug implement core.ILogger
 func (s *SimpleLogger) Debug(v ...interface{}) {
-	s.OpenExtreme(&v, 2)
+	s.IfOpenExtreme(LOG_DEBUG, &v)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprint(v...))
+		s.SendLog(LOG_DEBUG, fmt.Sprint(v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -185,9 +197,9 @@ func (s *SimpleLogger) Debug(v ...interface{}) {
 
 // Debugf implement core.ILogger
 func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
-	s.OpenExtremeF(&format, &v, 2)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprintf(format, v...))
+		s.SendLog(LOG_DEBUG, v)
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -197,9 +209,10 @@ func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
 
 // Info implement core.ILogger
 func (s *SimpleLogger) Info(v ...interface{}) {
-	s.IfOpenExtreme(&v)
+	s.IfOpenExtreme(LOG_INFO, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprint(v...))
+		s.SendLog(LOG_INFO, fmt.Sprint(v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -212,6 +225,7 @@ func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 	s.IfOpenExtremeF(&format, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprintf(format, v...))
+		s.SendLog(LOG_INFO, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -221,7 +235,7 @@ func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 
 // Warn implement core.ILogger
 func (s *SimpleLogger) Warn(v ...interface{}) {
-	s.IfOpenExtreme(&v)
+	s.IfOpenExtreme(LOG_WARNING, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprint(v...))
 	}
@@ -236,6 +250,7 @@ func (s *SimpleLogger) Warnf(format string, v ...interface{}) {
 	s.IfOpenExtremeF(&format, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprintf(format, v...))
+		s.SendLog(LOG_WARNING, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -256,6 +271,10 @@ func (s *SimpleLogger) SetLevel(l LogLevel, system string, logUrl string) {
 	s.level = l
 	s.system = system
 	s.logUrl = logUrl
+	s.DEBUG.SetParas(system, logUrl)
+	s.INFO.SetParas(system, logUrl)
+	s.WARN.SetParas(system, logUrl)
+	s.ERR.SetParas(system, logUrl)
 	return
 }
 
@@ -274,70 +293,79 @@ func (s *SimpleLogger) IsShowSQL() bool {
 }
 
 func (s *SimpleLogger) OpenExtremeF(format *string, v *[]interface{}, skip int) {
-	_, file, line, _ := runtime.Caller(skip)
+	//_, file, line, _ := runtime.Caller(skip)
 	//if idx := strings.Index(file, "/src/"); idx >= 0 {
 	//	file = file[idx+5:]
 	//}
-	_,file=filepath.Split(file)
-	//vr := make([]interface{}, 0)
-	//vr = append(vr, file)
-	//vr = append(vr, line)
-	*v = append(*v, file)
-	*v = append(*v, line)
-	*format = *format + " <-- %s:%d:-->"
+	////_,file=filepath.Split(file)
+	////vr := make([]interface{}, 0)
+	////vr = append(vr, file)
+	////vr = append(vr, line)
+	//*v = append(*v, file)
+	//*v = append(*v, line)
+	//*format = *format + " <-- %s:%d:-->"
 }
 
 func (s *SimpleLogger) OpenExtreme(v *[]interface{}, skip int) {
-	_, file, line, _ := runtime.Caller(skip)
+	//_, file, line, _ := runtime.Caller(skip)
 	//if idx := strings.Index(file, "/src/"); idx >= 0 {
 	//	file = file[idx+5:]
 	//}
-	_,file=filepath.Split(file)
-	//vr := make([]interface{}, 0)
-	//vr = append(vr, fmt.Sprintf("file:%s ",file))
-	//vr = append(vr, fmt.Sprintf("line:%d ",line))
-	*v = append(*v, fmt.Sprintf(" <-- %s:", file))
-	*v = append(*v, fmt.Sprintf("%d:-->", line))
+	////_,file=filepath.Split(file)
+	////vr := make([]interface{}, 0)
+	////vr = append(vr, fmt.Sprintf("file:%s ",file))
+	////vr = append(vr, fmt.Sprintf("line:%d ",line))
+	//*v = append(*v, fmt.Sprintf(" <-- %s:", file))
+	//*v = append(*v, fmt.Sprintf("%d:-->", line))
 }
-
 
 //*buf = append(*buf, file...)
 //*buf = append(*buf, ':')
 //itoa(buf, line, -1)
 //*buf = append(*buf, ":"...)
 
-
 func (s *SimpleLogger) IfOpenExtremeF(format *string, v *[]interface{}) {
-	if s.level <= LOG_EXTREME {
-		s.OpenExtremeF(format, v, 3)
-	}
+	//if s.level <= LOG_EXTREME {
+	//	s.OpenExtremeF(format, v, 3)
+	//}
 }
 
-func (s *SimpleLogger) IfOpenExtreme(v *[]interface{}) {
-	if s.level <= LOG_EXTREME {
-		s.OpenExtreme(v, 3)
-	}
-}
+func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
+	//ostr := ""
 
-
-func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
-	logKind := ""
-	switch lT {
-	case LOG_INFO:
-		logKind = "日志"
-	case LOG_DEBUG:
-		logKind = "日志"
-	case LOG_ERR:
-		logKind = "错误"
-	case LOG_WARNING:
-		logKind = "警告"
-	default:
-
-	}
-	if s.logUrl != "" {
-		err := postlog.Log.SendLog(s.system, logKind, logStr, s.logUrl)
-		if err != nil {
-			s.Error(err)
+	if len(*v) == 1 {
+		x := reflect.Indirect(reflect.ValueOf(v))
+		y:=x.Index(0).Interface()
+		if reflect.ValueOf(y).Type().Name() != "string" {
+			buff, _ := ffjson.Marshal(y)
+			s.SendLog(lT, y)
+			ostr := string(buff)
+			x.Index(0).Set(reflect.ValueOf(ostr))
 		}
 	}
+}
+
+func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
+	go func() {
+		logKind := ""
+		switch lT {
+		case LOG_INFO:
+			logKind = "日志"
+		case LOG_DEBUG:
+			logKind = "日志"
+		case LOG_ERR:
+			logKind = "错误"
+		case LOG_WARNING:
+			logKind = "警告"
+		default:
+			return
+		}
+
+		if s.logUrl != "" {
+			err := postlog.Log.SendLog(s.system, logKind, logStr, s.logUrl)
+			if err != nil {
+				s.ErrorNoPost(err)
+			}
+		}
+	}()
 }
