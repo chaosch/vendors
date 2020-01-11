@@ -337,11 +337,13 @@ func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 		x := reflect.Indirect(reflect.ValueOf(v))
 		y := x.Index(0).Interface()
 		//fmt.Println(reflect.ValueOf(y).Type().Name())
-		if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
-			buff, _ := ffjson.Marshal(y)
-			s.SendLog(lT, y)
-			ostr := string(buff)
-			x.Index(0).Set(reflect.ValueOf(ostr))
+		if y != nil {
+			if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
+				buff, _ := ffjson.Marshal(y)
+				s.SendLog(lT, y)
+				ostr := string(buff)
+				x.Index(0).Set(reflect.ValueOf(ostr))
+			}
 		}
 	}
 }
