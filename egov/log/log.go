@@ -19,6 +19,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -167,6 +168,11 @@ func (l *Logger) Output(calldepth int, s string) error {
 		l.mu.Lock()
 	}
 	l.buf = l.buf[:0]
+
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file=file[idx+5:]
+	}
+
 	l.formatHeader(&l.buf, now, file, line)
 	l.buf = append(l.buf, " "...)
 	l.buf = append(l.buf, s...)
@@ -175,7 +181,6 @@ func (l *Logger) Output(calldepth int, s string) error {
 		l.buf = append(l.buf, '\n')
 	}
 	_, err := l.out.Write(l.buf)
-
 
 	return err
 }
