@@ -433,8 +433,8 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	if err != nil {
 		return err, nil
 	}
-	//reg := regexp.MustCompile(`\s(?i:offset)\s\d+\s$`)
-	//sqlStr = reg.ReplaceAllString(sqlStr, "")
+	reg := regexp.MustCompile(`\s(?i:offset)\s\d+\s*$`)
+	sqlStr = reg.ReplaceAllString(sqlStr, "")
 
 	p := sqlparse.NewSQLParser(sqlStr)
 	p.DoParser()
