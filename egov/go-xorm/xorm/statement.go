@@ -1341,7 +1341,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string) {
 	}
 	if dialect.DBType() != core.MSSQL && dialect.DBType() != core.ORACLE {
 		if statement.Start > 0 {
-			a = fmt.Sprintf("%v LIMIT %v OFFSET %v", a, statement.LimitN, statement.Start)
+			a = fmt.Sprintf("%v LIMIT %v OFFSET %d", a, statement.LimitN, statement.Start)
 		} else if statement.LimitN > 0 {
 			a = fmt.Sprintf("%v LIMIT %v", a, statement.LimitN)
 		}
