@@ -42,7 +42,7 @@ func (session *Session) str2Time(col *core.Column, data string) (outTime time.Ti
 		}
 	} else if len(sdata) > 19 && strings.Contains(sdata, "-") {
 		x, err = time.ParseInLocation(time.RFC3339Nano, sdata, session.Engine.TZLocation)
-		session.Engine.logger.Debugf("time(1) key[%v]: %+v | sdata: [%v]", col.FieldName, x, sdata)
+//		session.Engine.logger.Debugf("time(1) key[%v]: %+v | sdata: [%v]", col.FieldName, x, sdata)
 		if err != nil {
 			x, err = time.ParseInLocation("2006-01-02 15:04:05.999999999", sdata, session.Engine.TZLocation)
 			session.Engine.logger.Debugf("time(2) key[%v]: %+v | sdata: [%v]", col.FieldName, x, sdata)
