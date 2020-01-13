@@ -417,7 +417,7 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	err = session.ParserSqlAllColumns(&sqlStr, Asc, Desc)
+	err,ps:= session.ParserSqlAllColumns(&sqlStr, Asc, Desc)
 
 	if err != nil {
 		return err, nil
@@ -433,12 +433,12 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	if err != nil {
 		return err, nil
 	}
-	reg := regexp.MustCompile(`\s(?i:offset)\s\d+\s*$`)
-	sqlStr = reg.ReplaceAllString(sqlStr, "")
-
-	p := sqlparse.NewSQLParser(sqlStr)
-	p.DoParser()
-	rawRows.SQLPR = p.GetResult()
+	//reg := regexp.MustCompile(`\s(?i:offset)\s\d+\s*$`)
+	//sqlStr = reg.ReplaceAllString(sqlStr, "")
+	//
+	//p := sqlparse.NewSQLParser(sqlStr)
+	//p.DoParser()
+	rawRows.SQLPR = ps
 	defer rawRows.Close()
 
 	fields, err := rawRows.Columns()
@@ -544,7 +544,7 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	return nil, rawRows.SQLPR
 }
 
-func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc []string) error {
+func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc []string) (error, *sqlparse.SQLParserResult) {
 
 	sql := *sqlStr
 	reg := regexp.MustCompile(`(?i:offset)\s\d+\s*$`)
@@ -554,7 +554,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 	x, err := ps.DoParser()
 
 	if err != nil {
-		return errors.New("sqlparser says:" + err.Error())
+		return errors.New("sqlparser says:" + err.Error()),nil
 	}
 	//if x == nil {
 	//	return
@@ -607,7 +607,7 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 	}
 
 	AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
-	return nil
+	return nil,x
 }
 
 func (session *Session) ParserSqlAOnly(sqlStr *string) error {
