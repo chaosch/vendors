@@ -4,11 +4,9 @@ import (
 	"egov/log"
 	"egov/postlog"
 	"fmt"
-	"github.com/pquerna/ffjson/ffjson"
 	"io"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strconv"
 )
 
@@ -152,7 +150,7 @@ func (s *SimpleLogger) Error(v ...interface{}) {
 	s.IfOpenExtreme(LOG_ERR, &v)
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprint(v...))
-		s.SendLog(LOG_ERR, fmt.Sprint(v...))
+		//s.SendLog(LOG_ERR, fmt.Sprint(v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -174,7 +172,7 @@ func (s *SimpleLogger) ErrorNoPost(v ...interface{}) {
 func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprintf(format, v...))
-		s.SendLog(LOG_ERR, fmt.Sprintf(format, v...))
+		//s.SendLog(LOG_ERR, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -187,7 +185,7 @@ func (s *SimpleLogger) Debug(v ...interface{}) {
 	s.IfOpenExtreme(LOG_DEBUG, &v)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprint(v...))
-		s.SendLog(LOG_DEBUG, fmt.Sprint(v...))
+		//s.SendLog(LOG_DEBUG, fmt.Sprint(v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -199,7 +197,7 @@ func (s *SimpleLogger) Debug(v ...interface{}) {
 func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprintf(format, v...))
-		s.SendLog(LOG_DEBUG, v)
+		//s.SendLog(LOG_DEBUG, v)
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -212,7 +210,7 @@ func (s *SimpleLogger) Info(v ...interface{}) {
 	s.IfOpenExtreme(LOG_INFO, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprint(v...))
-		s.SendLog(LOG_INFO, fmt.Sprint(v...))
+		//s.SendLog(LOG_INFO, fmt.Sprint(v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -225,7 +223,7 @@ func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 	s.IfOpenExtremeF(&format, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprintf(format, v...))
-		s.SendLog(LOG_INFO, fmt.Sprintf(format, v...))
+		//s.SendLog(LOG_INFO, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -250,7 +248,7 @@ func (s *SimpleLogger) Warnf(format string, v ...interface{}) {
 	s.IfOpenExtremeF(&format, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprintf(format, v...))
-		s.SendLog(LOG_WARNING, fmt.Sprintf(format, v...))
+		//s.SendLog(LOG_WARNING, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -332,20 +330,19 @@ func (s *SimpleLogger) IfOpenExtremeF(format *string, v *[]interface{}) {
 
 func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 	//ostr := ""
-
-	if len(*v) == 1 {
-		x := reflect.Indirect(reflect.ValueOf(v))
-		y := x.Index(0).Interface()
-		//fmt.Println(reflect.ValueOf(y).Type().Name())
-		if y != nil {
-			if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
-				buff, _ := ffjson.Marshal(y)
-				s.SendLog(lT, y)
-				ostr := string(buff)
-				x.Index(0).Set(reflect.ValueOf(ostr))
-			}
-		}
-	}
+	//if len(*v) == 1 {
+	//	x := reflect.Indirect(reflect.ValueOf(v))
+	//	y := x.Index(0).Interface()
+	//	//fmt.Println(reflect.ValueOf(y).Type().Name())
+	//	if y != nil {
+	//		if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
+	//			buff, _ := ffjson.Marshal(y)
+	//			s.SendLog(lT, y)
+	//			ostr := string(buff)
+	//			x.Index(0).Set(reflect.ValueOf(ostr))
+	//		}
+	//	}
+	//}
 }
 
 func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {

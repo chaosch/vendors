@@ -6,6 +6,7 @@ package xorm
 
 // Begin a transaction
 func (session *Session) Begin() error {
+	//session.IsAutoCommit=false
 	if session.IsAutoCommit {
 		tx, err := session.DB().Begin()
 		if err != nil {
@@ -35,7 +36,8 @@ func (session *Session) Commit() error {
 		session.saveLastSQL("COMMIT")
 		session.IsCommitedOrRollbacked = true
 		var err error
-		if err = session.Tx.Commit(); err == nil {
+
+		if err = session.Commit(); err == nil {
 			// handle processors after tx committed
 
 			closureCallFunc := func(closuresPtr *[]func(interface{}), bean interface{}) {

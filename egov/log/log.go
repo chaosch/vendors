@@ -175,6 +175,8 @@ func (l *Logger) Output(calldepth int, s string) error {
 
 	l.formatHeader(&l.buf, now, file, line)
 	l.buf = append(l.buf, " "...)
+	s=strings.Replace(s,fmt.Sprintf("%c",13),"",-1)
+	s=strings.Replace(s,fmt.Sprintf("%c",10),"",-1)
 	l.buf = append(l.buf, s...)
 	l.buf = append(l.buf, " */"...)
 	if len(s) == 0 || s[len(s)-1] != '\n' {
