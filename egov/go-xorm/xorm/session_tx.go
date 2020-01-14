@@ -6,7 +6,7 @@ package xorm
 
 // Begin a transaction
 func (session *Session) Begin() error {
-	//session.IsAutoCommit=false
+	session.IsAutoCommit=false
 	if session.IsAutoCommit {
 		tx, err := session.DB().Begin()
 		if err != nil {
