@@ -4,9 +4,11 @@ import (
 	"egov/log"
 	"egov/postlog"
 	"fmt"
+	"github.com/pquerna/ffjson/ffjson"
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 )
 
@@ -330,19 +332,19 @@ func (s *SimpleLogger) IfOpenExtremeF(format *string, v *[]interface{}) {
 
 func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 	//ostr := ""
-	//if len(*v) == 1 {
-	//	x := reflect.Indirect(reflect.ValueOf(v))
-	//	y := x.Index(0).Interface()
-	//	//fmt.Println(reflect.ValueOf(y).Type().Name())
-	//	if y != nil {
-	//		if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
-	//			buff, _ := ffjson.Marshal(y)
-	//			s.SendLog(lT, y)
-	//			ostr := string(buff)
-	//			x.Index(0).Set(reflect.ValueOf(ostr))
-	//		}
-	//	}
-	//}
+	if len(*v) == 1 {
+		x := reflect.Indirect(reflect.ValueOf(v))
+		y := x.Index(0).Interface()
+		//fmt.Println(reflect.ValueOf(y).Type().Name())
+		if y != nil {
+			if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
+				buff, _ := ffjson.Marshal(y)
+				//s.SendLog(lT, y)
+				ostr := string(buff)
+				x.Index(0).Set(reflect.ValueOf(ostr))
+			}
+		}
+	}
 }
 
 func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
