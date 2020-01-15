@@ -87,10 +87,12 @@ func (session *Session) Close() {
 		v.Close()
 	}
 
-	if session.db != nil {
+	if session.Tx != nil {
 		// When Close be called, if session is a transaction and do not call
 		// Commit or Rollback, then call Rollback.
 		if session.Tx != nil && !session.IsCommitedOrRollbacked {
+			session.Tx.Rollback()
+		}else{
 			session.Rollback()
 		}
 		session.Tx = nil
