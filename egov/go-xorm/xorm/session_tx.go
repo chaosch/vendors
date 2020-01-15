@@ -30,10 +30,15 @@ func (session *Session) Rollback() error {
 }
 
 // Commit When using transaction, Commit will commit all operations.
-func (session *Session) Commit() error {
+func (session *Session) Commit() (re error) {
+	defer func() {
+		if re == nil {
+			session.saveLastSQL("COMMIT")
+			session.IsAutoCommit = true
+			session.IsCommitedOrRollbacked = true
+		}
+	}()
 	if !session.IsAutoCommit && !session.IsCommitedOrRollbacked {
-		session.saveLastSQL("COMMIT")
-		session.IsCommitedOrRollbacked = true
 		var err error
 		if err = session.Tx.Commit(); err == nil {
 			// handle processors after tx committed
