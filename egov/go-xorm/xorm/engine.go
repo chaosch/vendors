@@ -95,6 +95,10 @@ func (engine *Engine) Logger() common.ILogger {
 // SetLogger set the new logger
 func (engine *Engine) SetLogger(logger common.ILogger) {
 	engine.logger = logger
+	if logger.Level() <= common.LOG_DEBUG {
+		engine.showSQL = true
+		engine.showExecTime = false
+	}
 	engine.dialect.SetLogger(logger)
 }
 
@@ -1991,7 +1995,7 @@ func (engine *Engine) Get(bean interface{}) (bool, error) {
 func (engine *Engine) Find(beans interface{}, condiBeans ...interface{}) error {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.Find(beans,condiBeans...)
+	return session.Find(beans, condiBeans...)
 }
 
 // Iterate record by record handle records from table, bean's non-empty fields
