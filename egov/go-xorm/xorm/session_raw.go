@@ -144,7 +144,10 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 			return res,err
 		}
 
-		res,err:= session.innerExec(sqlStr, args...)
+		res,err:= session.Tx.Exec(sqlStr, args...)
+		if err==nil{
+
+		}
 		return res,err
 	})
 }
