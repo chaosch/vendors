@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
 )
 
 var pbKey = `MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCsxKFbUOc7QOvpOK2XdfXC7yAq
@@ -42,4 +43,25 @@ func RsaPassword(pk string) (password string, err error) {
 	//io.WriteString(w, string(originalData))  //将str写入到w中
 	//password = fmt.Sprintf("%x", w.Sum(nil)) //w.Sum(nil)将w的hash转成[]byte格式
 	return string(originalData), nil
+}
+
+func GetRsaPassword(pk *string) (err error) {
+	if pk == nil {
+		return errors.New("输入的空地址")
+	}
+	encryptedDecodeBytes, err := base64.StdEncoding.DecodeString(*pk)
+	if err != nil {
+		return err
+	}
+	key, _ := base64.StdEncoding.DecodeString(pKey)
+	prvKey, _ := x509.ParsePKCS1PrivateKey(key)
+	originalData, err := rsa.DecryptPKCS1v15(rand.Reader, prvKey, encryptedDecodeBytes)
+	if err != nil {
+		return err
+	}
+	//w := md5.New()
+	//io.WriteString(w, string(originalData))  //将str写入到w中
+	//password = fmt.Sprintf("%x", w.Sum(nil)) //w.Sum(nil)将w的hash转成[]byte格式
+	*pk = string(originalData)
+	return nil
 }
