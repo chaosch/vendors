@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 // Copyright 2015 The Xorm Authors. All rights reserved.
@@ -53,7 +54,7 @@ type ILogger interface {
 	Warnf(format string, v ...interface{})
 
 	Level() LogLevel
-	SetLevel(l LogLevel, system string, logServer string)
+	SetLevel(l LogLevel, system string, logServer string, output string)
 
 	ShowSQL(show ...bool)
 	IsShowSQL() bool
@@ -63,6 +64,7 @@ const (
 	DEFAULT_LOG_PREFIX = ""
 	DEFAULT_LOG_FLAG   = log.Ldate | log.Lmicroseconds | log.Lshortfile
 	DEFAULT_LOG_LEVEL  = LOG_EXTREME
+	DEFAULT_OUT_PUT    = "stdout"
 )
 
 var _ ILogger = DiscardLogger{}
@@ -100,7 +102,7 @@ func (DiscardLogger) Level() LogLevel {
 }
 
 // SetLevel empty implementation
-func (DiscardLogger) SetLevel(l LogLevel, system string, logServer string) {}
+func (DiscardLogger) SetLevel(l LogLevel, system string, logServer string, output string) {}
 
 // ShowSQL empty implementation
 func (DiscardLogger) ShowSQL(show ...bool) {}
@@ -264,17 +266,19 @@ func (s *SimpleLogger) Level() LogLevel {
 }
 
 // SetLevel implement core.ILogger
-func (s *SimpleLogger) SetLevel(l LogLevel, system string, logUrl string) {
-	if l > LOG_INFO {
-		l = LOG_INFO
-	}
+func (s *SimpleLogger) SetLevel(l LogLevel, system string, logUrl string, out string) {
 	s.level = l
 	s.system = system
 	s.logUrl = logUrl
-	s.DEBUG.SetParas(system, logUrl)
-	s.INFO.SetParas(system, logUrl)
-	s.WARN.SetParas(system, logUrl)
-	s.ERR.SetParas(system, logUrl)
+	output := os.Stdout
+	if out != DEFAULT_OUT_PUT {
+		output, _ = os.OpenFile(system+"_"+time.Now().Local().Format("2006_01_02_15_04_05.log"), os.O_CREATE|os.O_APPEND, os.ModePerm)
+	}
+	s.DEBUG.SetParas(system, logUrl, output)
+	s.INFO.SetParas(system, logUrl, output)
+	s.WARN.SetParas(system, logUrl, output)
+	s.ERR.SetParas(system, logUrl, output)
+
 	return
 }
 

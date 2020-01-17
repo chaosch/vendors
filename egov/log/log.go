@@ -170,13 +170,13 @@ func (l *Logger) Output(calldepth int, s string) error {
 	l.buf = l.buf[:0]
 
 	if idx := strings.Index(file, "/src/"); idx >= 0 {
-		file=file[idx+5:]
+		file = file[idx+5:]
 	}
 
 	l.formatHeader(&l.buf, now, file, line)
 	l.buf = append(l.buf, " "...)
-	s=strings.Replace(s,fmt.Sprintf("%c",13),"",-1)
-	s=strings.Replace(s,fmt.Sprintf("%c",10),"",-1)
+	s = strings.Replace(s, fmt.Sprintf("%c", 13), "", -1)
+	s = strings.Replace(s, fmt.Sprintf("%c", 10), "", -1)
 	l.buf = append(l.buf, s...)
 	l.buf = append(l.buf, " */"...)
 	if len(s) == 0 || s[len(s)-1] != '\n' {
@@ -365,7 +365,8 @@ func Output(calldepth int, s string) error {
 	return std.Output(calldepth+1, s) // +1 for this frame.
 }
 
-func (l *Logger) SetParas(system string, logUrl string) {
+func (l *Logger) SetParas(system string, logUrl string, out io.Writer) {
 	l.system = system
 	l.logUrl = logUrl
+	l.out = out
 }
