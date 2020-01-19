@@ -110,6 +110,10 @@ func NewError(errorCode int, errorMsg string) ErrContext {
 		file = "???"
 		line = 0
 	}
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file = file[idx+5:]
+	}
+
 	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg, ErrLine: line, ErrFile: file}
 }
 
@@ -119,6 +123,10 @@ func NewError0(errorCode int, errorMsg string) ErrContext {
 		file = "???"
 		line = 0
 	}
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file = file[idx+5:]
+	}
+
 	return &ErrType{ErrCode: errorCode, ErrMsg: errorMsg, ErrLine: line, ErrFile: file}
 }
 
@@ -128,6 +136,10 @@ func NewErrorWithParam(errorCode int, param ...interface{}) ErrContext {
 		file = "???"
 		line = 0
 	}
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file = file[idx+5:]
+	}
+
 	return &ErrType{ErrCode: errorCode, ErrMsg: "", ErrLine: line, ErrFile: file, ErrParas: param}
 }
 
@@ -137,23 +149,29 @@ func NewErrorCode(errorCode int, paras ...interface{}) ErrContext {
 		file = "???"
 		line = 0
 	}
+	if idx := strings.Index(file, "/src/"); idx >= 0 {
+		file = file[idx+5:]
+	}
 	return &ErrType{ErrCode: errorCode, ErrMsg: "", ErrLine: line, ErrFile: file, ErrParas: paras}
 }
 
 func (e *ErrType) ConfirmErr(lanKey string) {
-	if e.ErrCode != 0 {
-		if v, ok := ErrorMap[lanKey][e.ErrCode]; ok {
-			valueCount := strings.Count(v, "%v")
-			if valueCount > 0 {
-				paraArrary := e.ErrParas[0:valueCount]
-				e.ErrMsg = fmt.Sprintf(v, paraArrary...)
+	if lanKey != "" {
+		if e.ErrCode != 0 {
+			if v, ok := ErrorMap[lanKey][e.ErrCode]; ok {
+				valueCount := strings.Count(v, "%v")
+				if valueCount > 0 {
+					paraArrary := e.ErrParas[0:valueCount]
+					e.ErrMsg = fmt.Sprintf(v, paraArrary...)
+				} else {
+					e.ErrMsg = fmt.Sprintf(v)
+				}
 			} else {
-				e.ErrMsg = fmt.Sprintf(v)
+				e.ErrMsg = ErrorMap[lanKey][9998]
 			}
-		} else {
-			e.ErrMsg = ErrorMap[lanKey][9998]
 		}
-		//fmt.Println(fmt.Sprintf("%+v", e))
+	} else {
+		e.ErrMsg = fmt.Sprint(e.ErrParas...)
 	}
 }
 
