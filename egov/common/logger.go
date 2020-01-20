@@ -35,6 +35,7 @@ type LogLevel int
 const (
 	// !nashtsai! following level also match syslog.Priority value
 	LOG_EXTREME LogLevel = iota
+	LOG_SQL
 	LOG_DEBUG
 	LOG_INFO
 	LOG_WARNING
@@ -44,6 +45,8 @@ const (
 
 // logger interface
 type ILogger interface {
+	Sql(v ...interface{})
+	Sqlf(format string, v ...interface{})
 	Debug(v ...interface{})
 	Debugf(format string, v ...interface{})
 	Error(v ...interface{})
@@ -58,6 +61,7 @@ type ILogger interface {
 
 	ShowSQL(show ...bool)
 	IsShowSQL() bool
+	SetSensitiveKeys(keys []string)
 }
 
 const (
@@ -71,6 +75,14 @@ var _ ILogger = DiscardLogger{}
 
 // DiscardLogger don't log implementation for core.ILogger
 type DiscardLogger struct{}
+
+func (DiscardLogger) SetSensitiveKeys(keys []string) {}
+
+// Sql empty implementation
+func (DiscardLogger) Sql(v ...interface{}) {}
+
+// Sqlf empty implementation
+func (DiscardLogger) Sqlf(format string, v ...interface{}) {}
 
 // Debug empty implementation
 func (DiscardLogger) Debug(v ...interface{}) {}
@@ -118,12 +130,14 @@ type SimpleLogger struct {
 	ERR           *log.Logger
 	INFO          *log.Logger
 	WARN          *log.Logger
+	SQL           *log.Logger
 	level         LogLevel
 	showSQL       bool
 	postLog       bool
 	system        string
 	ExtraFunction func(p ...interface{})
 	logUrl        string
+	SensitiveKeys []string
 }
 
 var _ ILogger = &SimpleLogger{}
@@ -145,8 +159,45 @@ func NewSimpleLogger3(out io.Writer, prefix string, flag int, l LogLevel) *Simpl
 		ERR:   log.New(out, fmt.Sprintf("ERROR %s ", prefix), flag),
 		INFO:  log.New(out, fmt.Sprintf("INFO  %s ", prefix), flag),
 		WARN:  log.New(out, fmt.Sprintf("WARN  %s ", prefix), flag),
+		SQL:   log.New(out, fmt.Sprintf("SQL   %s ", prefix), flag),
 		level: l,
 	}
+}
+
+func (s *SimpleLogger) SetSensitiveKeys(keys []string) {
+	s.SensitiveKeys = keys
+	s.DEBUG.SetSensitiveKeys(keys)
+	s.INFO.SetSensitiveKeys(keys)
+	s.WARN.SetSensitiveKeys(keys)
+	s.ERR.SetSensitiveKeys(keys)
+	s.SQL.SetSensitiveKeys(keys)
+	return
+
+}
+
+// Sql implement core.ILogger
+func (s *SimpleLogger) Sql(v ...interface{}) {
+	s.IfOpenExtreme(LOG_SQL, &v)
+	if s.level <= LOG_SQL {
+		s.SQL.Output(2, fmt.Sprint(v...))
+		//s.SendLog(LOG_ERR, fmt.Sprint(v...))
+	}
+	if s.ExtraFunction != nil {
+		s.ExtraFunction()
+	}
+	return
+}
+
+// Sqlf implement core.ILogger
+func (s *SimpleLogger) Sqlf(format string, v ...interface{}) {
+	if s.level <= LOG_SQL {
+		s.SQL.Output(2, fmt.Sprintf(format, v...))
+		//s.SendLog(LOG_ERR, fmt.Sprintf(format, v...))
+	}
+	if s.ExtraFunction != nil {
+		s.ExtraFunction()
+	}
+	return
 }
 
 // Error implement core.ILogger
@@ -278,7 +329,7 @@ func (s *SimpleLogger) SetLevel(l LogLevel, system string, logUrl string, out st
 	s.INFO.SetParas(system, logUrl, output)
 	s.WARN.SetParas(system, logUrl, output)
 	s.ERR.SetParas(system, logUrl, output)
-
+	s.SQL.SetParas(system, logUrl, output)
 	return
 }
 
@@ -375,3 +426,4 @@ func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
 		}
 	}()
 }
+

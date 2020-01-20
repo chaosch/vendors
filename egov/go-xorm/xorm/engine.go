@@ -291,10 +291,10 @@ func (engine *Engine) Ping() error {
 func (engine *Engine) logSQL(sqlStr string, sessionId string, sqlArgs ...interface{}) {
 	if engine.showSQL && !engine.showExecTime {
 		if len(sqlArgs) > 0 {
-			engine.logger.Debugf("[%s][SQL][%s] %v %v", engine.EngineName, sessionId, sqlStr, sqlArgs)
+			engine.logger.Sqlf("[%s][SQL][%s] %v %v", engine.EngineName, sessionId, sqlStr, sqlArgs)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v %v",engine.EngineName, sqlStr, sqlArgs))
 		} else {
-			engine.logger.Debugf("[%s][SQL][%s] %v", engine.EngineName, sessionId, sqlStr)
+			engine.logger.Sqlf("[%s][SQL][%s] %v", engine.EngineName, sessionId, sqlStr)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v", engine.EngineName,sqlStr))
 		}
 	}
@@ -306,9 +306,9 @@ func (engine *Engine) logSQLQueryTime(sqlStr string, args []interface{}, executi
 		stmt, res, err := executionBlock()
 		execDuration := time.Since(b4ExecTime)
 		if len(args) > 0 {
-			engine.logger.Debugf("[SQL] %s %v - took: %v", sqlStr, args, execDuration)
+			engine.logger.Sqlf("[SQL] %s %v - took: %v", sqlStr, args, execDuration)
 		} else {
-			engine.logger.Debugf("[SQL] %s - took: %v", sqlStr, execDuration)
+			engine.logger.Sqlf("[SQL] %s - took: %v", sqlStr, execDuration)
 		}
 		return stmt, res, err
 	}
@@ -321,9 +321,9 @@ func (engine *Engine) logSQLExecutionTime(sqlStr string, args []interface{}, exe
 		res, err := executionBlock()
 		execDuration := time.Since(b4ExecTime)
 		if len(args) > 0 {
-			engine.logger.Debugf("[sql] %s [args] %v - took: %v", sqlStr, args, execDuration)
+			engine.logger.Sqlf("[sql] %s [args] %v - took: %v", sqlStr, args, execDuration)
 		} else {
-			engine.logger.Debugf("[sql] %s - took: %v", sqlStr, execDuration)
+			engine.logger.Sqlf("[sql] %s - took: %v", sqlStr, execDuration)
 		}
 		return res, err
 	}

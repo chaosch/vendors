@@ -16,6 +16,8 @@ package log
 
 import (
 	"fmt"
+	"regexp"
+
 	"io"
 	"os"
 	"runtime"
@@ -49,13 +51,15 @@ const (
 // the Writer's Write method. A Logger can be used simultaneously from
 // multiple goroutines; it guarantees to serialize access to the Writer.
 type Logger struct {
-	mu     sync.Mutex // ensures atomic writes; protects the following fields
-	prefix string     // prefix to write at beginning of each line
-	flag   int        // properties
-	out    io.Writer  // destination for output
-	buf    []byte     // for accumulating text to write
-	logUrl string
-	system string
+	mu            sync.Mutex // ensures atomic writes; protects the following fields
+	prefix        string     // prefix to write at beginning of each line
+	flag          int        // properties
+	out           io.Writer  // destination for output
+	buf           []byte     // for accumulating text to write
+	logUrl        string
+	system        string
+	sensitiveKeys []string
+	regex         *regexp.Regexp
 }
 
 // New creates a new Logger. The out variable sets the
@@ -177,6 +181,7 @@ func (l *Logger) Output(calldepth int, s string) error {
 	l.buf = append(l.buf, " "...)
 	s = strings.Replace(s, fmt.Sprintf("%c", 13), "", -1)
 	s = strings.Replace(s, fmt.Sprintf("%c", 10), "", -1)
+	l.SensitiveJsonFilterReg(&s)
 	l.buf = append(l.buf, s...)
 	l.buf = append(l.buf, " */"...)
 	if len(s) == 0 || s[len(s)-1] != '\n' {
@@ -369,4 +374,23 @@ func (l *Logger) SetParas(system string, logUrl string, out io.Writer) {
 	l.system = system
 	l.logUrl = logUrl
 	l.out = out
+}
+
+func (l *Logger) SetSensitiveKeys(keys []string) {
+	l.sensitiveKeys = keys
+	if len(keys) > 0 {
+		regStr := `(?P<hi>"(xxx`
+		for _, v := range keys {
+			regStr += "|" + v
+		}
+		regStr += `)"\:(\[\]|""|"[^"]+)"?,)`
+		l.regex, _ = regexp.Compile(regStr)
+	}
+}
+
+func (l *Logger) SensitiveJsonFilterReg(content *string) {
+	if l.regex != nil {
+		//x:=l.regex.FindAllString(*content,-1)
+		*content = l.regex.ReplaceAllString(*content, "")
+	}
 }

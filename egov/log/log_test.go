@@ -203,3 +203,35 @@ func BenchmarkPrintlnNoFlags(b *testing.B) {
 		l.Println(testString)
 	}
 }
+
+func TestSensitiveKeys(t *testing.T) {
+	var b bytes.Buffer
+	l := New(&b, "Header:", LstdFlags)
+	l.Print()
+	l.Println("non-empty")
+	l.SetSensitiveKeys([]string{"idcard", "phone"})
+	content := `{"idcard":[],"price":12.3,"phone":"啊啊啊啊","object":{"idcard":"","test":"test","phone":"XXYYZZ","object":[{"phone":"abc","test":"test"},{"phone":"abc","test":"test"},{"phone":"abcd","test":"test"}]}}`
+	x:=l.regex.FindAllString(content,-1)
+	fmt.Println(x)
+	fmt.Println(content)
+	l.SensitiveJsonFilterReg(&content)
+	fmt.Println(content)
+}
+
+
+func TestSensitiveKeysArrary(t *testing.T) {
+	var b bytes.Buffer
+	l := New(&b, "Header:", LstdFlags)
+	l.Print()
+	l.Println("non-empty")
+	//l.SetSensitiveKeys([]string{"idcard", "phone"})
+	//regStr := `(?P<hi>"(xxx|phone|idcard)"\:(\[[.+]\]|\[\]|""|"[^"]+)"?,)`
+	l.regex,_=regexp.Compile(`(?P<hi>"(xxx|phone|idcard)"\:((?P<X>\[("[^"]+)"\])]|\[\]|""|"[^"]+)"?,)`)
+	content := `{"idcard":[],"price":12.3,"phone":"啊啊啊啊","object":{"idcard":"","test":"test","phone":["a"],"object":[{"phone":"abc","test":"test"},{"phone":"abc","test":"test"},{"phone":"abcd","test":"test"}]}}`
+	x:=l.regex.FindAllString(content,-1)
+	fmt.Println(x)
+	fmt.Println(content)
+	l.SensitiveJsonFilterReg(&content)
+	fmt.Println(content)
+}
+
