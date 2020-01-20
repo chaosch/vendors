@@ -9,6 +9,7 @@ package log
 import (
 	"bytes"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"regexp"
 	"strings"
@@ -211,11 +212,10 @@ func TestSensitiveKeys(t *testing.T) {
 	l.Println("non-empty")
 	l.SetSensitiveKeys([]string{"idcard", "phone"})
 	content := `{"idcard":[],"price":12.3,"phone":"啊啊啊啊","object":{"idcard":"","test":"test","phone":"XXYYZZ","object":[{"phone":"abc","test":"test"},{"phone":"abc","test":"test"},{"phone":"abcd","test":"test"}]}}`
-	x:=l.regex.FindAllString(content,-1)
-	fmt.Println(x)
-	fmt.Println(content)
+	contentResult:=`{"price":12.3,"object":{"test":"test","object":[{"test":"test"},{"test":"test"},{"test":"test"}]}}`
 	l.SensitiveJsonFilterReg(&content)
-	fmt.Println(content)
+	//assert.EqualValues(t,contentResult,content,"not passed")
+	assert.Equal(t,contentResult,content)
 }
 
 
