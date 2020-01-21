@@ -211,7 +211,9 @@ func TestSensitiveKeys(t *testing.T) {
 	l.Print()
 	l.Println("non-empty")
 	l.SetSensitiveKeys([]string{"idcard", "phone"})
-	content := `{"idcard":[],"price":12.3,"phone":"啊啊啊啊","object":{"idcard":"","test":"test","phone":"XXYYZZ","object":[{"phone":"abc","test":"test"},{"phone":"abc","test":"test"},{"phone":"abcd","test":"test"}]}}`
+	content := `{"phone":["XXYYZZ","a","b"],"xxxxx":[],"price":12.3,"phone":"啊啊啊啊","object":{"idcard":"","test":"test","object":[{"phone":"abc","test":"test"},{"phone":"abc","test":"test"},{"phone":"abcd","test":"test"}]}}`
+	x:=l.regex.FindAllString(content,-1)
+	fmt.Println(x)
 	contentResult:=`{"price":12.3,"object":{"test":"test","object":[{"test":"test"},{"test":"test"},{"test":"test"}]}}`
 	l.SensitiveJsonFilterReg(&content)
 	//assert.EqualValues(t,contentResult,content,"not passed")
@@ -226,8 +228,8 @@ func TestSensitiveKeysArrary(t *testing.T) {
 	l.Println("non-empty")
 	//l.SetSensitiveKeys([]string{"idcard", "phone"})
 	//regStr := `(?P<hi>"(xxx|phone|idcard)"\:(\[[.+]\]|\[\]|""|"[^"]+)"?,)`
-	l.regex,_=regexp.Compile(`(?P<hi>"(xxx|phone|idcard)"\:((?P<X>\[("[^"]+)"\])]|\[\]|""|"[^"]+)"?,)`)
-	content := `{"idcard":[],"price":12.3,"phone":"啊啊啊啊","object":{"idcard":"","test":"test","phone":["a"],"object":[{"phone":"abc","test":"test"},{"phone":"abc","test":"test"},{"phone":"abcd","test":"test"}]}}`
+	l.regex,_=regexp.Compile(`\[["^""](?:,["^""]+)*\]`)
+	content := `["a","b","c"]`
 	x:=l.regex.FindAllString(content,-1)
 	fmt.Println(x)
 	fmt.Println(content)
