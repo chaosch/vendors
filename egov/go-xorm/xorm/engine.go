@@ -295,10 +295,10 @@ func (engine *Engine) logSQL(sqlStr string, sessionId string, sqlArgs ...interfa
 			//log.Println(fmt.Sprintf("[%s][SQL] %v %v",engine.EngineName, sqlStr, sqlArgs))
 		} else {
 			sqlStr=strings.ToLower(strings.TrimLeft(sqlStr," "))
-			if strings.HasPrefix(sqlStr,"alter")||strings.HasPrefix(sqlStr,"create")||strings.HasPrefix(sqlStr,"drop"){
-				engine.logger.Sqlf("[%s][SQL][%s] use %s; %v;", engine.EngineName, sessionId,engine.dialect.URI().DbName, sqlStr)
+			if strings.HasPrefix(sqlStr,"alter")||strings.HasPrefix(sqlStr,"create")||strings.HasPrefix(sqlStr,"drop")||strings.HasPrefix(sqlStr,"set"){
+				engine.logger.Sqlf("[%s][DDL][%s] use %s; %v;", engine.EngineName, sessionId,engine.dialect.URI().DbName, sqlStr)
 			}else{
-				engine.logger.Sqlf("[%s][DDL][%s] %v", engine.EngineName, sessionId,sqlStr)
+				engine.logger.Sqlf("[%s][SQL][%s] %v", engine.EngineName, sessionId,sqlStr)
 			}
 			//log.Println(fmt.Sprintf("[%s][SQL] %v", engine.EngineName,sqlStr))
 		}
