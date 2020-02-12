@@ -291,10 +291,15 @@ func (engine *Engine) Ping() error {
 func (engine *Engine) logSQL(sqlStr string, sessionId string, sqlArgs ...interface{}) {
 	if engine.showSQL && !engine.showExecTime {
 		if len(sqlArgs) > 0 {
-			engine.logger.Sqlf("[%s][SQL][%s] %v %v", engine.EngineName, sessionId, sqlStr, sqlArgs)
+			engine.logger.Sqlf("[%s][SQL][%s] %v %v", engine.EngineName, sessionId,sqlStr, sqlArgs)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v %v",engine.EngineName, sqlStr, sqlArgs))
 		} else {
-			engine.logger.Sqlf("[%s][SQL][%s] %v", engine.EngineName, sessionId, sqlStr)
+			sqlStr=strings.ToLower(strings.TrimLeft(sqlStr," "))
+			if strings.HasPrefix(sqlStr,"alter")||strings.HasPrefix(sqlStr,"create")||strings.HasPrefix(sqlStr,"drop"){
+				engine.logger.Sqlf("[%s][SQL][%s] use %s; %v;", engine.EngineName, sessionId,engine.dialect.URI().DbName, sqlStr)
+			}else{
+				engine.logger.Sqlf("[%s][DDL][%s] %v", engine.EngineName, sessionId,sqlStr)
+			}
 			//log.Println(fmt.Sprintf("[%s][SQL] %v", engine.EngineName,sqlStr))
 		}
 	}
