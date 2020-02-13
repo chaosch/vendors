@@ -306,7 +306,20 @@ func (session *Session) isIndexExist2(tableName string, cols []string, unique bo
 
 	for _, index := range indexes {
 		if sliceEq(index.Cols, cols) {
+			//todo 已存在索引为类型不同忽略，看如何处理
+			if unique&&index.Type==core.IndexType||!unique&&index.Type==core.UniqueType{
+				//虽然有索引，但类型不对，返回false之前应drop掉该索引
+				DropIndexSql:=""
+				switch session.Engine.dialect.DBType() {
+				case core.MYSQL:
+					DropIndexSql="drop index "+index.Name+" on "+tableName
+				default:
+					DropIndexSql="drop index "+index.Name
+				}
+				session.Exec(DropIndexSql)
+			}
 			if unique {
+				//返回false之前删掉该
 				return index.Type == core.UniqueType, nil
 			}
 			return index.Type == core.IndexType, nil
@@ -356,6 +369,9 @@ func (session *Session) addIndex(tableName, idxName string) error {
 	index := session.Statement.RefTable.Indexes[idxName]
 	sqlStr := session.Engine.dialect.CreateIndexSql(tableName, index)
 
+	//if !strings.HasPrefix(sqlStr,";"){
+	//	sqlStr=sqlStr+";"
+	//}
 	_, err := session.exec(sqlStr)
 	return err
 }

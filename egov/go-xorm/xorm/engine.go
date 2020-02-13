@@ -291,14 +291,14 @@ func (engine *Engine) Ping() error {
 func (engine *Engine) logSQL(sqlStr string, sessionId string, sqlArgs ...interface{}) {
 	if engine.showSQL && !engine.showExecTime {
 		if len(sqlArgs) > 0 {
-			engine.logger.Sqlf("[%s][SQL][%s] %v %v", engine.EngineName, sessionId,sqlStr, sqlArgs)
+			engine.logger.Sqlf("[%s][SQL][%s] %v %v", engine.EngineName, sessionId, sqlStr, sqlArgs)
 			//log.Println(fmt.Sprintf("[%s][SQL] %v %v",engine.EngineName, sqlStr, sqlArgs))
 		} else {
-			sqlStr=strings.ToLower(strings.TrimLeft(sqlStr," "))
-			if strings.HasPrefix(sqlStr,"alter")||strings.HasPrefix(sqlStr,"create")||strings.HasPrefix(sqlStr,"drop")||strings.HasPrefix(sqlStr,"set"){
-				engine.logger.Sqlf("[%s][DDL][%s] use %s; %v;", engine.EngineName, sessionId,engine.dialect.URI().DbName, sqlStr)
-			}else{
-				engine.logger.Sqlf("[%s][SQL][%s] %v", engine.EngineName, sessionId,sqlStr)
+			sqlStr = strings.ToLower(strings.TrimLeft(sqlStr, " "))
+			if strings.HasPrefix(sqlStr, "alter") || strings.HasPrefix(sqlStr, "create") || strings.HasPrefix(sqlStr, "drop") || strings.HasPrefix(sqlStr, "set") || strings.HasPrefix(sqlStr, "create or replace") {
+				engine.logger.Sqlf("[%s][DDL][%s] use %s; %v;", engine.EngineName, sessionId, engine.dialect.URI().DbName, sqlStr)
+			} else {
+				engine.logger.Sqlf("[%s][SQL][%s] %v", engine.EngineName, sessionId, sqlStr)
 			}
 			//log.Println(fmt.Sprintf("[%s][SQL] %v", engine.EngineName,sqlStr))
 		}
@@ -1578,6 +1578,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 		defer s.Close()
 		_, isExist := tableMaps[tableName]
 		if !isExist {
+			err := engine.DropView(tableName)
 			err = engine.CreateTables(bean)
 			if err != nil {
 				fmt.Println(err)
@@ -1590,7 +1591,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
 				if isExist && col.XormTag != phyCol.XormTag {
-					engine.logger.Debug(table.Name, col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
+					engine.logger.Debug(table.Name, " ", col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
 				}
 				//if isExist&&col.Comment!=phyCol.Comment{
 				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
@@ -1606,9 +1607,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 					if err := session.Statement.setRefValue(v); err != nil {
 						return err
 					}
-					engine.ShowSQL(true)
 					err = session.addColumn(col)
-					engine.ShowSQL(false)
 					if err != nil {
 						//log.Println("增加字段错:"+err.Error())
 						return err
@@ -1629,9 +1628,125 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						}
 						if col.Default != "" && col.Default != "null" && col.Default != "NULL" {
 							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
-							engine.ShowSQL(true)
 							engine.Exec(sqlUpdateDefault)
-							engine.ShowSQL(false)
+						}
+					}
+				}
+
+			}
+		}
+
+		for name, index := range table.Indexes {
+			session := engine.NewSession()
+			defer session.Close()
+			if err := session.Statement.setRefValue(v); err != nil {
+				return err
+			}
+			if index.Type == core.UniqueType {
+				//isExist, err := session.isIndexExist(table.Name, name, true)
+				isExist, err := session.isIndexExist2(tableName, index.Cols, true)
+				if err != nil {
+					return err
+				}
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+
+					err = session.addUnique(tableName, name)
+					if err != nil {
+						return err
+					}
+				}
+			} else if index.Type == core.IndexType {
+				isExist, err := session.isIndexExist2(tableName, index.Cols, false)
+				if err != nil {
+					return err
+				}
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+
+					err = session.addIndex(tableName, name)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				return errors.New("unknow index type")
+			}
+		}
+	}
+
+	return nil
+}
+
+func (engine *Engine) SyncFastSplitDatabase(tableMaps map[string]map[string]*core.Column, beans ...interface{}) error {
+
+	for _, bean := range beans {
+		v := rValue(bean)
+		tableName := engine.tbName(v)
+		table, err := engine.autoMapType(v)
+		s := engine.NewSession()
+		defer s.Close()
+		_, isExist := tableMaps[tableName]
+		if !isExist {
+			err := engine.DropView(tableName)
+			err = engine.CreateTables(bean)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+		} else {
+			if ex, _ := engine.IsTableExist(bean); !ex {
+				continue
+			}
+			for _, col := range table.Columns() {
+				phyCol, isExist := tableMaps[tableName][col.Name]
+				if isExist && col.XormTag != phyCol.XormTag {
+					engine.logger.Debug(table.Name, " ", col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
+				}
+				//if isExist&&col.Comment!=phyCol.Comment{
+				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
+				//}
+				//continue
+				//fmt.Println(phyCol.Comment)
+				//if err != nil {
+				//	return err
+				//}
+				if !isExist {
+					session := engine.NewSession()
+					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
+					err = session.addColumn(col)
+					if err != nil {
+						//log.Println("增加字段错:"+err.Error())
+						return err
+					}
+				} else {
+					if col.XormTag != phyCol.XormTag {
+						//fmt.Println()
+						//fmt.Println("L:",col.XormTag)
+						//fmt.Println("P:",phyCol.XormTag)
+						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
+						for _, sql := range strings.Split(sqls, ";") {
+							// 							engine.ShowSQL(true)
+							_, err1 := engine.Exec(sql)
+							//							engine.ShowSQL(false)
+							if err1 != nil {
+								engine.logger.Error("修改字段出错:" + err1.Error())
+							}
+						}
+						if col.Default != "" && col.Default != "null" && col.Default != "NULL" {
+							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
+							engine.Exec(sqlUpdateDefault)
 						}
 					}
 				}
@@ -1883,6 +1998,14 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 	return session.Commit()
 	//	}
 	//	return nil
+}
+
+//drop a view
+func (engine *Engine) DropView(viewName string) error {
+
+	sqlStr := fmt.Sprintf("drop view if exists %s", viewName)
+	_, err := engine.Exec(sqlStr)
+	return err
 }
 
 func (engine *Engine) AlterAutoIncrement(beans ...interface{}) error {

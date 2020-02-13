@@ -407,10 +407,12 @@ func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
   case DATA_TYPE when 'varchar' then CONCAT('(''',COLUMN_DEFAULT,''')') else CONCAT('((',COLUMN_DEFAULT,'))') end	defaultvalue,
   '' indexes,
   0 indexnum
-from information_schema.COLUMNS where TABLE_SCHEMA=? 
+from information_schema.COLUMNS where TABLE_SCHEMA=?
+and table_name in (select table_name from information_schema.TABLES where TABLE_SCHEMA=? and table_type='BASE TABLE' )
 `
+	//
 	sql = fmt.Sprintf(sql, "`")
-	rows, err := db.DB().Query(sql, db.DbName)
+	rows, err := db.DB().Query(sql, db.DbName,db.DbName)
 
 	if err != nil {
 		panic(err)
@@ -419,6 +421,9 @@ from information_schema.COLUMNS where TABLE_SCHEMA=?
 
 	return GetStringColumnFormRows(rows), nil
 }
+
+
+
 
 func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 	result := make(map[string]map[string]*Column)
@@ -624,7 +629,8 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 			if col.IsPrimaryKey {
 				defaultString = ""
 			} else {
-				defaultString = "default null"
+				//defaultString = "default null"
+				defaultString = ""
 			}
 		} else {
 			switch SQLType2Type(col.SQLType).String() {
@@ -639,7 +645,7 @@ func TransMapStringColumn(maxColLen int, column map[string]string) (string, *Col
 			}
 		}
 	} else {
-		defaultString = "default null"
+		defaultString = ""
 	}
 
 	if defaultString != "" {

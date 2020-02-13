@@ -35,12 +35,13 @@ func (q *Quoter) Quote(content string) string {
 }
 
 func (i *IdFilter) Do(sql string, dialect Dialect, table *Table) string {
-	quoter := NewQuoter(dialect)
-	if table != nil && len(table.PrimaryKeys) == 1 {
-		sql = strings.Replace(sql, "`(id)`", quoter.Quote(table.PrimaryKeys[0]), -1)
-		sql = strings.Replace(sql, quoter.Quote("(id)"), quoter.Quote(table.PrimaryKeys[0]), -1)
-		return strings.Replace(sql, "(id)", quoter.Quote(table.PrimaryKeys[0]), -1)
-	}
+	//todo 为什么如果是id就要过滤掉括号？先注释
+	//quoter := NewQuoter(dialect)
+	//if table != nil && len(table.PrimaryKeys) == 1 {
+	//	sql = strings.Replace(sql, "`(id)`", quoter.Quote(table.PrimaryKeys[0]), -1)
+	//	sql = strings.Replace(sql, quoter.Quote("(id)"), quoter.Quote(table.PrimaryKeys[0]), -1)
+	//	return strings.Replace(sql, "(id)", quoter.Quote(table.PrimaryKeys[0]), -1)
+	//}
 	return sql
 }
 
