@@ -34,7 +34,7 @@ func (session *Session) CreateTable(bean interface{}) error {
 	}
 	if !session.Engine.IdentityInsert {
 		session.Statement.RefTable.AutoIncrement = session.Statement.RefTable.PKColumns()[0].Name
-		session.Statement.RefTable.PKColumns()[0].IsAutoIncrement=true
+		session.Statement.RefTable.PKColumns()[0].IsAutoIncrement = true
 	}
 	defer session.resetStatement()
 	if session.IsAutoClose {
@@ -306,18 +306,17 @@ func (session *Session) isIndexExist2(tableName string, cols []string, unique bo
 
 	for _, index := range indexes {
 		if sliceEq(index.Cols, cols) {
-			//todo 已存在索引为类型不同忽略，看如何处理
-			if unique&&index.Type==core.IndexType||!unique&&index.Type==core.UniqueType{
-				//虽然有索引，但类型不对，返回false之前应drop掉该索引
-				DropIndexSql:=""
-				switch session.Engine.dialect.DBType() {
-				case core.MYSQL:
-					DropIndexSql="drop index "+index.Name+" on "+tableName
-				default:
-					DropIndexSql="drop index "+index.Name
-				}
-				session.Exec(DropIndexSql)
-			}
+			//if unique&&index.Type==core.IndexType||!unique&&index.Type==core.UniqueType{
+			//	//虽然有索引，但类型不对，返回false之前应drop掉该索引
+			//	DropIndexSql:=""
+			//	switch session.Engine.dialect.DBType() {
+			//	case core.MYSQL:
+			//		DropIndexSql="drop index "+index.Name+" on "+tableName
+			//	default:
+			//		DropIndexSql="drop index "+index.Name
+			//	}
+			//	session.Exec(DropIndexSql)
+			//}
 			if unique {
 				//返回false之前删掉该
 				return index.Type == core.UniqueType, nil
@@ -326,6 +325,36 @@ func (session *Session) isIndexExist2(tableName string, cols []string, unique bo
 		}
 	}
 	return false, nil
+}
+
+func (session *Session) isIndexExist3(tableName string, cols []string, unique bool) (bool, error, string) {
+	defer session.resetStatement()
+	alterSql := ""
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+
+	indexes, err := session.Engine.dialect.GetIndexes(tableName)
+	if err != nil {
+		return false, err, alterSql
+	}
+
+	for _, index := range indexes {
+		if sliceEq(index.Cols, cols) {
+			if unique {
+				if index.Type == core.IndexType {
+					alterSql = fmt.Sprintf("ALTER TABLE %s DROP INDEX %s,ADD unique INDEX  %s ( %s )", tableName, index.Name, index.Name, strings.Join(index.Cols, ","))
+				}
+				return index.Type == core.UniqueType, nil, alterSql
+			} else {
+				if index.Type == core.UniqueType {
+					alterSql = fmt.Sprintf("ALTER TABLE %s DROP INDEX %s,ADD  INDEX  %s ( %s )", tableName, index.Name, index.Name, strings.Join(index.Cols, ","))
+				}
+				return index.Type == core.IndexType, nil, alterSql
+			}
+		}
+	}
+	return false, nil, alterSql
 }
 
 func (session *Session) addColumn(col *core.Column) error {

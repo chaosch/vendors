@@ -1644,37 +1644,45 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 			}
 			if index.Type == core.UniqueType {
 				//isExist, err := session.isIndexExist(table.Name, name, true)
-				isExist, err := session.isIndexExist2(tableName, index.Cols, true)
+				isExist, err,alterSql := session.isIndexExist3(tableName, index.Cols, true)
 				if err != nil {
 					return err
 				}
 				if !isExist {
-					session := engine.NewSession()
-					defer session.Close()
-					if err := session.Statement.setRefValue(v); err != nil {
-						return err
-					}
+					if alterSql=="" {
+						session := engine.NewSession()
+						defer session.Close()
+						if err := session.Statement.setRefValue(v); err != nil {
+							return err
+						}
 
-					err = session.addUnique(tableName, name)
-					if err != nil {
-						return err
+						err = session.addUnique(tableName, name)
+						if err != nil {
+							return err
+						}
+					}else{
+						session.Exec(alterSql)
 					}
 				}
 			} else if index.Type == core.IndexType {
-				isExist, err := session.isIndexExist2(tableName, index.Cols, false)
+				isExist, err,alterSql := session.isIndexExist3(tableName, index.Cols, false)
 				if err != nil {
 					return err
 				}
 				if !isExist {
-					session := engine.NewSession()
-					defer session.Close()
-					if err := session.Statement.setRefValue(v); err != nil {
-						return err
-					}
+					if alterSql=="" {
+						session := engine.NewSession()
+						defer session.Close()
+						if err := session.Statement.setRefValue(v); err != nil {
+							return err
+						}
 
-					err = session.addIndex(tableName, name)
-					if err != nil {
-						return err
+						err = session.addIndex(tableName, name)
+						if err != nil {
+							return err
+						}
+					}else{
+						session.Exec(alterSql)
 					}
 				}
 			} else {

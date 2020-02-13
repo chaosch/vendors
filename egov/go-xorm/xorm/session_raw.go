@@ -7,6 +7,7 @@ package xorm
 import (
 	"database/sql"
 	"egov/go-xorm/core"
+	"strings"
 )
 
 func (session *Session) query(sqlStr string, paramStr ...interface{}) ([]map[string][]byte, error) {
@@ -114,11 +115,13 @@ func (session *Session) innerExec(sqlStr string, args ...interface{}) (sql.Resul
 
 //todo 加入记录
 func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, error) {
-   	for _, filter := range session.Engine.dialect.Filters() {
+	if strings.Trim(sqlStr, " ") == "" {
+		return nil, nil
+	}
+	for _, filter := range session.Engine.dialect.Filters() {
 		// TODO: for table name, it's no need to RefTable
 		sqlStr = filter.Do(sqlStr, session.Engine.dialect, session.Statement.RefTable)
 	}
-
 
 	return session.Engine.logSQLExecutionTime(sqlStr, args, func() (sql.Result, error) {
 		session.saveLastSQL(sqlStr, args...)
@@ -127,28 +130,28 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 			if session.Engine.dialect.DBType() == core.ORACLE {
 				//session.Begin()
 				//r, err := session.Tx.Exec(sqlStr, args...)
-				r,err:=session.innerExec(sqlStr,args...)
-				if err!=nil{
+				r, err := session.innerExec(sqlStr, args...)
+				if err != nil {
 					//fmt.Println(sqlStr,err)
-//					session.Rollback()
-				}else{
-//					session.Commit()
+					//					session.Rollback()
+				} else {
+					//					session.Commit()
 				}
 				return r, err
 			}
 
-			res,err:= session.innerExec(sqlStr, args...)
-			if err==nil{
+			res, err := session.innerExec(sqlStr, args...)
+			if err == nil {
 
 			}
-			return res,err
+			return res, err
 		}
 
-		res,err:= session.Tx.Exec(sqlStr, args...)
-		if err==nil{
+		res, err := session.Tx.Exec(sqlStr, args...)
+		if err == nil {
 
 		}
-		return res,err
+		return res, err
 	})
 }
 
