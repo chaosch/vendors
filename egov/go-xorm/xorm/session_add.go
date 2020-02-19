@@ -215,7 +215,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 	return e, sqlStr
 }
 
-func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, Asc []string, Desc []string, condiBean ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, Asc []string, Desc []string, InAllSpitDb bool, condiBean ...interface{}) (error, *sqlparse.SQLParserResult) {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -406,18 +406,18 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 		}
 	}
 
-	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, args...)
+	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, InAllSpitDb, args...)
 	return err, parserRes
 }
 
-func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, args ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, InAllSpitDb bool, args ...interface{}) (error, *sqlparse.SQLParserResult) {
 	var rawRows *core.Rows
 	var err error
 
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	err, ps := session.ParserSqlAllColumns(&sqlStr, Asc, Desc)
+	err, ps := session.ParserSqlAllColumns(&sqlStr, Asc, Desc, InAllSpitDb)
 
 	if err != nil {
 		return err, nil
@@ -544,13 +544,24 @@ func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Va
 	return nil, rawRows.SQLPR
 }
 
-func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc []string) (error, *sqlparse.SQLParserResult) {
+func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc []string, InAllSpitDb bool) (error, *sqlparse.SQLParserResult) {
 
-	sql := *sqlStr
 	reg := regexp.MustCompile(`(?i:offset)\s\d+\s*$`)
-	sql = reg.ReplaceAllString(sql, "")
+	offset := ""
+	if !InAllSpitDb {
+		offset = reg.FindString(*sqlStr) //非所有分库查询，保留下offset及其参数，解析后补回去
+	}
 
-	ps := sqlparse.NewSQLParser(sql)
+	//todo sqlparser 不能识别offset，解析时先去掉offset及其参数
+	*sqlStr = reg.ReplaceAllString(*sqlStr, "")
+
+	if InAllSpitDb {
+		//所有分库查询，截掉limit及其参数,汇总后由linq实现limit和offset
+		regLimit := regexp.MustCompile(`(?i:limit)\s\d+\s*$`)
+		*sqlStr = regLimit.ReplaceAllString(*sqlStr, "")
+	}
+
+	ps := sqlparse.NewSQLParser(*sqlStr)
 	x, err := ps.DoParser()
 
 	if err != nil {
@@ -608,7 +619,10 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 
 	}
 
-	AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
+	if InAllSpitDb {
+		//在结果集（select列表）中加入排序字段，以便linq使用
+		AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
+	}
 	if ModifySql {
 		ps = sqlparse.NewSQLParser(*sqlStr)
 		x, err = ps.DoParser()
@@ -616,6 +630,10 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 			return errors.New("sqlparser says:" + err.Error()), nil
 		}
 	}
+	if !InAllSpitDb {
+		*sqlStr = *sqlStr + " " + offset
+	}
+
 	return nil, x
 }
 
