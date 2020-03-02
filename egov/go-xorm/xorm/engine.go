@@ -1585,9 +1585,6 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 				return err
 			}
 		} else {
-			if ex, _ := engine.IsTableExist(bean); !ex {
-				continue
-			}
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
 				if isExist && col.XormTag != phyCol.XormTag {
@@ -1644,12 +1641,12 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 			}
 			if index.Type == core.UniqueType {
 				//isExist, err := session.isIndexExist(table.Name, name, true)
-				isExist, err,alterSql := session.isIndexExist3(tableName, index.Cols, true)
+				isExist, err, alterSql := session.isIndexExist3(tableName, index.Cols, true)
 				if err != nil {
 					return err
 				}
 				if !isExist {
-					if alterSql=="" {
+					if alterSql == "" {
 						session := engine.NewSession()
 						defer session.Close()
 						if err := session.Statement.setRefValue(v); err != nil {
@@ -1660,17 +1657,17 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						if err != nil {
 							return err
 						}
-					}else{
+					} else {
 						session.Exec(alterSql)
 					}
 				}
 			} else if index.Type == core.IndexType {
-				isExist, err,alterSql := session.isIndexExist3(tableName, index.Cols, false)
+				isExist, err, alterSql := session.isIndexExist3(tableName, index.Cols, false)
 				if err != nil {
 					return err
 				}
 				if !isExist {
-					if alterSql=="" {
+					if alterSql == "" {
 						session := engine.NewSession()
 						defer session.Close()
 						if err := session.Statement.setRefValue(v); err != nil {
@@ -1681,7 +1678,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 						if err != nil {
 							return err
 						}
-					}else{
+					} else {
 						session.Exec(alterSql)
 					}
 				}
@@ -1694,7 +1691,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 	return nil
 }
 
-func (engine *Engine) SyncFastSplitDatabase(tableMaps map[string]map[string]*core.Column, beans ...interface{}) error {
+func (engine *Engine) SyncFastView(tableMaps map[string]map[string]*core.Column, baseOn string, beans ...interface{}) error {
 
 	for _, bean := range beans {
 		v := rValue(bean)
@@ -1704,111 +1701,25 @@ func (engine *Engine) SyncFastSplitDatabase(tableMaps map[string]map[string]*cor
 		defer s.Close()
 		_, isExist := tableMaps[tableName]
 		if !isExist {
-			err := engine.DropView(tableName)
-			err = engine.CreateTables(bean)
+			err = engine.CreateOrReplaceView(tableName, baseOn)
 			if err != nil {
 				fmt.Println(err)
 				return err
 			}
 		} else {
-			if ex, _ := engine.IsTableExist(bean); !ex {
-				continue
-			}
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
-				if isExist && col.XormTag != phyCol.XormTag {
-					engine.logger.Debug(table.Name, " ", col.Name, " modify from [", phyCol.XormTag, "] to [", col.XormTag+"]")
-				}
-				//if isExist&&col.Comment!=phyCol.Comment{
-				//	fmt.Println(table.Name,col.Name," modify comment from ",phyCol.Comment,"to",col.Comment)
-				//}
-				//continue
-				//fmt.Println(phyCol.Comment)
-				//if err != nil {
-				//	return err
-				//}
-				if !isExist {
-					session := engine.NewSession()
-					defer session.Close()
-					if err := session.Statement.setRefValue(v); err != nil {
-						return err
-					}
-					err = session.addColumn(col)
+				if isExist || col.XormTag != phyCol.XormTag {
+					engine.logger.Debug("create or replace view need executed")
+					err = engine.CreateOrReplaceView(tableName, baseOn)
 					if err != nil {
-						//log.Println("增加字段错:"+err.Error())
-						return err
+						fmt.Println(err)
 					}
-				} else {
-					if col.XormTag != phyCol.XormTag {
-						//fmt.Println()
-						//fmt.Println("L:",col.XormTag)
-						//fmt.Println("P:",phyCol.XormTag)
-						sqls := engine.dialect.ModifyColumnSql(table.Name, col)
-						for _, sql := range strings.Split(sqls, ";") {
-							// 							engine.ShowSQL(true)
-							_, err1 := engine.Exec(sql)
-							//							engine.ShowSQL(false)
-							if err1 != nil {
-								engine.logger.Error("修改字段出错:" + err1.Error())
-							}
-						}
-						if col.Default != "" && col.Default != "null" && col.Default != "NULL" {
-							sqlUpdateDefault := fmt.Sprintf("update %s set %s='%s' where %s is null", tableName, col.Name, col.Default, col.Name)
-							engine.Exec(sqlUpdateDefault)
-						}
-					}
+					break
 				}
-
-			}
-		}
-
-		for name, index := range table.Indexes {
-			session := engine.NewSession()
-			defer session.Close()
-			if err := session.Statement.setRefValue(v); err != nil {
-				return err
-			}
-			if index.Type == core.UniqueType {
-				//isExist, err := session.isIndexExist(table.Name, name, true)
-				isExist, err := session.isIndexExist2(tableName, index.Cols, true)
-				if err != nil {
-					return err
-				}
-				if !isExist {
-					session := engine.NewSession()
-					defer session.Close()
-					if err := session.Statement.setRefValue(v); err != nil {
-						return err
-					}
-
-					err = session.addUnique(tableName, name)
-					if err != nil {
-						return err
-					}
-				}
-			} else if index.Type == core.IndexType {
-				isExist, err := session.isIndexExist2(tableName, index.Cols, false)
-				if err != nil {
-					return err
-				}
-				if !isExist {
-					session := engine.NewSession()
-					defer session.Close()
-					if err := session.Statement.setRefValue(v); err != nil {
-						return err
-					}
-
-					err = session.addIndex(tableName, name)
-					if err != nil {
-						return err
-					}
-				}
-			} else {
-				return errors.New("unknow index type")
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -2012,6 +1923,19 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 func (engine *Engine) DropView(viewName string) error {
 
 	sqlStr := fmt.Sprintf("drop view if exists %s", viewName)
+	_, err := engine.Exec(sqlStr)
+	return err
+}
+
+//create or replace view
+func (engine *Engine) CreateOrReplaceView(tableName string, baseOn string) error {
+	sqlStr := ""
+	switch engine.dialect.DBType() {
+	case core.MYSQL:
+		sqlStr = fmt.Sprintf("create or replace view %s as select * from %s.%s;", tableName, baseOn, tableName)
+	default:
+		sqlStr = fmt.Sprintf("create or replace view %s as select * from %s.%s;", tableName, baseOn, tableName)
+	}
 	_, err := engine.Exec(sqlStr)
 	return err
 }
