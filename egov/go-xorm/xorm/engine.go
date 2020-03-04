@@ -1709,13 +1709,22 @@ func (engine *Engine) SyncFastView(tableMaps map[string]map[string]*core.Column,
 		} else {
 			for _, col := range table.Columns() {
 				phyCol, isExist := tableMaps[tableName][col.Name]
-				if (!isExist || col.XormTag != phyCol.XormTag)&&!col.IsPrimaryKey {
-					engine.logger.Debugf("create or replace view need executed:%s vs %s",col.XormTag,phyCol.XormTag)
+				if !isExist {
+					engine.logger.Debugf("create or replace view %s", tableName)
 					err = engine.CreateOrReplaceView(tableName, baseOn)
 					if err != nil {
 						fmt.Println(err)
 					}
 					break
+				} else {
+					if (col.XormTag != phyCol.XormTag) && !col.IsPrimaryKey {
+						engine.logger.Debugf("create or replace view need executed:%s vs %s", col.XormTag, phyCol.XormTag)
+						err = engine.CreateOrReplaceView(tableName, baseOn)
+						if err != nil {
+							fmt.Println(err)
+						}
+						break
+					}
 				}
 			}
 		}
