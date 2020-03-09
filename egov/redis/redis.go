@@ -31,7 +31,7 @@ func NewRedisClusterClient(addr []string,password string)(redis.Cmdable,error){
 	})
 	return client ,nil
 }
-func NewRedisSentinelClient(addr []string,masterName,password string)(redis.Cmdable,error){
+func NewRedisSentinelClient(addr []string,masterName,password string,db int)(redis.Cmdable,error){
 	client:=redis.NewFailoverClient(&redis.FailoverOptions{
 		MasterName:         masterName,
 		SentinelAddrs:      addr,
@@ -39,7 +39,7 @@ func NewRedisSentinelClient(addr []string,masterName,password string)(redis.Cmda
 		Dialer:             nil,
 		OnConnect:          nil,
 		Password:           password,
-		DB:                 0,
+		DB:                 db,
 		MaxRetries:         0,
 		MinRetryBackoff:    0,
 		MaxRetryBackoff:    0,
@@ -56,14 +56,14 @@ func NewRedisSentinelClient(addr []string,masterName,password string)(redis.Cmda
 	})
 	return client ,nil
 }
-func NewSingleRedisClient(addr, password string) (redis.Cmdable, error) {
+func NewSingleRedisClient(addr, password string,db int) (redis.Cmdable, error) {
 	client := redis.NewClient(&redis.Options{
 		Network:            "",
 		Addr:               addr,
 		Dialer:             nil,
 		OnConnect:          nil,
 		Password:           password,
-		DB:                 0,
+		DB:                 db,
 		MaxRetries:         0,
 		MinRetryBackoff:    0,
 		MaxRetryBackoff:    0,
@@ -83,16 +83,16 @@ func NewSingleRedisClient(addr, password string) (redis.Cmdable, error) {
 	//fmt.Println(pong, err)
 	return client, err
 }
-func NewRedisClient(addr []string, masterName,password string) (redis.Cmdable, error) {
+func NewRedisClient(addr []string, masterName,password string,db int) (redis.Cmdable, error) {
 	if len(addr)==0{
 		return nil, errors.New("redis addr is null")
 	}
 	if masterName!=""{
-		client,err := NewRedisSentinelClient(addr,masterName,password)
+		client,err := NewRedisSentinelClient(addr,masterName,password,db)
 		return client,err
 	}
 	if len(addr)==1{
-		client,err := NewSingleRedisClient(addr[0],password)
+		client,err := NewSingleRedisClient(addr[0],password,db)
 		return client,err
 	}else{
 		client,err :=NewRedisClusterClient(addr,password)
