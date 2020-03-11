@@ -177,7 +177,7 @@ func (s *SimpleLogger) SetSensitiveKeys(keys []string) {
 
 // Sql implement core.ILogger
 func (s *SimpleLogger) Sql(v ...interface{}) {
-	s.IfOpenExtreme(LOG_SQL, &v)
+	//s.IfOpenExtreme(LOG_SQL, &v)
 	if s.level <= LOG_SQL {
 		s.SQL.Output(2, fmt.Sprint(v...))
 		//s.SendLog(LOG_ERR, fmt.Sprint(v...))
@@ -237,7 +237,7 @@ func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
 
 // Debug implement core.ILogger
 func (s *SimpleLogger) Debug(v ...interface{}) {
-	s.IfOpenExtreme(LOG_DEBUG, &v)
+	//s.IfOpenExtreme(LOG_DEBUG, &v)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprint(v...))
 		//s.SendLog(LOG_DEBUG, fmt.Sprint(v...))
@@ -262,7 +262,7 @@ func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
 
 // Info implement core.ILogger
 func (s *SimpleLogger) Info(v ...interface{}) {
-	s.IfOpenExtreme(LOG_INFO, &v)
+	//s.IfOpenExtreme(LOG_INFO, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprint(v...))
 		//s.SendLog(LOG_INFO, fmt.Sprint(v...))
@@ -288,7 +288,7 @@ func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 
 // Warn implement core.ILogger
 func (s *SimpleLogger) Warn(v ...interface{}) {
-	s.IfOpenExtreme(LOG_WARNING, &v)
+	//s.IfOpenExtreme(LOG_WARNING, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprint(v...))
 	}
@@ -394,7 +394,7 @@ func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 		if y != nil {
 			if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
 				buff, _ := ffjson.Marshal(y)
-				//s.SendLog(lT, y)
+				s.SendLog(lT, y)
 				ostr := string(buff)
 				x.Index(0).Set(reflect.ValueOf(ostr))
 			}
