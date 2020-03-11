@@ -177,7 +177,7 @@ func (s *SimpleLogger) SetSensitiveKeys(keys []string) {
 
 // Sql implement core.ILogger
 func (s *SimpleLogger) Sql(v ...interface{}) {
-	//s.IfOpenExtreme(LOG_SQL, &v)
+	s.IfOpenExtreme(LOG_SQL, &v)
 	if s.level <= LOG_SQL {
 		s.SQL.Output(2, fmt.Sprint(v...))
 		//s.SendLog(LOG_ERR, fmt.Sprint(v...))
@@ -190,6 +190,7 @@ func (s *SimpleLogger) Sql(v ...interface{}) {
 
 // Sqlf implement core.ILogger
 func (s *SimpleLogger) Sqlf(format string, v ...interface{}) {
+	s.IfOpenExtremeF(LOG_SQL, &format, &v)
 	if s.level <= LOG_SQL {
 		s.SQL.Output(2, fmt.Sprintf(format, v...))
 		//s.SendLog(LOG_ERR, fmt.Sprintf(format, v...))
@@ -225,6 +226,7 @@ func (s *SimpleLogger) ErrorNoPost(v ...interface{}) {
 
 // Errorf implement core.ILogger
 func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
+	s.IfOpenExtremeF(LOG_ERR, &format, &v)
 	if s.level <= LOG_ERR {
 		s.ERR.Output(2, fmt.Sprintf(format, v...))
 		//s.SendLog(LOG_ERR, fmt.Sprintf(format, v...))
@@ -237,7 +239,7 @@ func (s *SimpleLogger) Errorf(format string, v ...interface{}) {
 
 // Debug implement core.ILogger
 func (s *SimpleLogger) Debug(v ...interface{}) {
-	//s.IfOpenExtreme(LOG_DEBUG, &v)
+	s.IfOpenExtreme(LOG_DEBUG, &v)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprint(v...))
 		//s.SendLog(LOG_DEBUG, fmt.Sprint(v...))
@@ -250,6 +252,7 @@ func (s *SimpleLogger) Debug(v ...interface{}) {
 
 // Debugf implement core.ILogger
 func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
+	s.IfOpenExtremeF(LOG_DEBUG, &format, &v)
 	if s.level <= LOG_DEBUG {
 		s.DEBUG.Output(2, fmt.Sprintf(format, v...))
 		//s.SendLog(LOG_DEBUG, v)
@@ -262,7 +265,7 @@ func (s *SimpleLogger) Debugf(format string, v ...interface{}) {
 
 // Info implement core.ILogger
 func (s *SimpleLogger) Info(v ...interface{}) {
-	//s.IfOpenExtreme(LOG_INFO, &v)
+	s.IfOpenExtreme(LOG_INFO, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprint(v...))
 		//s.SendLog(LOG_INFO, fmt.Sprint(v...))
@@ -275,7 +278,7 @@ func (s *SimpleLogger) Info(v ...interface{}) {
 
 // Infof implement core.ILogger
 func (s *SimpleLogger) Infof(format string, v ...interface{}) {
-	s.IfOpenExtremeF(&format, &v)
+	s.IfOpenExtremeF(LOG_INFO, &format, &v)
 	if s.level <= LOG_INFO {
 		s.INFO.Output(2, fmt.Sprintf(format, v...))
 		//s.SendLog(LOG_INFO, fmt.Sprintf(format, v...))
@@ -288,7 +291,7 @@ func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 
 // Warn implement core.ILogger
 func (s *SimpleLogger) Warn(v ...interface{}) {
-	//s.IfOpenExtreme(LOG_WARNING, &v)
+	s.IfOpenExtreme(LOG_WARNING, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprint(v...))
 	}
@@ -300,7 +303,7 @@ func (s *SimpleLogger) Warn(v ...interface{}) {
 
 // Warnf implement core.ILogger
 func (s *SimpleLogger) Warnf(format string, v ...interface{}) {
-	s.IfOpenExtremeF(&format, &v)
+	s.IfOpenExtremeF(LOG_WARNING, &format, &v)
 	if s.level <= LOG_WARNING {
 		s.WARN.Output(2, fmt.Sprintf(format, v...))
 		//s.SendLog(LOG_WARNING, fmt.Sprintf(format, v...))
@@ -379,10 +382,9 @@ func (s *SimpleLogger) OpenExtreme(v *[]interface{}, skip int) {
 //itoa(buf, line, -1)
 //*buf = append(*buf, ":"...)
 
-func (s *SimpleLogger) IfOpenExtremeF(format *string, v *[]interface{}) {
-	//if s.level <= LOG_EXTREME {
-	//	s.OpenExtremeF(format, v, 3)
-	//}
+func (s *SimpleLogger) IfOpenExtremeF(lT LogLevel, format *string, v *[]interface{}) {
+	ostr := fmt.Sprintf(*format, v)
+	s.SendLog(lT, ostr)
 }
 
 func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
@@ -403,6 +405,9 @@ func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 }
 
 func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
+	if lT != LOG_WARNING && lT != LOG_ERR {
+		return
+	}
 	go func() {
 		logKind := ""
 		switch lT {
@@ -426,4 +431,3 @@ func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
 		}
 	}()
 }
-
