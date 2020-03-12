@@ -244,6 +244,27 @@ func (statement *Statement) Table(tableNameOrBean interface{}) *Statement {
 	return statement
 }
 
+func (statement *Statement) TableWithSchema(tableNameOrBean interface{}) *Statement {
+	v := rValue(tableNameOrBean)
+	t := v.Type()
+	if t.Kind() == reflect.String {
+		statement.AltTableName = statement.Engine.dialect.URI().DbName + "." +tableNameOrBean.(string)
+		//for key,_:=range statement.Engine.Tables{
+		//	fmt.Println(key.String())
+		//}
+
+	} else if t.Kind() == reflect.Struct {
+		var err error
+		statement.RefTable, err = statement.Engine.autoMapType(v)
+		if err != nil {
+			statement.Engine.logger.Error(err)
+			return statement
+		}
+		statement.AltTableName = statement.Engine.dialect.URI().DbName + "." + statement.Engine.tbName(v)
+	}
+	return statement
+}
+
 // Auto generating update columnes and values according a struct
 func buildUpdates(engine *Engine, table *core.Table, bean interface{},
 	includeVersion bool, includeUpdated bool, includeNil bool,
@@ -988,6 +1009,52 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, condition
 		}
 	default:
 		fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", tablename)))
+	}
+
+	fmt.Fprintf(&buf, " ON %v", condition)
+	statement.JoinStr = buf.String()
+	statement.joinArgs = append(statement.joinArgs, args...)
+	return statement
+}
+
+func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{}, condition string, args ...interface{}) *Statement {
+	var buf bytes.Buffer
+	if len(statement.JoinStr) > 0 {
+		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
+	} else {
+		fmt.Fprintf(&buf, "%v JOIN ", joinOP)
+	}
+
+	switch tablename.(type) {
+	case []string:
+		t := tablename.([]string)
+		if len(t) > 1 {
+			fmt.Fprintf(&buf, "%s.%v AS %v", statement.Engine.dialect.URI().DbName, statement.Engine.Quote(t[0]), statement.Engine.Quote(t[1]))
+		} else if len(t) == 1 {
+			fmt.Fprintf(&buf, statement.Engine.dialect.URI().DbName+"."+statement.Engine.Quote(t[0]))
+		}
+	case []interface{}:
+		t := tablename.([]interface{})
+		l := len(t)
+		var table string
+		if l > 0 {
+			f := t[0]
+			v := rValue(f)
+			t := v.Type()
+			if t.Kind() == reflect.String {
+				table = statement.Engine.dialect.URI().DbName + "." + f.(string)
+			} else if t.Kind() == reflect.Struct {
+				table = statement.Engine.dialect.URI().DbName + "." + statement.Engine.tbName(v)
+			}
+		}
+		if l > 1 {
+			fmt.Fprintf(&buf, "%v AS %v", statement.Engine.Quote(table),
+				statement.Engine.Quote(fmt.Sprintf("%v", t[1])))
+		} else if l == 1 {
+			fmt.Fprintf(&buf, statement.Engine.Quote(table))
+		}
+	default:
+		fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%s.%v", statement.Engine.dialect.URI().DbName, tablename)))
 	}
 
 	fmt.Fprintf(&buf, " ON %v", condition)

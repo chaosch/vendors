@@ -78,7 +78,7 @@ func (session *Session) Init() {
 	session.lastSQL = ""
 	session.lastSQLArgs = []interface{}{}
 	session.IdentityInsert = session.Engine.IdentityInsert
-	session.SessId=object_id.NewObjectId().Hex()
+	session.SessId = object_id.NewObjectId().Hex()
 }
 
 // Close release the connection from pool
@@ -133,6 +133,13 @@ func (session *Session) Table(tableNameOrBean interface{}) *Session {
 	session.Statement.Table(tableNameOrBean)
 	return session
 }
+
+// Table can input a string or pointer to struct for special a table to operate.
+func (session *Session) TableWithSchemal(tableNameOrBean interface{}) *Session {
+	session.Statement.TableWithSchema(tableNameOrBean)
+	return session
+}
+
 
 // Alias set the table alias
 func (session *Session) Alias(alias string) *Session {
@@ -215,6 +222,12 @@ func (session *Session) Join(joinOperator string, tablename interface{}, conditi
 	session.Statement.Join(joinOperator, tablename, condition, args...)
 	return session
 }
+
+func (session *Session) JoinWithSchema(joinOperator string, tablename interface{}, condition string, args ...interface{}) *Session {
+	session.Statement.JoinWithSchema(joinOperator, tablename, condition, args...)
+	return session
+}
+
 
 // GroupBy Generate Group By statement
 func (session *Session) GroupBy(keys string) *Session {
@@ -801,7 +814,7 @@ func (session *Session) saveLastSQL(sql string, args ...interface{}) {
 	session.lastSQL = sql
 	session.lastSQLArgs = args
 	//args = append(args, session.SessId)
-	session.Engine.logSQL(sql,session.SessId, args...)
+	session.Engine.logSQL(sql, session.SessId, args...)
 }
 
 // LastSQL returns last query information
