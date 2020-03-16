@@ -406,21 +406,23 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 		}
 	}
 
-	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, InAllSpitDb, args...)
+	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, InAllSpitDb, true, args...)
 	return err, parserRes
 }
 
-func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, InAllSpitDb bool, args ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, InAllSpitDb bool, paraseSql bool, args ...interface{}) (error, *sqlparse.SQLParserResult) {
 	var rawRows *core.Rows
 	var err error
-
+	var ps *sqlparse.SQLParserResult
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	err, ps := session.ParserSqlAllColumns(&sqlStr, Asc, Desc, InAllSpitDb)
+	if paraseSql {
+		err, ps = session.ParserSqlAllColumns(&sqlStr, Asc, Desc, InAllSpitDb)
 
-	if err != nil {
-		return err, nil
+		if err != nil {
+			return err, nil
+		}
 	}
 
 	session.queryPreprocess(&sqlStr, args...)
@@ -571,6 +573,99 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 	//	return
 	//}
 	p := x.GetDBUser("*")
+
+	//if p == nil {
+	//	return
+	//}
+	//fmt.Println(p.TableMap)
+	ModifySql := false
+	for _, t := range p.TableMap {
+		sqlTab := ""
+		sqlCols := ""
+
+		//T, Tok := session.Engine.Tabs[t.Name]
+		//if _, ok := t.ColumnMap[T.PrimaryKeys[0]]; !ok && Tok && len(t.ColumnMap) > 1 && t.Alias.Name == t.GetTopAlias() { //t表主键不存在于select
+		//	if strings.HasPrefix(*sqlStr, "select") {
+		//		*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
+		//	}
+		//	if strings.HasPrefix(*sqlStr, "SELECT") {
+		//		*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+t.GetTopAlias()+"."+T.PrimaryKeys[0]+" "+t.GetTopAlias()+"_"+T.PrimaryKeys[0]+",", 1)
+		//	}
+		//}
+		//
+		//if _, ok := t.ColumnMap["split_code"]; !ok && Tok && len(t.ColumnMap) > 1 && Tok && !strings.HasPrefix(t.Name, "dic_") && t.Alias.Name == t.GetTopAlias() { //t.split_code不存在于select
+		//	if strings.HasPrefix(*sqlStr, "select") {
+		//		*sqlStr = strings.Replace(*sqlStr, "select ", "select "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
+		//	}
+		//	if strings.HasPrefix(*sqlStr, "SELECT") {
+		//		*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+t.GetTopAlias()+".split_code"+" "+t.GetTopAlias()+"_split_code,", 1)
+		//	}
+		//}
+
+		for _, c := range t.ColumnMap {
+			if c.Name == "*" {
+				//fmt.Println(t.GetTopAlias()+"."+"*", t.Name+"."+"*")
+				var xt *core.Table
+				xt = session.Engine.Tabs[t.Name]
+				sqlTab = t.GetTopAlias()
+				for _, col := range xt.Columns() {
+					sqlCols += sqlTab + "." + col.Name + ","
+				}
+				sqlCols += "'x'"
+			}
+		}
+		if sqlCols != "" {
+			ModifySql = true
+			*sqlStr = strings.Replace(*sqlStr, sqlTab+".*", sqlCols, -1)
+		}
+
+	}
+
+	if InAllSpitDb {
+		//在结果集（select列表）中加入排序字段，以便linq使用
+		AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
+	}
+	if ModifySql {
+		ps = sqlparse.NewSQLParser(*sqlStr)
+		x, err = ps.DoParser()
+		if err != nil {
+			return errors.New("sqlparser says:" + err.Error()), nil
+		}
+	}
+	if !InAllSpitDb {
+		*sqlStr = *sqlStr + " " + offset
+	}
+
+	return nil, x
+}
+
+func (session *Session) ParserSqlAllColumnsWithSchema(sqlStr *string, Asc []string, Desc []string, InAllSpitDb bool, schema string) (error, *sqlparse.SQLParserResult) {
+
+	reg := regexp.MustCompile(`(?i:offset)\s\d+\s*$`)
+	offset := ""
+	if !InAllSpitDb {
+		offset = reg.FindString(*sqlStr) //非所有分库查询，保留下offset及其参数，解析后补回去
+	}
+
+	//todo sqlparser 不能识别offset，解析时先去掉offset及其参数
+	*sqlStr = reg.ReplaceAllString(*sqlStr, "")
+
+	if InAllSpitDb {
+		//所有分库查询，截掉limit及其参数,汇总后由linq实现limit和offset
+		regLimit := regexp.MustCompile(`(?i:limit)\s\d+\s*$`)
+		*sqlStr = regLimit.ReplaceAllString(*sqlStr, "")
+	}
+
+	ps := sqlparse.NewSQLParser(*sqlStr)
+	x, err := ps.DoParser()
+
+	if err != nil {
+		return errors.New("sqlparser says:" + err.Error()), nil
+	}
+	//if x == nil {
+	//	return
+	//}
+	p := x.GetDBUser(schema)
 
 	//if p == nil {
 	//	return
