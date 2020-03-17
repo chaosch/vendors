@@ -406,23 +406,25 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 		}
 	}
 
-	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, InAllSpitDb, true, args...)
+	err, parserRes := session.NoCacheFind(table, sliceValue, sqlStr, Asc, Desc, InAllSpitDb, nil, args...)
 	return err, parserRes
 }
 
-func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, InAllSpitDb bool, paraseSql bool, args ...interface{}) (error, *sqlparse.SQLParserResult) {
+func (session *Session) NoCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, Asc []string, Desc []string, InAllSpitDb bool, parseSql *sqlparse.SQLParserResult, args ...interface{}) (error, *sqlparse.SQLParserResult) {
 	var rawRows *core.Rows
 	var err error
 	var ps *sqlparse.SQLParserResult
 	//if session.Engine.showSQL {
 	//	fmt.Println(sqlStr)
 	//}
-	if paraseSql {
+	if parseSql == nil {
 		err, ps = session.ParserSqlAllColumns(&sqlStr, Asc, Desc, InAllSpitDb)
 
 		if err != nil {
 			return err, nil
 		}
+	} else {
+		ps = parseSql
 	}
 
 	session.queryPreprocess(&sqlStr, args...)
@@ -962,3 +964,6 @@ func StringContains(m map[string]string, key string, p string) bool {
 	}
 	return false
 }
+
+
+
