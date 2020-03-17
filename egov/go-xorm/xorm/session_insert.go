@@ -83,6 +83,27 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 	var args []interface{}
 	var cols []*core.Column
 
+	colIsNotNil := make(map[string]bool)
+
+	DataType := reflect.Indirect(reflect.ValueOf(rowsSlicePtr)).Type().Elem()
+	for j := 0; j < DataType.NumField(); j++ {
+		cName := DataType.Field(j).Name
+		colDone:=false
+		for i := 0; i < size; i++ {
+			v := sliceValue.Index(i)
+			Data := reflect.Indirect(v)
+			if !Data.Field(j).IsNil() {
+				colIsNotNil[strings.ToLower(cName)]=false
+				colDone=true
+				break
+			}
+		}
+		if colDone{
+			continue
+		}
+		colIsNotNil[strings.ToLower(cName)]=true
+	}
+
 	for i := 0; i < size; i++ {
 		v := sliceValue.Index(i)
 		vv := reflect.Indirect(v)
@@ -110,6 +131,11 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 				if col.IsAutoIncrement && isZero(fieldValue.Interface()) {
 					continue
 				}
+
+				if colIsNotNil[col.Name] {
+					continue
+				}
+
 				if col.MapType == core.ONLYFROMDB {
 					continue
 				}
@@ -126,7 +152,7 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 						continue
 					}
 				}
-				if (col.IsCreated&&fieldValue.IsNil() ) && session.Statement.UseAutoTime {
+				if (col.IsCreated && fieldValue.IsNil()) && session.Statement.UseAutoTime {
 					val, t := session.Engine.NowTime2(col.SQLType.Name)
 					args = append(args, val)
 
@@ -162,6 +188,10 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 				}
 				fieldValue := *ptrFieldValue
 
+				if colIsNotNil[col.Name] {
+					continue
+				}
+
 				if col.IsAutoIncrement && isZero(fieldValue.Interface()) {
 					continue
 				}
@@ -181,7 +211,7 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 						continue
 					}
 				}
-				if (col.IsCreated&&fieldValue.IsNil()) && session.Statement.UseAutoTime {
+				if (col.IsCreated && fieldValue.IsNil()) && session.Statement.UseAutoTime {
 					val, t := session.Engine.NowTime2(col.SQLType.Name)
 					args = append(args, val)
 
@@ -278,6 +308,11 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 	return res.RowsAffected()
 }
 
+//对齐所有数据的插入列,在所有数据中看对应列是否为空
+func (session *Session) allIsNil(rowsSlicePtr interface{}) (error, bool) {
+	return nil, true
+}
+
 // InsertMulti insert multiple records
 func (session *Session) InsertMulti(rowsSlicePtr interface{}) (int64, error) {
 	defer session.resetStatement()
@@ -318,7 +353,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 		processor.BeforeInsert()
 	}
 	// --
-	colNames, args, err := genCols(session.Statement.RefTable, session, bean, false, false,false)
+	colNames, args, err := genCols(session.Statement.RefTable, session, bean, false, false, false)
 	if err != nil {
 		return 0, err
 	}
@@ -344,7 +379,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 	if len(exprColVals) > 0 {
 		colPlaces = colPlaces + strings.Join(exprColVals, ", ")
 	} else {
-		colPlaces = colPlaces[0: len(colPlaces)-2]
+		colPlaces = colPlaces[0 : len(colPlaces)-2]
 	}
 
 	sqlStr := fmt.Sprintf("INSERT INTO %s (%v%v%v) VALUES (%v)",
@@ -413,7 +448,6 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 			}
 		}
 
-
 		if getSeq {
 			if !session.IdentityInsert {
 				if len(table.AutoIncrement) > 0 {
@@ -448,13 +482,13 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 		}
 		//fmt.Println(id)
 		//fmt.Println(bean)
-		colNames, args, err := genCols(session.Statement.RefTable, session, bean, false, false,false)
+		colNames, args, err := genCols(session.Statement.RefTable, session, bean, false, false, false)
 		//fmt.Println(colNames)
 		colPlaces := strings.Repeat("?, ", len(colNames))
 		if len(exprColVals) > 0 {
 			colPlaces = colPlaces + strings.Join(exprColVals, ", ")
 		} else {
-			colPlaces = colPlaces[0: len(colPlaces)-2]
+			colPlaces = colPlaces[0 : len(colPlaces)-2]
 		}
 
 		sqlStr := fmt.Sprintf("INSERT INTO %s (%v%v%v) VALUES (%v)",
