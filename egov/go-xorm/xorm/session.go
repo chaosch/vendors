@@ -83,6 +83,7 @@ func (session *Session) Init() {
 
 // Close release the connection from pool
 func (session *Session) Close() {
+	//fmt.Println("session",session.SessId,"closed")
 	for _, v := range session.stmtCache {
 		v.Close()
 	}

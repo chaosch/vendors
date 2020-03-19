@@ -944,6 +944,19 @@ func (statement *Statement) OrderBy(order string) *Statement {
 	return statement
 }
 
+
+func (statement *Statement) Order(order ...string) *Statement {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, statement.OrderStr)
+	if len(statement.OrderStr) > 0 {
+		fmt.Fprint(&buf, ", ")
+	}
+	newColNames := statement.col2NewColsWithQuote(order...)
+	fmt.Fprintf(&buf, "%v ", strings.Join(newColNames, " DESC, "))
+	statement.OrderStr = buf.String()
+	return statement
+}
+
 // Desc generate `ORDER BY xx DESC`
 func (statement *Statement) Desc(colNames ...string) *Statement {
 	var buf bytes.Buffer

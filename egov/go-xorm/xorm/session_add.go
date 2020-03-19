@@ -718,7 +718,7 @@ func (session *Session) ParserSqlAllColumnsWithSchema(sqlStr *string, Asc []stri
 
 	if InAllSpitDb {
 		//在结果集（select列表）中加入排序字段，以便linq使用
-		AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
+		AddOrderFieldToResultSetWithSchema(sqlStr, Asc, Desc, x, schema,session.Statement.selectStr)
 	}
 	if ModifySql {
 		ps = sqlparse.NewSQLParser(*sqlStr)
@@ -967,3 +967,81 @@ func StringContains(m map[string]string, key string, p string) bool {
 
 
 
+func AddOrderFieldToResultSetWithSchema(sqlStr *string, asc []string, desc []string, parser *sqlparse.SQLParserResult,schema string, SelectStr string) {
+	addFields := ""
+	selectStr := ""
+	selectStr = " select " + SelectStr
+
+	AliasCol := make(map[string]string)
+
+	ast, err := sqlparser.Parse(selectStr)
+	if err == nil {
+		x := ast.(*sqlparser.Select)
+		//fmt.Println(x)
+		for _, c := range x.SelectExprs {
+			buf := sqlparser.NewTrackedBuffer(nil)
+			c.Format(buf)
+			//		fmt.Println(buf)
+			temp := fmt.Sprintf("%s", buf)
+			//		fmt.Println(temp)
+			temp = strings.Trim(temp, " ")
+			if strings.Contains(temp, " as ") {
+				AliasCol[strings.Split(temp, " as ")[1]] = strings.Split(temp, " as ")[0]
+			} else {
+				idx := strings.LastIndex(temp, " ")
+				if idx > 0 {
+					AliasCol[temp[idx+1:]] = temp[0:idx]
+				} else {
+					AliasCol[temp] = temp
+				}
+			}
+		}
+	}
+	for _, a := range asc {
+		alias := FindColumnNameFromResultSetWithSchema(a, parser,schema)
+		if alias == "" && !StringContains(AliasCol, a, "'(+-*/") {
+			addFields += a + ","
+		}
+	}
+	for _, a := range desc {
+		alias := FindColumnNameFromResultSetWithSchema(a, parser,schema)
+		if alias == "" && !StringContains(AliasCol, a, "'(+-*/") {
+			addFields += a + ","
+		}
+	}
+
+	*sqlStr = strings.Replace(*sqlStr, "SELECT ", "SELECT "+addFields, 1)
+}
+
+func FindColumnNameFromResultSetWithSchema(sqlColumnStr string, parser *sqlparse.SQLParserResult,schema string) string {
+	//strings.Index(sqlstr,"SELECT")
+
+	var tAlias, cAlias, alias string
+	if strings.Contains(sqlColumnStr, ".") {
+		tAlias = strings.Split(sqlColumnStr, ".")[0]
+		cAlias = strings.Split(sqlColumnStr, ".")[1]
+		for _, t := range parser.GetDBUser(schema).TableMap {
+			if t.GetTopAlias() == tAlias {
+				for _, c := range t.ColumnMap {
+					if c.GetTopAlias() == cAlias {
+						alias = c.GetTopAlias()
+						return alias
+					}
+				}
+			}
+		}
+	} else {
+		cAlias = sqlColumnStr
+		for _, t := range parser.GetDBUser(schema).TableMap {
+			for _, c := range t.ColumnMap {
+				//fmt.Println(c.GetTopAlias())
+				if c.GetTopAlias() == cAlias {
+					alias = c.GetTopAlias()
+					return alias
+				}
+			}
+		}
+
+	}
+	return alias
+}

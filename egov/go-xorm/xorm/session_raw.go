@@ -161,6 +161,5 @@ func (session *Session) Exec(sqlStr string, args ...interface{}) (sql.Result, er
 	if session.IsAutoClose {
 		defer session.Close()
 	}
-
 	return session.exec(sqlStr, args...)
 }
