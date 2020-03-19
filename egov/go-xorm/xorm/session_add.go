@@ -623,16 +623,16 @@ func (session *Session) ParserSqlAllColumns(sqlStr *string, Asc []string, Desc [
 
 	}
 
-	if InAllSpitDb {
-		//在结果集（select列表）中加入排序字段，以便linq使用
-		AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
-	}
 	if ModifySql {
 		ps = sqlparse.NewSQLParser(*sqlStr)
 		x, err = ps.DoParser()
 		if err != nil {
 			return errors.New("sqlparser says:" + err.Error()), nil
 		}
+	}
+	if InAllSpitDb {
+		//在结果集（select列表）中加入排序字段，以便linq使用
+		AddOrderFieldToResultSet(sqlStr, Asc, Desc, x, session.Statement.selectStr)
 	}
 	if !InAllSpitDb {
 		*sqlStr = *sqlStr + " " + offset
@@ -716,10 +716,6 @@ func (session *Session) ParserSqlAllColumnsWithSchema(sqlStr *string, Asc []stri
 
 	}
 
-	if InAllSpitDb {
-		//在结果集（select列表）中加入排序字段，以便linq使用
-		AddOrderFieldToResultSetWithSchema(sqlStr, Asc, Desc, x, schema,session.Statement.selectStr)
-	}
 	if ModifySql {
 		ps = sqlparse.NewSQLParser(*sqlStr)
 		x, err = ps.DoParser()
@@ -727,6 +723,11 @@ func (session *Session) ParserSqlAllColumnsWithSchema(sqlStr *string, Asc []stri
 			return errors.New("sqlparser says:" + err.Error()), nil
 		}
 	}
+	if InAllSpitDb {
+		//在结果集（select列表）中加入排序字段，以便linq使用
+		AddOrderFieldToResultSetWithSchema(sqlStr, Asc, Desc, x, schema,session.Statement.selectStr)
+	}
+
 	if !InAllSpitDb {
 		*sqlStr = *sqlStr + " " + offset
 	}
