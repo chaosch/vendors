@@ -169,6 +169,10 @@ func (e *ErrType) ConfirmErr(lanKey string) {
 			} else {
 				e.ErrMsg = ErrorMap[lanKey][9998]
 			}
+		} else {
+			if e.ErrMsg == "" {
+				e.ErrMsg = fmt.Sprintf("%+v", e.ErrParas)
+			}
 		}
 	} else {
 		e.ErrMsg = fmt.Sprint(e.ErrParas...)
