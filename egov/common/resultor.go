@@ -53,6 +53,8 @@ func init() {
 	}
 }
 
+
+
 //swagger:model
 type ResultTemplate struct {
 	//成功
