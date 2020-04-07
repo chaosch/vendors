@@ -65,3 +65,4 @@ func GetRsaPassword(pk *string) (err error) {
 	*pk = string(originalData)
 	return nil
 }
+
