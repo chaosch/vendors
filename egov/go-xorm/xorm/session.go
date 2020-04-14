@@ -141,7 +141,6 @@ func (session *Session) TableWithSchemal(tableNameOrBean interface{}) *Session {
 	return session
 }
 
-
 // Alias set the table alias
 func (session *Session) Alias(alias string) *Session {
 	session.Statement.Alias(alias)
@@ -224,11 +223,15 @@ func (session *Session) Join(joinOperator string, tablename interface{}, conditi
 	return session
 }
 
-func (session *Session) JoinWithSchema(joinOperator string, tablename interface{}, condition string, args ...interface{}) *Session {
-	session.Statement.JoinWithSchema(joinOperator, tablename, condition, args...)
+// Join join_operator should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
+func (session *Session) JoinWithSchema(joinOperator string, tablename interface{}, condition string, WithSchema bool, args ...interface{}) *Session {
+	if WithSchema {
+		session.Statement.JoinWithSchema(joinOperator, tablename, condition, args...)
+	} else {
+		session.Statement.Join(joinOperator, tablename, condition, args...)
+	}
 	return session
 }
-
 
 // GroupBy Generate Group By statement
 func (session *Session) GroupBy(keys string) *Session {
