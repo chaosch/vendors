@@ -56,6 +56,8 @@ type ILogger interface {
 	Infof(format string, v ...interface{})
 	Warn(v ...interface{})
 	Warnf(format string, v ...interface{})
+	Watch(v ...interface{})
+	Watchf(format string, v ...interface{})
 
 	Level() LogLevel
 	SetLevel(l LogLevel, system string, logServer string, output string)
@@ -109,6 +111,13 @@ func (DiscardLogger) Warn(v ...interface{}) {}
 // Warnf empty implementation
 func (DiscardLogger) Warnf(format string, v ...interface{}) {}
 
+
+// Watch empty implementation
+func (DiscardLogger) Watch(v ...interface{}) {}
+
+// Watchf empty implementation
+func (DiscardLogger) Watchf(format string, v ...interface{}) {}
+
 // Level empty implementation
 func (DiscardLogger) Level() LogLevel {
 	return LOG_OFF
@@ -129,7 +138,7 @@ func (DiscardLogger) IsShowSQL() bool {
 type SimpleLogger struct {
 	DEBUG         *log.Logger
 	ERR           *log.Logger
-	IMP           *log.Logger
+	WATCH         *log.Logger
 	INFO          *log.Logger
 	WARN          *log.Logger
 	SQL           *log.Logger
@@ -160,6 +169,7 @@ func NewSimpleLogger3(out io.Writer, prefix string, flag int, l LogLevel) *Simpl
 		DEBUG: log.New(out, fmt.Sprintf("DEBUG %s ", prefix), flag),
 		ERR:   log.New(out, fmt.Sprintf("ERROR %s ", prefix), flag),
 		INFO:  log.New(out, fmt.Sprintf("INFO  %s ", prefix), flag),
+		WATCH: log.New(out, fmt.Sprintf("WATCH  %s ", prefix), flag),
 		WARN:  log.New(out, fmt.Sprintf("WARN  %s ", prefix), flag),
 		SQL:   log.New(out, fmt.Sprintf("SQL   %s ", prefix), flag),
 		level: l,
@@ -170,6 +180,7 @@ func (s *SimpleLogger) SetSensitiveKeys(keys []string) {
 	s.SensitiveKeys = keys
 	s.DEBUG.SetSensitiveKeys(keys)
 	s.INFO.SetSensitiveKeys(keys)
+	s.WATCH.SetSensitiveKeys(keys)
 	s.WARN.SetSensitiveKeys(keys)
 	s.ERR.SetSensitiveKeys(keys)
 	s.SQL.SetSensitiveKeys(keys)
@@ -320,7 +331,7 @@ func (s *SimpleLogger) Warnf(format string, v ...interface{}) {
 func (s *SimpleLogger) Watch(v ...interface{}) {
 	s.IfOpenExtreme(LOG_WATCH, &v)
 	if s.level <= LOG_WATCH {
-		s.WARN.Output(2, fmt.Sprint(v...))
+		s.WATCH.Output(2, fmt.Sprint(v...))
 	}
 	if s.ExtraFunction != nil {
 		s.ExtraFunction()
@@ -332,7 +343,7 @@ func (s *SimpleLogger) Watch(v ...interface{}) {
 func (s *SimpleLogger) Watchf(format string, v ...interface{}) {
 	s.IfOpenExtremeF(LOG_WATCH, &format, &v)
 	if s.level <= LOG_WATCH {
-		s.WARN.Output(2, fmt.Sprintf(format, v...))
+		s.WATCH.Output(2, fmt.Sprintf(format, v...))
 		//s.SendLog(LOG_WARNING, fmt.Sprintf(format, v...))
 	}
 	if s.ExtraFunction != nil {
@@ -432,7 +443,7 @@ func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 }
 
 func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
-	if lT != LOG_WARNING && lT != LOG_ERR || lT != LOG_WATCH {
+	if lT != LOG_WARNING && lT != LOG_ERR && lT != LOG_WATCH {
 		return
 	}
 	go func() {
