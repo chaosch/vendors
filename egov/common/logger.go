@@ -111,7 +111,6 @@ func (DiscardLogger) Warn(v ...interface{}) {}
 // Warnf empty implementation
 func (DiscardLogger) Warnf(format string, v ...interface{}) {}
 
-
 // Watch empty implementation
 func (DiscardLogger) Watch(v ...interface{}) {}
 
@@ -432,13 +431,26 @@ func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 		y := x.Index(0).Interface()
 		//fmt.Println(reflect.ValueOf(y).Type().Name())
 		if y != nil {
+			var buff []byte
 			if reflect.ValueOf(y).Type().Name() == "ProcessStatus" {
-				buff, _ := ffjson.Marshal(y)
+				buff, _ = ffjson.Marshal(y)
 				s.SendLog(lT, y)
 				ostr := string(buff)
 				x.Index(0).Set(reflect.ValueOf(ostr))
+			}else{
+				pc:=postlog.ProcessStatus{}
+				pc.Prompt=fmt.Sprintf("%v",y.(interface{}))
+				s.SendLog(lT, pc.Prompt)
 			}
 		}
+	} else if len(*v) > 1 {
+		pc := postlog.ProcessStatus{}
+		for _,val :=range *v{
+			pc.Prompt+=fmt.Sprintf("%v ",val)
+		}
+		s.SendLog(lT, pc.Prompt)
+		//ostr := pc.Prompt
+		//x.Index(0).Set(reflect.ValueOf(ostr))
 	}
 }
 
