@@ -38,6 +38,7 @@ const (
 	LOG_SQL
 	LOG_DEBUG
 	LOG_INFO
+	LOG_WATCH
 	LOG_WARNING
 	LOG_ERR
 	LOG_OFF
@@ -128,6 +129,7 @@ func (DiscardLogger) IsShowSQL() bool {
 type SimpleLogger struct {
 	DEBUG         *log.Logger
 	ERR           *log.Logger
+	IMP           *log.Logger
 	INFO          *log.Logger
 	WARN          *log.Logger
 	SQL           *log.Logger
@@ -314,6 +316,31 @@ func (s *SimpleLogger) Warnf(format string, v ...interface{}) {
 	return
 }
 
+// Warn implement core.ILogger
+func (s *SimpleLogger) Watch(v ...interface{}) {
+	s.IfOpenExtreme(LOG_WATCH, &v)
+	if s.level <= LOG_WATCH {
+		s.WARN.Output(2, fmt.Sprint(v...))
+	}
+	if s.ExtraFunction != nil {
+		s.ExtraFunction()
+	}
+	return
+}
+
+// Warnf implement core.ILogger
+func (s *SimpleLogger) Watchf(format string, v ...interface{}) {
+	s.IfOpenExtremeF(LOG_WATCH, &format, &v)
+	if s.level <= LOG_WATCH {
+		s.WARN.Output(2, fmt.Sprintf(format, v...))
+		//s.SendLog(LOG_WARNING, fmt.Sprintf(format, v...))
+	}
+	if s.ExtraFunction != nil {
+		s.ExtraFunction()
+	}
+	return
+}
+
 // Level implement core.ILogger
 func (s *SimpleLogger) Level() LogLevel {
 	return s.level
@@ -405,13 +432,15 @@ func (s *SimpleLogger) IfOpenExtreme(lT LogLevel, v *[]interface{}) {
 }
 
 func (s *SimpleLogger) SendLog(lT LogLevel, logStr interface{}) {
-	if lT != LOG_WARNING && lT != LOG_ERR {
+	if lT != LOG_WARNING && lT != LOG_ERR || lT != LOG_WATCH {
 		return
 	}
 	go func() {
 		logKind := ""
 		switch lT {
 		case LOG_INFO:
+			logKind = "日志"
+		case LOG_WATCH:
 			logKind = "日志"
 		case LOG_DEBUG:
 			logKind = "日志"
