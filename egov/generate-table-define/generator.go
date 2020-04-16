@@ -25,82 +25,6 @@ var exactSchemaTableName = make(map[string]map[string]string)
 var pks = make(map[string]string)
 var dsn = "server=192.168.4.106;port=1433;user id=sa;password=Qwer1234;database=table_define;encrypt=disable;"
 
-//var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
-
-func funcGetTabsPk(db_name string) string {
-
-	content := "\n "
-	content += "	//所有表的主键 \n"
-	//content += "	Databases[\"" + db_name + "\"].TabsPk=make(map[string]string)  \n"
-	if db_name != "all" {
-		for _, v := range exactSchemaTableName[db_name] {
-			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, v, pks[v])
-			content += "\n"
-		}
-	} else {
-		for k, v := range pks {
-			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, k, v)
-			content += "\n"
-		}
-	}
-	//	content += "}\n"
-	return content
-}
-
-func getAllTables(engine *xorm.Engine, dbName *string) {
-	var allTables []map[string]string
-	var err error
-	if *dbName != "all" {
-		allTables, err = engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], '')
-from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
-left join sys.extended_properties g on g.major_id=c.[object_id] and g.minor_id=0 and g.class=1 and g.name='Application'
-where    c.Type = 'U' and f.name='MS_Description' 
-and g.[value]='` + *dbName + `'`)
-	} else {
-		allTables, err = engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], '')
-from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
-where    c.Type = 'U' and f.name='MS_Description'
-order by c.name`)
-	}
-	if err != nil {
-		panic(err)
-	}
-	allTablesComment = make(map[string]string)
-	allTablesTableName = make(map[string]string)
-	for _, row := range allTables {
-		allTablesComment[row["name"]] = row["comment"]
-		allTablesTableName[row["comment"]] = row["name"]
-	}
-	if len(allTablesTableName) != len(allTablesComment) {
-		panic(errors.New("表中文说明有重复"))
-	} else {
-		fmt.Println(fmt.Sprintf("数据库中共有表%v个", len(allTablesComment)))
-	}
-}
-
-func getSchemaTables(engine *xorm.Engine, dbName string) {
-	schemaTables, err := engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], ''),g.[value] dbName
-from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
-left join sys.extended_properties g on g.major_id = c.object_id and g.minor_id = 0 and g.class = 1 and g.name='Application'
-where    c.Type = 'U' and f.name='MS_Description'
-and c.[name] in (select object_name(major_id) from sys.extended_properties where name = 'Application' and (value='` + dbName + `'))
-order by c.name`)
-	if err != nil {
-		panic(err)
-	}
-	schemaTableComment[dbName] = make(map[string]string)
-	schemaTableName[dbName] = make(map[string]string)
-	for _, row := range schemaTables {
-		schemaTableComment[dbName][row["name"]] = row["comment"]
-		schemaTableName[dbName][row["comment"]] = row["name"]
-	}
-	if len(schemaTableComment[dbName]) != len(schemaTableName[dbName]) {
-		panic(errors.New("表中文说明有重复"))
-	} else {
-		fmt.Println(fmt.Sprintf("数据库%s共有表%v个", dbName, len(schemaTableComment[dbName])))
-	}
-}
-
 func main() {
 	var err error
 	dependency, err = getDependency()
@@ -203,6 +127,84 @@ func init(){
 	fmt.Println("代码生成完毕")
 
 }
+
+
+//var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
+
+func funcGetTabsPk(db_name string) string {
+
+	content := "\n "
+	content += "	//所有表的主键 \n"
+	//content += "	Databases[\"" + db_name + "\"].TabsPk=make(map[string]string)  \n"
+	if db_name != "all" {
+		for _, v := range exactSchemaTableName[db_name] {
+			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, v, pks[v])
+			content += "\n"
+		}
+	} else {
+		for k, v := range pks {
+			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, k, v)
+			content += "\n"
+		}
+	}
+	//	content += "}\n"
+	return content
+}
+
+func getAllTables(engine *xorm.Engine, dbName *string) {
+	var allTables []map[string]string
+	var err error
+	if *dbName != "all" {
+		allTables, err = engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], '')
+from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
+left join sys.extended_properties g on g.major_id=c.[object_id] and g.minor_id=0 and g.class=1 and g.name='Application'
+where    c.Type = 'U' and f.name='MS_Description' 
+and g.[value]='` + *dbName + `'`)
+	} else {
+		allTables, err = engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], '')
+from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
+where    c.Type = 'U' and f.name='MS_Description'
+order by c.name`)
+	}
+	if err != nil {
+		panic(err)
+	}
+	allTablesComment = make(map[string]string)
+	allTablesTableName = make(map[string]string)
+	for _, row := range allTables {
+		allTablesComment[row["name"]] = row["comment"]
+		allTablesTableName[row["comment"]] = row["name"]
+	}
+	if len(allTablesTableName) != len(allTablesComment) {
+		panic(errors.New("表中文说明有重复"))
+	} else {
+		fmt.Println(fmt.Sprintf("数据库中共有表%v个", len(allTablesComment)))
+	}
+}
+
+func getSchemaTables(engine *xorm.Engine, dbName string) {
+	schemaTables, err := engine.QueryString(`select   [name] = c.Name, [comment] = isnull(f.[value], ''),g.[value] dbName
+from     sys.objects c left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1
+left join sys.extended_properties g on g.major_id = c.object_id and g.minor_id = 0 and g.class = 1 and g.name='Application'
+where    c.Type = 'U' and f.name='MS_Description'
+and c.[name] in (select object_name(major_id) from sys.extended_properties where name = 'Application' and (value='` + dbName + `'))
+order by c.name`)
+	if err != nil {
+		panic(err)
+	}
+	schemaTableComment[dbName] = make(map[string]string)
+	schemaTableName[dbName] = make(map[string]string)
+	for _, row := range schemaTables {
+		schemaTableComment[dbName][row["name"]] = row["comment"]
+		schemaTableName[dbName][row["comment"]] = row["name"]
+	}
+	if len(schemaTableComment[dbName]) != len(schemaTableName[dbName]) {
+		panic(errors.New("表中文说明有重复"))
+	} else {
+		fmt.Println(fmt.Sprintf("数据库%s共有表%v个", dbName, len(schemaTableComment[dbName])))
+	}
+}
+
 
 func listDatabase(engine *xorm.Engine, dbName *string) ([]map[string]string, error) {
 	sql := ""
