@@ -75,6 +75,7 @@ type Statement struct {
 	exprColumns     map[string]exprParam
 	cond            builder.Cond
 	NullFields      []string
+	useIndexes      string
 }
 
 // Init reset all the statement's fields
@@ -115,6 +116,7 @@ func (statement *Statement) Init() {
 	statement.exprColumns = make(map[string]exprParam)
 	statement.cond = builder.NewCond()
 	statement.NullFields = nil
+	statement.useIndexes = ""
 }
 
 // NoAutoCondition if you do not want convert bean's field as query condition, then use this function
@@ -129,6 +131,12 @@ func (statement *Statement) NoAutoCondition(no ...bool) *Statement {
 // Alias set the table alias
 func (statement *Statement) Alias(alias string) *Statement {
 	statement.TableAlias = alias
+	return statement
+}
+
+// useIndex set the table useIndexes
+func (statement *Statement) useIndex(useIndexes string) *Statement {
+	statement.useIndexes = useIndexes
 	return statement
 }
 
@@ -248,7 +256,7 @@ func (statement *Statement) TableWithSchema(tableNameOrBean interface{}) *Statem
 	v := rValue(tableNameOrBean)
 	t := v.Type()
 	if t.Kind() == reflect.String {
-		statement.AltTableName = statement.Engine.dialect.URI().DbName + "." +tableNameOrBean.(string)
+		statement.AltTableName = statement.Engine.dialect.URI().DbName + "." + tableNameOrBean.(string)
 		//for key,_:=range statement.Engine.Tables{
 		//	fmt.Println(key.String())
 		//}
@@ -944,7 +952,6 @@ func (statement *Statement) OrderBy(order string) *Statement {
 	return statement
 }
 
-
 func (statement *Statement) Order(order ...string) *Statement {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, statement.OrderStr)
@@ -984,7 +991,7 @@ func (statement *Statement) Asc(colNames ...string) *Statement {
 }
 
 // Join The joinOP should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (statement *Statement) Join(joinOP string, tablename interface{}, condition string, args ...interface{}) *Statement {
+func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex string,condition string, args ...interface{}) *Statement {
 	var buf bytes.Buffer
 	if len(statement.JoinStr) > 0 {
 		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
@@ -1023,14 +1030,17 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, condition
 	default:
 		fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", tablename)))
 	}
-
+	//加入使用索引
+	if statement.Engine.dialect.DBType()==core.MYSQL&&useIndex!=""{
+		fmt.Fprintf(&buf, " use index(%s)", useIndex)
+	}
 	fmt.Fprintf(&buf, " ON %v", condition)
 	statement.JoinStr = buf.String()
 	statement.joinArgs = append(statement.joinArgs, args...)
 	return statement
 }
 
-func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{}, condition string, args ...interface{}) *Statement {
+func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{},useIndex string, condition string, args ...interface{}) *Statement {
 	var buf bytes.Buffer
 	if len(statement.JoinStr) > 0 {
 		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
@@ -1070,6 +1080,10 @@ func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{},
 		fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%s.%v", statement.Engine.dialect.URI().DbName, tablename)))
 	}
 
+	//加入使用索引
+	if statement.Engine.dialect.DBType()==core.MYSQL&&useIndex!=""{
+		fmt.Fprintf(&buf, " use index(%s)", useIndex)
+	}
 	fmt.Fprintf(&buf, " ON %v", condition)
 	statement.JoinStr = buf.String()
 	statement.joinArgs = append(statement.joinArgs, args...)
@@ -1354,6 +1368,9 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string) {
 			fromStr += " " + quote(statement.TableAlias)
 		} else {
 			fromStr += " AS " + quote(statement.TableAlias)
+			if statement.useIndexes != "" && statement.Engine.dialect.DBType() == core.MYSQL {
+				fromStr += fmt.Sprintf(" use index (%s)", statement.useIndexes)
+			}
 		}
 	}
 	if statement.JoinStr != "" {

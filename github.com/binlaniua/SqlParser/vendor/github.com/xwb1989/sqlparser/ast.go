@@ -5,7 +5,7 @@
 package sqlparser
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"strconv"
 
@@ -29,7 +29,7 @@ import (
 func Parse(sql string) (Statement, error) {
 	tokenizer := NewStringTokenizer(sql)
 	if yyParse(tokenizer) != 0 {
-		return nil, errors.New(tokenizer.LastError)
+		return tokenizer.ParseTree,nil
 	}
 	return tokenizer.ParseTree, nil
 }

@@ -792,10 +792,10 @@ func (engine *Engine) OrderBy(order string) *Session {
 }
 
 // Join the join_operator should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (engine *Engine) Join(joinOperator string, tablename interface{}, condition string, args ...interface{}) *Session {
+func (engine *Engine) Join(joinOperator string, tablename interface{},useIndex string, condition string, args ...interface{}) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
-	return session.Join(joinOperator, tablename, condition, args...)
+	return session.Join(joinOperator, tablename,useIndex, condition, args...)
 }
 
 // GroupBy generate group by statement
@@ -2209,7 +2209,7 @@ func (engine *Engine) formatTime(tz *time.Location, sqlTypeName string, t time.T
 	case core.Date:
 		v = t.Format("2006-01-02")
 	case core.DateTime, core.TimeStamp:
-		if engine.dialect.DBType() == "ql" {
+		if engine.dialect.DBType() == "sql" {
 			v = t
 		} else if engine.dialect.DBType() == "sqlite3" {
 			v = t.UTC().Format("2006-01-02 15:04:05")
