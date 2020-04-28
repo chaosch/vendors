@@ -495,7 +495,8 @@ func (db *mysql) GetTablesSingle(tableName string) ([]*core.Table, error) {
 
 func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 	args := []interface{}{db.DbName, tableName}
-	s := "SELECT `INDEX_NAME`, `NON_UNIQUE`, `COLUMN_NAME` ,`SEQ_IN_INDEX` FROM `INFORMATION_SCHEMA`.`STATISTICS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
+	s := "SELECT `INDEX_NAME`, `NON_UNIQUE`, `COLUMN_NAME`  FROM `INFORMATION_SCHEMA`.`STATISTICS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
+	//,`SEQ_IN_INDEX`
 	db.LogSQL(s, args)
 
 	rows, err := db.DB().Query(s, args...)
