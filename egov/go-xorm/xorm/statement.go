@@ -118,6 +118,7 @@ func (statement *Statement) Init() {
 	statement.cond = builder.NewCond()
 	statement.NullFields = nil
 	statement.useIndexes = ""
+	statement.ignoreIndexes = ""
 }
 
 // NoAutoCondition if you do not want convert bean's field as query condition, then use this function
@@ -997,7 +998,7 @@ func (statement *Statement) Asc(colNames ...string) *Statement {
 }
 
 // Join The joinOP should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex string,ignoreIndex string, condition string, args ...interface{}) *Statement {
+func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex string, ignoreIndex string, condition string, args ...interface{}) *Statement {
 	var buf bytes.Buffer
 	if len(statement.JoinStr) > 0 {
 		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
@@ -1047,7 +1048,7 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex 
 		//fmt.Fprintf(&buf, " use index(%s)", useIndex)
 	}
 	if statement.Engine.dialect.DBType() == core.MYSQL && ignoreIndex != "" {
-		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		IndexString += fmt.Sprintf(" ignore index(%s)", ignoreIndex)
 		//fmt.Fprintf(&buf, " ignore index(%s)", ignoreIndex)
 	}
 	fmt.Fprintf(&buf, " %s ", IndexString)
@@ -1105,7 +1106,7 @@ func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{},
 		//fmt.Fprintf(&buf, " use index(%s)", useIndex)
 	}
 	if statement.Engine.dialect.DBType() == core.MYSQL && ignoreIndex != "" {
-		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		IndexString += fmt.Sprintf(" ignore index(%s)", ignoreIndex)
 		//fmt.Fprintf(&buf, " ignore index(%s)", ignoreIndex)
 	}
 	fmt.Fprintf(&buf, " %s ", IndexString)
