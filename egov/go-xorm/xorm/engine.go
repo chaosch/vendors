@@ -791,10 +791,10 @@ func (engine *Engine) OrderBy(order string) *Session {
 }
 
 // Join the join_operator should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (engine *Engine) Join(joinOperator string, tablename interface{}, useIndex string,ignoreIndex string, condition string, args ...interface{}) *Session {
+func (engine *Engine) Join(joinOperator string, tablename interface{}, useIndex string, ignoreIndex string, condition string, args ...interface{}) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
-	return session.Join(joinOperator, tablename, useIndex,ignoreIndex, condition, args...)
+	return session.Join(joinOperator, tablename, useIndex, ignoreIndex, condition, args...)
 }
 
 // GroupBy generate group by statement
@@ -1433,8 +1433,11 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 		sqlCreateFK := ""
 		for _, col := range fkColumns {
 			//fkName := "FK_" + bson.NewObjectId().Hex()
-			fkName := strings.Split(col.ForeignKey, ",")[1]
-			col.ForeignKey = strings.Split(col.ForeignKey, ",")[0]
+			fkName := col.ForeignKey
+			if len(strings.Split(col.ForeignKey, ",")) > 1 {
+				fkName = strings.Split(col.ForeignKey, ",")[1]
+				col.ForeignKey = strings.Split(col.ForeignKey, ",")[0]
+			}
 			parentTableName := strings.Split(col.ForeignKey, "(")[0]
 			colIsTable, _ := engine.IsTableExist(parentTableName)
 			//fmt.Println(col.TableName,col.Name,col.ForeignKey)
@@ -1475,16 +1478,16 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
 				}
 				//fmt.Println(sqlCreateFK)
-				exitFkName := engine.IsFKExists(col,fkName)
+				exitFkName := engine.IsFKExists(col, fkName)
 				if exitFkName != "" {
 					var preSql string
 					switch engine.dialect.DBType() {
 					case core.MYSQL:
 						sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
-						preSql=fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s",col.TableName,exitFkName,fkName)
+						preSql = fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s", col.TableName, exitFkName, fkName)
 					default:
 						sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
-						preSql=fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s",col.TableName,exitFkName,fkName)
+						preSql = fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s", col.TableName, exitFkName, fkName)
 					}
 					_, err := engine.Exec(preSql)
 					if err != nil {
@@ -1521,7 +1524,7 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 	return nil
 }
 
-func (engine *Engine) IsFKExists(column core.Column,fkName string) string {
+func (engine *Engine) IsFKExists(column core.Column, fkName string) string {
 	sql := ""
 	switch engine.dialect.DBType() {
 	case core.ORACLE:
@@ -1577,9 +1580,9 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 		return ""
 	}
 	if len(result) > 0 {
-		if fkName!=result[0]["fk_name"]{
+		if fkName != result[0]["fk_name"] {
 			return result[0]["fk_name"]
-		}else{
+		} else {
 			return ""
 		}
 	}
