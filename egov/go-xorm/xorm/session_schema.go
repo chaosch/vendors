@@ -293,7 +293,7 @@ func (session *Session) isIndexExist(tableName, idxName string, unique bool) (bo
 }
 
 // find if index is exist according cols
-func (session *Session) isIndexExist2(tableName string, cols []string, unique bool) (bool, error) {
+func (session *Session) isIndexExist2(tableName string, dst *core.Index, unique bool) (bool, error) {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -305,7 +305,9 @@ func (session *Session) isIndexExist2(tableName string, cols []string, unique bo
 	}
 
 	for _, index := range indexes {
-		if sliceEq(index.Cols, cols) {
+		typeEq, nameEq, colsEq := index.Equal(dst)
+
+		if typeEq && nameEq && colsEq {
 			//if unique&&index.Type==core.IndexType||!unique&&index.Type==core.UniqueType{
 			//	//虽然有索引，但类型不对，返回false之前应drop掉该索引
 			//	DropIndexSql:=""
@@ -327,7 +329,11 @@ func (session *Session) isIndexExist2(tableName string, cols []string, unique bo
 	return false, nil
 }
 
-func (session *Session) isIndexExist3(tableName string, cols []string, unique bool) (bool, error, string) {
+func (session *Session) CreateOrRenameIndex() {
+
+}
+
+func (session *Session) isIndexExist3(tableName string, dstIndex *core.Index) (bool, error, string) {
 	defer session.resetStatement()
 	alterSql := ""
 	if session.IsAutoClose {
@@ -340,21 +346,16 @@ func (session *Session) isIndexExist3(tableName string, cols []string, unique bo
 	}
 
 	for _, index := range indexes {
-		if sliceEq(index.Cols, cols) {
-			if unique {
-				if index.Type == core.IndexType {
-					alterSql = fmt.Sprintf("ALTER TABLE %s DROP INDEX %s,ADD unique INDEX  %s ( %s )", tableName, index.Name, index.Name, strings.Join(index.Cols, ","))
-				}
-				return index.Type == core.UniqueType, nil, alterSql
-			} else {
-				if index.Type == core.UniqueType {
-					alterSql = fmt.Sprintf("ALTER TABLE %s DROP INDEX %s,ADD  INDEX  %s ( %s )", tableName, index.Name, index.Name, strings.Join(index.Cols, ","))
-				}
-				return index.Type == core.IndexType, nil, alterSql
-			}
+		typeEq, nameEq, colsEq := index.Equal(dstIndex)
+		if colsEq && typeEq && !nameEq { //索引内容一致只是名称不一致，修改名称
+			alterSql := session.Engine.dialect.CreateRenameIndexSql(tableName, index, dstIndex)
+			return false, nil, alterSql
+		}
+		if colsEq && nameEq && typeEq {
+			return true, nil, ""
 		}
 	}
-	return false, nil, alterSql
+	return false, nil, ""
 }
 
 func (session *Session) addColumn(col *core.Column) error {
@@ -395,7 +396,10 @@ func (session *Session) addIndex(tableName, idxName string) error {
 	if session.IsAutoClose {
 		defer session.Close()
 	}
-	index := session.Statement.RefTable.Indexes[idxName]
+	index, ok := session.Statement.RefTable.Indexes[idxName]
+	if !ok {
+		return nil
+	}
 	sqlStr := session.Engine.dialect.CreateIndexSql(tableName, index)
 
 	//if !strings.HasPrefix(sqlStr,";"){
@@ -553,7 +557,8 @@ func (session *Session) Sync2(beans ...interface{}) error {
 			for name, index := range table.Indexes {
 				var oriIndex *core.Index
 				for name2, index2 := range oriTable.Indexes {
-					if index.Equal(index2) {
+					typeEq, nameEq, colsEq := index.Equal(index2)
+					if typeEq && nameEq && colsEq {
 						oriIndex = index2
 						foundIndexNames[name2] = true
 						break

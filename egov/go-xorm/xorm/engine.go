@@ -13,7 +13,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
 	"io"
 	"os"
 	"reflect"
@@ -394,7 +393,7 @@ func (engine *Engine) DBMetas() ([]*core.Table, error) {
 
 		for _, index := range indexes {
 			for _, name := range index.Cols {
-				if col := table.GetColumn(name); col != nil {
+				if col := table.GetColumn(name.Name); col != nil {
 					col.Indexes[index.Name] = index.Type
 				} else {
 					return nil, fmt.Errorf("Unknown col %s in index %v of table %v, columns %v", name, index.Name, table.Name, table.ColumnsSeq())
@@ -792,10 +791,10 @@ func (engine *Engine) OrderBy(order string) *Session {
 }
 
 // Join the join_operator should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (engine *Engine) Join(joinOperator string, tablename interface{},useIndex string, condition string, args ...interface{}) *Session {
+func (engine *Engine) Join(joinOperator string, tablename interface{}, useIndex string,ignoreIndex string, condition string, args ...interface{}) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
-	return session.Join(joinOperator, tablename,useIndex, condition, args...)
+	return session.Join(joinOperator, tablename, useIndex,ignoreIndex, condition, args...)
 }
 
 // GroupBy generate group by statement
@@ -891,13 +890,13 @@ func (engine *Engine) TableInfo(bean interface{}) *Table {
 	return &Table{tb, engine.tbName(v)}
 }
 
-func addIndex(indexName string, table *core.Table, col *core.Column, indexType int) {
+func addIndex(indexName string, table *core.Table, col *core.Column, indexType int, desc bool, seq int64) {
 	if index, ok := table.Indexes[indexName]; ok {
-		index.AddColumn(col.Name)
+		index.AddColumn(core.IndexColumn{Name: col.Name, Seq: seq, Desc: desc})
 		col.Indexes[index.Name] = indexType
 	} else {
 		index := core.NewIndex(indexName, indexType)
-		index.AddColumn(col.Name)
+		index.AddColumn(core.IndexColumn{Name: col.Name, Seq: seq, Desc: desc})
 		table.AddIndex(index)
 		col.Indexes[index.Name] = indexType
 	}
@@ -1111,7 +1110,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 				}
 
 				for indexName, indexType := range ctx.indexNames {
-					addIndex(indexName, table, col, indexType)
+					addIndex(indexName, table, col, indexType, false, 1)
 				}
 
 			}
@@ -1145,9 +1144,11 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 			}
 		}
 
+		//if table.Name=="tab_affairs_info"{
+		//	fmt.Println(table.Name)
+		//}
 		if indexesTagStr != "" {
 			tags := splitTag(indexesTagStr)
-
 			if len(tags) > 0 {
 				if tags[0] == "-" {
 					continue
@@ -1184,6 +1185,18 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 
 					}
 
+					//if ctx.tagName=="UNIQUE"{
+					//	fmt.Println("unique")
+					//}
+
+					if ctx.tagName == "INDEX" {
+						ctx.isIndex = true
+						ctx.isUnique = false
+					} else {
+						ctx.isIndex = false
+						ctx.isUnique = true
+					}
+
 					if j > 0 {
 						ctx.preTag = strings.ToUpper(tags[j-1])
 					}
@@ -1205,16 +1218,21 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 					if ctx.hasNoCacheTag {
 						hasNoCacheTag = true
 					}
-				}
 
-				if ctx.isUnique {
-					ctx.indexNames[col.Name] = core.UniqueType
-				} else if ctx.isIndex {
-					ctx.indexNames[col.Name] = core.IndexType
+					//if ctx.isUnique {
+					//	key:=col.Name+","+strings.Join(ctx.params,",")
+					//	ctx.indexNames[key] = core.UniqueType
+					//} else if ctx.isIndex {
+					//	key:=col.Name+","+strings.Join(ctx.params,",")
+					//	ctx.indexNames[key] = core.IndexType
+					//}
 				}
 
 				for indexName, indexType := range ctx.indexNames {
-					addIndex(indexName, table, col, indexType)
+					x := strings.Split(indexName, ",")
+					//fmt.Println(indexName)
+					seq, _ := strconv.ParseInt(x[1], 10, 64)
+					addIndex(x[0], table, col, indexType, x[2] == "1", seq)
 				}
 			}
 		}
@@ -1414,13 +1432,15 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 		}
 		sqlCreateFK := ""
 		for _, col := range fkColumns {
-			fkName := "FK_" + bson.NewObjectId().Hex()
+			//fkName := "FK_" + bson.NewObjectId().Hex()
+			fkName := strings.Split(col.ForeignKey, ",")[1]
+			col.ForeignKey = strings.Split(col.ForeignKey, ",")[0]
 			parentTableName := strings.Split(col.ForeignKey, "(")[0]
 			colIsTable, _ := engine.IsTableExist(parentTableName)
 			//fmt.Println(col.TableName,col.Name,col.ForeignKey)
 			if !colIsTable {
 				session := engine.NewSession()
-				isExist, err := session.isIndexExist2(col.TableName, []string{col.Name}, false)
+				isExist, err := session.isIndexExist2(col.TableName, core.ColumNameArraryToIndex([]string{col.Name}, fkName), false)
 				if err != nil {
 					return err
 				}
@@ -1433,7 +1453,7 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 					x := &core.Index{}
 					x.Name = fkName
 					x.Type = core.IndexType
-					x.Cols = []string{col.Name}
+					x = core.ColumNameArraryToIndex([]string{col.Name}, fkName)
 					session.Statement.RefTable.Indexes[x.Name] = x
 					err = session.addIndex(col.TableName, fkName)
 					if err != nil {
@@ -1455,20 +1475,34 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
 				}
 				//fmt.Println(sqlCreateFK)
-				if !engine.IsFKExists(col) {
-					_, err := engine.Exec(sqlCreateFK)
-					if err != nil {
-						engine.logger.Error(fmt.Sprintf("cant not create foreign key on table %s(%s) reference to table %s :", col.TableName, col.Name, col.ForeignKey), err)
+				exitFkName := engine.IsFKExists(col,fkName)
+				if exitFkName != "" {
+					var preSql string
+					switch engine.dialect.DBType() {
+					case core.MYSQL:
+						sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
+						preSql=fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s",col.TableName,exitFkName,fkName)
+					default:
+						sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
+						preSql=fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s",col.TableName,exitFkName,fkName)
 					}
+					_, err := engine.Exec(preSql)
+					if err != nil {
+						engine.logger.Error(preSql, err)
+					}
+				}
+				_, err := engine.Exec(sqlCreateFK)
+				if err != nil {
+					engine.logger.Error(sqlCreateFK, err)
 				}
 			} else {
 				x := &core.Index{}
 				x.Name = fkName
 				x.Type = core.IndexType
-				x.Cols = []string{col.Name}
+				x = core.ColumNameArraryToIndex([]string{col.Name}, fkName)
 				session := engine.NewSession()
 				defer session.Close()
-				ex, err := session.isIndexExist2(col.TableName, x.Cols, false)
+				ex, err := session.isIndexExist2(col.TableName, x, false)
 				if !ex {
 					if err := session.Statement.setRefValue(v); err != nil {
 						return err
@@ -1487,7 +1521,7 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 	return nil
 }
 
-func (engine *Engine) IsFKExists(column core.Column) bool {
+func (engine *Engine) IsFKExists(column core.Column,fkName string) string {
 	sql := ""
 	switch engine.dialect.DBType() {
 	case core.ORACLE:
@@ -1514,22 +1548,22 @@ WHERE a.r_constraint_name = b.constraint_name
       and b.table_name=upper('%s')
       and d.column_name=upper('%s')`
 	case core.MYSQL:
-		sql = `select table_name,column_name,referenced_table_name,referenced_column_name
-from information_schema.key_column_usage  a
-where constraint_schema=(select database())
-and table_name='%s'
-and column_name='%s'
-and referenced_table_name='%s'
-and referenced_column_name='%s'`
+		sql = `select table_name,column_name,referenced_table_name,referenced_column_name,constraint_name fk_name
+	from information_schema.key_column_usage  a
+	where constraint_schema=(select database())
+	and table_name='%s'
+	and column_name='%s'
+	and referenced_table_name='%s'
+	and referenced_column_name='%s'`
 	case core.MSSQL:
-		sql = `SELECT O3.NAME F_NAME, O1.NAME M_TAB, O2.NAME F_TAB, L1.NAME M_CLON, L2.NAME F_CLON
+		sql = `SELECT O3.NAME F_NAME, O1.NAME M_TAB, O2.NAME F_TAB, L1.NAME M_CLON, L2.NAME F_CLON,object_name(a.constid) fk_name
 FROM   SYSFOREIGNKEYS A, SYSOBJECTS O1, SYSOBJECTS O2, SYSOBJECTS O3, SYSCOLUMNS L1, SYSCOLUMNS L2
 WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O1.ID AND L2.ID = O2.ID AND A.FKEY = L1.COLID AND A
        .RKEY = L2.COLID AND O1.XTYPE = 'U' AND O2.XTYPE = 'U' and o1.name = '%s' and l1.name
        = '%s' and o2.name = '%s'  and l2.name = '%s'`
 	default:
 		engine.logger.Error("no supported database type!")
-		return true
+		return ""
 	}
 	f_table_name := ""
 	f_column_name := ""
@@ -1537,15 +1571,19 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 	f_table_name = temp[0]
 	f_column_name = strings.Trim(temp[1], ")")
 	sqlQuery := fmt.Sprintf(sql, column.TableName, column.Name, f_table_name, f_column_name)
-	result, err := engine.Query(sqlQuery)
+	result, err := engine.QueryString(sqlQuery)
 	if err != nil {
 		engine.logger.Error(err)
-		return true
+		return ""
 	}
 	if len(result) > 0 {
-		return true
+		if fkName!=result[0]["fk_name"]{
+			return result[0]["fk_name"]
+		}else{
+			return ""
+		}
 	}
-	return false
+	return ""
 }
 
 func (Engine *Engine) RevertDatabase() map[string]*core.Table {
@@ -1641,7 +1679,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 			}
 			if index.Type == core.UniqueType {
 				//isExist, err := session.isIndexExist(table.Name, name, true)
-				isExist, err, alterSql := session.isIndexExist3(tableName, index.Cols, true)
+				isExist, err, alterSql := session.isIndexExist3(tableName, index)
 				if err != nil {
 					return err
 				}
@@ -1662,7 +1700,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 					}
 				}
 			} else if index.Type == core.IndexType {
-				isExist, err, alterSql := session.isIndexExist3(tableName, index.Cols, false)
+				isExist, err, alterSql := session.isIndexExist3(tableName, index)
 				if err != nil {
 					return err
 				}
@@ -1824,7 +1862,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 				}
 				if index.Type == core.UniqueType {
 					//isExist, err := session.isIndexExist(table.Name, name, true)
-					isExist, err := session.isIndexExist2(tableName, index.Cols, true)
+					isExist, err := session.isIndexExist2(tableName, index, true)
 					if err != nil {
 						return err
 					}
@@ -1841,7 +1879,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 						}
 					}
 				} else if index.Type == core.IndexType {
-					isExist, err := session.isIndexExist2(tableName, index.Cols, false)
+					isExist, err := session.isIndexExist2(tableName, index, false)
 					if err != nil {
 						return err
 					}
@@ -2261,7 +2299,7 @@ func (engine *Engine) DBMetasSingle(table_name string) ([]*core.Table, error) {
 
 		for _, index := range indexes {
 			for _, name := range index.Cols {
-				if col := table.GetColumn(name); col != nil {
+				if col := table.GetColumn(name.Name); col != nil {
 					col.Indexes[index.Name] = index.Type
 				} else {
 					return nil, fmt.Errorf("Unknown col %s in index %v of table %v, columns %v", name, index.Name, table.Name, table.ColumnsSeq())

@@ -495,7 +495,7 @@ func (db *mysql) GetTablesSingle(tableName string) ([]*core.Table, error) {
 
 func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 	args := []interface{}{db.DbName, tableName}
-	s := "SELECT `INDEX_NAME`, `NON_UNIQUE`, `COLUMN_NAME`  FROM `INFORMATION_SCHEMA`.`STATISTICS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
+	s := "SELECT `INDEX_NAME`, `NON_UNIQUE`, `COLUMN_NAME`,ifnull(`COLLATION`,'A'),`SEQ_IN_INDEX`  FROM `INFORMATION_SCHEMA`.`STATISTICS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?"
 	//,`SEQ_IN_INDEX`
 	db.LogSQL(s, args)
 
@@ -509,7 +509,10 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 	for rows.Next() {
 		var indexType int
 		var indexName, colName, nonUnique string
-		err = rows.Scan(&indexName, &nonUnique, &colName)
+		var col core.IndexColumn
+		var desc, ordinal string
+
+		err = rows.Scan(&indexName, &nonUnique, &colName,&desc,&ordinal)
 		if err != nil {
 			return nil, err
 		}
@@ -526,11 +529,11 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 
 		colName = strings.Trim(colName, "` ")
 		var isRegular bool
-		if strings.HasPrefix(indexName, "IDX_"+tableName) || strings.HasPrefix(indexName, "UQE_"+tableName) {
-			indexName = indexName[5+len(tableName):]
-			isRegular = true
-		}
-
+		//if strings.HasPrefix(indexName, "IDX_"+tableName) || strings.HasPrefix(indexName, "UQE_"+tableName) {
+		//	indexName = indexName[5+len(tableName):]
+		//	isRegular = true
+		//}
+		isRegular=true
 		var index *core.Index
 		var ok bool
 		if index, ok = indexes[indexName]; !ok {
@@ -540,7 +543,11 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 			index.Name = indexName
 			indexes[indexName] = index
 		}
-		index.AddColumn(colName)
+		col.Name = colName
+		col.Desc = desc == "D"
+		col.Seq, _ = strconv.ParseInt(ordinal, 10, 64)
+
+		index.AddColumn(col)
 	}
 	return indexes, nil
 }

@@ -76,6 +76,7 @@ type Statement struct {
 	cond            builder.Cond
 	NullFields      []string
 	useIndexes      string
+	ignoreIndexes   string
 }
 
 // Init reset all the statement's fields
@@ -137,6 +138,11 @@ func (statement *Statement) Alias(alias string) *Statement {
 // useIndex set the table useIndexes
 func (statement *Statement) useIndex(useIndexes string) *Statement {
 	statement.useIndexes = useIndexes
+	return statement
+}
+
+func (statement *Statement) ignoreIndex(ignoreIndex string) *Statement {
+	statement.ignoreIndexes = ignoreIndex
 	return statement
 }
 
@@ -991,7 +997,7 @@ func (statement *Statement) Asc(colNames ...string) *Statement {
 }
 
 // Join The joinOP should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
-func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex string,condition string, args ...interface{}) *Statement {
+func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex string,ignoreIndex string, condition string, args ...interface{}) *Statement {
 	var buf bytes.Buffer
 	if len(statement.JoinStr) > 0 {
 		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
@@ -1031,16 +1037,28 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex 
 		fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", tablename)))
 	}
 	//加入使用索引
-	if statement.Engine.dialect.DBType()==core.MYSQL&&useIndex!=""{
-		fmt.Fprintf(&buf, " use index(%s)", useIndex)
+	//if statement.Engine.dialect.DBType() == core.MYSQL && useIndex != "" {
+	//	fmt.Fprintf(&buf, " use index(%s)", useIndex)
+	//}
+
+	IndexString := ""
+	if statement.Engine.dialect.DBType() == core.MYSQL && useIndex != "" {
+		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		//fmt.Fprintf(&buf, " use index(%s)", useIndex)
 	}
+	if statement.Engine.dialect.DBType() == core.MYSQL && ignoreIndex != "" {
+		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		//fmt.Fprintf(&buf, " ignore index(%s)", ignoreIndex)
+	}
+	fmt.Fprintf(&buf, " %s ", IndexString)
+
 	fmt.Fprintf(&buf, " ON %v", condition)
 	statement.JoinStr = buf.String()
 	statement.joinArgs = append(statement.joinArgs, args...)
 	return statement
 }
 
-func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{},useIndex string, condition string, args ...interface{}) *Statement {
+func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{}, useIndex string, ignoreIndex string, condition string, args ...interface{}) *Statement {
 	var buf bytes.Buffer
 	if len(statement.JoinStr) > 0 {
 		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
@@ -1081,9 +1099,16 @@ func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{},
 	}
 
 	//加入使用索引
-	if statement.Engine.dialect.DBType()==core.MYSQL&&useIndex!=""{
-		fmt.Fprintf(&buf, " use index(%s)", useIndex)
+	IndexString := ""
+	if statement.Engine.dialect.DBType() == core.MYSQL && useIndex != "" {
+		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		//fmt.Fprintf(&buf, " use index(%s)", useIndex)
 	}
+	if statement.Engine.dialect.DBType() == core.MYSQL && ignoreIndex != "" {
+		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		//fmt.Fprintf(&buf, " ignore index(%s)", ignoreIndex)
+	}
+	fmt.Fprintf(&buf, " %s ", IndexString)
 	fmt.Fprintf(&buf, " ON %v", condition)
 	statement.JoinStr = buf.String()
 	statement.joinArgs = append(statement.joinArgs, args...)
@@ -1174,7 +1199,7 @@ func (statement *Statement) genIndexSQL() []string {
 	for idxName, index := range statement.RefTable.Indexes {
 		if index.Type == core.IndexType {
 			sql := fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tbName, idxName)),
-				quote(tbName), quote(strings.Join(index.Cols, quote(","))))
+				quote(tbName), quote(core.CreateIndexString(index.Cols)))
 			sqls = append(sqls, sql)
 		}
 	}
@@ -1368,11 +1393,16 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string) {
 			fromStr += " " + quote(statement.TableAlias)
 		} else {
 			fromStr += " AS " + quote(statement.TableAlias)
-			if statement.useIndexes != "" && statement.Engine.dialect.DBType() == core.MYSQL {
-				fromStr += fmt.Sprintf(" use index (%s)", statement.useIndexes)
-			}
 		}
 	}
+
+	if statement.useIndexes != "" && statement.Engine.dialect.DBType() == core.MYSQL {
+		fromStr += fmt.Sprintf(" use index (%s)", statement.useIndexes)
+	}
+	if statement.ignoreIndexes != "" && statement.Engine.dialect.DBType() == core.MYSQL {
+		fromStr += fmt.Sprintf(" ignore index (%s)", statement.ignoreIndexes)
+	}
+
 	if statement.JoinStr != "" {
 		fromStr = fmt.Sprintf("%v %v", fromStr, statement.JoinStr)
 	}
@@ -1386,7 +1416,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string) {
 			if len(statement.RefTable.PKColumns()) == 0 {
 				for _, index := range statement.RefTable.Indexes {
 					if len(index.Cols) == 1 {
-						column = index.Cols[0]
+						column = index.Cols[0].Name
 						break
 					}
 				}

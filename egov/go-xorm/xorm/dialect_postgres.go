@@ -1114,9 +1114,9 @@ func (db *postgres) GetIndexes(tableName string) (map[string]*core.Index, error)
 			}
 		}
 
-		index := &core.Index{Name: indexName, Type: indexType, Cols: make([]string, 0)}
+		index := &core.Index{Name: indexName, Type: indexType, Cols: make(core.IndexColumns, 0)}
 		for _, colName := range colNames {
-			index.Cols = append(index.Cols, strings.Trim(colName, `" `))
+			index.Cols = append(index.Cols, core.IndexColumn{Name: strings.Trim(colName, `" `)})
 		}
 		index.IsRegular = isRegular
 		indexes[index.Name] = index

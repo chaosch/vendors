@@ -190,7 +190,7 @@ func DeletedTagHandler(ctx *tagContext) error {
 // IndexTagHandler describes index tag handler
 func IndexTagHandler(ctx *tagContext) error {
 	if len(ctx.params) > 0 {
-		ctx.indexNames[ctx.params[0]] = core.IndexType
+		ctx.indexNames[ctx.params[0]+","+ctx.params[1]+","+ctx.params[2]] = core.IndexType
 	} else {
 		ctx.isIndex = true
 	}
@@ -200,7 +200,7 @@ func IndexTagHandler(ctx *tagContext) error {
 // UniqueTagHandler describes unique tag handler
 func UniqueTagHandler(ctx *tagContext) error {
 	if len(ctx.params) > 0 {
-		ctx.indexNames[ctx.params[0]] = core.UniqueType
+		ctx.indexNames[ctx.params[0]+","+ctx.params[1]+","+ctx.params[2]] = core.UniqueType
 	} else {
 		ctx.isUnique = true
 	}
@@ -270,7 +270,7 @@ func ExtendsTagHandler(ctx *tagContext) error {
 			col.FieldName = fmt.Sprintf("%v.%v", ctx.col.FieldName, col.FieldName)
 			ctx.table.AddColumn(col)
 			for indexName, indexType := range col.Indexes {
-				addIndex(indexName, ctx.table, col, indexType)
+				addIndex(indexName, ctx.table, col, indexType,false,1)
 			}
 		}
 	default:

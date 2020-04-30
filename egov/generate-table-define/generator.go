@@ -273,7 +273,7 @@ func createStruct(tablist map[string]string, engine *xorm.Engine) string {
 			else
 			0
 			end,
-			fk = T.f_tab + '(' + T.f_clon + ')',
+			fk = T.f_tab + '(' + T.f_clon + ')'+','+T.fk_name,
 			type = b.Name,
 			byte =
 		case
@@ -295,8 +295,8 @@ func createStruct(tablist map[string]string, engine *xorm.Engine) string {
          left join sys.extended_properties e on e.major_id = c.object_id and e.minor_id = a.Column_id and e.class = 1 and e.name='MS_Description'
          left join sys.extended_properties f on f.major_id = c.object_id and f.minor_id = 0 and f.class = 1 and f.name='MS_Description'
          left join
-         (SELECT m_tab, f_tab, m_clon, f_clon
-          FROM   (SELECT O3.NAME F_NAME, O1.NAME M_TAB, O2.NAME F_TAB, L1.NAME M_CLON, L2.NAME F_CLON
+         (SELECT m_tab, f_tab, m_clon, f_clon,fk_name
+          FROM   (SELECT O3.NAME F_NAME, O1.NAME M_TAB, O2.NAME F_TAB, L1.NAME M_CLON, L2.NAME F_CLON,object_name(A.constid) fk_name
                   FROM   SYSFOREIGNKEYS A, SYSOBJECTS O1, SYSOBJECTS O2, SYSOBJECTS O3, SYSCOLUMNS L1, SYSCOLUMNS L2
                   WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O1.ID AND L2.ID = O2.ID AND A.FKEY
                          = L1.COLID AND A.RKEY = L2.COLID AND O1.XTYPE = 'U' AND O2.XTYPE = 'U' and o1.name='%[1]s' ) M) T
@@ -305,7 +305,7 @@ func createStruct(tablist map[string]string, engine *xorm.Engine) string {
          (select   c_name,
                    val =
                      (select i_name + ' '
-                      from   ((select case  a1.is_unique when 1  then 'unique('+a1.name+')' else 'index('+a1.name+')' end i_name, c1.name c_name
+                      from   ((select case  a1.is_unique when 1  then 'unique('+a1.name+','+ltrim(str(b1.key_ordinal))+','+ltrim(str(b1.is_descending_key))+')' else 'index('+a1.name+','+ltrim(str(b1.key_ordinal))+','+ltrim(str(b1.is_descending_key))+')' end i_name, c1.name c_name
                                from   sys.indexes a1
                                       inner join sys.index_columns b1 on a1.index_id = b1.index_id
                                       inner join sys.columns c1 on b1.column_id = c1.column_id and c1.object_id=a1.object_id

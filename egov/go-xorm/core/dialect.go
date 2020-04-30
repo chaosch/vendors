@@ -4,6 +4,7 @@ import (
 	"egov/common"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -66,6 +67,8 @@ type Dialect interface {
 
 	DropTableSql(tableName string) string
 	CreateIndexSql(tableName string, index *Index) string
+	CreateRenameIndexSql(tableName string, oldIndex, index *Index) string
+
 	DropIndexSql(tableName string, index *Index) string
 
 	ModifyColumnSql(tableName string, col *Column) string
@@ -102,6 +105,11 @@ type Base struct {
 	*Uri
 	DataTable    map[string]string
 	Dictionaries map[string]string
+}
+
+func (b *Base) CreateRenameIndexSql(tableName string, oldIndex, index *Index) string {
+	sql := "ALTER TABLE %s RENAME INDEX %s TO %s"
+	return fmt.Sprintf(sql, tableName, oldIndex.Name, index.Name)
 }
 
 func (b *Base) SetTableComment(d map[string]string, t map[string]string) {
@@ -224,16 +232,16 @@ func (db *Base) CreateIndexSql(tableName string, index *Index) string {
 	if index.Type == UniqueType {
 		unique = " UNIQUE"
 	}
-	idxName = index.XName(tableName)
+	idxName = index.Name
 	if db.DbType == MSSQL {
 		//notnull := quote(strings.Join(index.Cols, quote(" is not null and ")) + " is not null")
 		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v) ", unique,
 			quote(idxName), quote(tableName),
-			quote(strings.Join(index.Cols, quote(","))))
+			quote(CreateIndexString(index.Cols)))
 	} else {
 		return fmt.Sprintf("CREATE %s INDEX %v ON %v (%v)", unique,
 			quote(idxName), quote(tableName),
-			quote(strings.Join(index.Cols, quote(","))))
+			quote(CreateIndexString(index.Cols)))
 	}
 }
 
@@ -420,9 +428,6 @@ from information_schema.COLUMNS where TABLE_SCHEMA=?
 
 	return GetStringColumnFormRows(rows), nil
 }
-
-
-
 
 func GetStringColumnFormRows(rows *Rows) map[string]map[string]*Column {
 	result := make(map[string]map[string]*Column)
@@ -724,4 +729,18 @@ func strFirstToUpper(str string) string {
 	chars := []rune(str)
 	chars[0] = []rune(strings.ToUpper(string(chars[0])))[0]
 	return string(chars)
+}
+
+func CreateIndexString(columns IndexColumns) string {
+
+	sort.Sort(columns)
+	columnSlice := make([]string, 0)
+	for _, col := range columns {
+		item := col.Name
+		if col.Desc {
+			item = item + " desc"
+		}
+		columnSlice = append(columnSlice, item)
+	}
+	return strings.Join(columnSlice, ",")
 }

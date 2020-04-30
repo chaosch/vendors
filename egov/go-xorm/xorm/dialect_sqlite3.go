@@ -450,9 +450,9 @@ func (db *sqlite3) GetIndexes(tableName string) (map[string]*core.Index, error) 
 		nEnd := strings.Index(sql, ")")
 		colIndexes := strings.Split(sql[nStart+1:nEnd], ",")
 
-		index.Cols = make([]string, 0)
+		index.Cols = make(core.IndexColumns, 0)
 		for _, col := range colIndexes {
-			index.Cols = append(index.Cols, strings.Trim(col, "` []"))
+			index.Cols = append(index.Cols,core.IndexColumn{Name: strings.Trim(col, "` []")})
 		}
 		index.IsRegular = isRegular
 		indexes[index.Name] = index
