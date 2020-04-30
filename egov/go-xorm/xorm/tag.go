@@ -190,7 +190,11 @@ func DeletedTagHandler(ctx *tagContext) error {
 // IndexTagHandler describes index tag handler
 func IndexTagHandler(ctx *tagContext) error {
 	if len(ctx.params) > 0 {
-		ctx.indexNames[ctx.params[0]+","+ctx.params[1]+","+ctx.params[2]] = core.IndexType
+		if len(ctx.params)==3 {
+			ctx.indexNames[ctx.params[0]+","+ctx.params[1]+","+ctx.params[2]] = core.IndexType
+		}else{
+			ctx.indexNames[ctx.params[0]] = core.IndexType
+		}
 	} else {
 		ctx.isIndex = true
 	}
@@ -200,7 +204,11 @@ func IndexTagHandler(ctx *tagContext) error {
 // UniqueTagHandler describes unique tag handler
 func UniqueTagHandler(ctx *tagContext) error {
 	if len(ctx.params) > 0 {
-		ctx.indexNames[ctx.params[0]+","+ctx.params[1]+","+ctx.params[2]] = core.UniqueType
+		if len(ctx.params)==3 {
+			ctx.indexNames[ctx.params[0]+","+ctx.params[1]+","+ctx.params[2]] = core.UniqueType
+		}else{
+			ctx.indexNames[ctx.params[0]] = core.UniqueType
+		}
 	} else {
 		ctx.isUnique = true
 	}
