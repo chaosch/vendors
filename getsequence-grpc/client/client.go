@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
-	"google.golang.org/grpc"
-	pb "getsequence-grpc/proto-api"
 	"context"
 	"fmt"
+	pb "getsequence-grpc/proto-api"
+	"google.golang.org/grpc"
+	"log"
 )
 
 const(
