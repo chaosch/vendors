@@ -5,6 +5,7 @@ import (
 	"fmt"
 	pb "getsequence-grpc/proto-api"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"log"
 )
 
@@ -20,7 +21,10 @@ func main(){
 	defer conn.Close()
 	c:=pb.NewGetSequenceServiceClient(conn)
 	rq:=&pb.Request{OutBuf:"tab_affairs"}
-	res,err1:=c.GrpcGetSequence(context.Background(),rq)
+	type MD map[string][]string
+	md := metadata.New(map[string]string{"ChipId": "191"})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	res,err1:=c.GrpcGetSequence(ctx,rq)
 	if err1!=nil{
 		fmt.Println(err1)
 	}else {
@@ -28,7 +32,7 @@ func main(){
 	}
 	cc:=pb.NewGetSequenceIntServiceClient(conn)
 	reqs:=&pb.RequestInt{OutInt:"tab_user"}
-	resint,err2:=cc.GrpcGetSequenceInt(context.Background(),reqs)
+	resint,err2:=cc.GrpcGetSequenceInt(ctx,reqs)
 	if err2!=nil{
 		fmt.Println(err2)
 	}else{
