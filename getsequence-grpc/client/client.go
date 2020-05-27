@@ -10,7 +10,7 @@ import (
 )
 
 const(
-	address="localhost: 9028"
+	address="192.168.6.12:9028"
 )
 func main(){
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
@@ -22,7 +22,7 @@ func main(){
 	c:=pb.NewGetSequenceServiceClient(conn)
 	rq:=&pb.Request{OutBuf:"tab_affairs"}
 	type MD map[string][]string
-	md := metadata.New(map[string]string{"ChipId": "191"})
+	md := metadata.New(map[string]string{"ChipId": "181"})
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	res,err1:=c.GrpcGetSequence(ctx,rq)
 	if err1!=nil{
@@ -32,7 +32,7 @@ func main(){
 	}
 	cc:=pb.NewGetSequenceIntServiceClient(conn)
 	reqs:=&pb.RequestInt{OutInt:"tab_user"}
-	resint,err2:=cc.GrpcGetSequenceInt(ctx,reqs)
+	resint,err2:=cc.GrpcGetSequenceInt(context.Background(),reqs)
 	if err2!=nil{
 		fmt.Println(err2)
 	}else{

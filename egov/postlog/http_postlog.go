@@ -110,7 +110,9 @@ func (p *Pool) HttpPostLog(msg map[string]interface{}, logsUrl string) error {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{}
+		client := &http.Client{
+			Timeout:30*time.Second,
+		}
 		client.Do(req)
 	})
 	if err != nil {
@@ -132,7 +134,9 @@ func (p *Pool) HttpPostLogSlice(msg LogStructSlice, logsUrl string) error {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{}
+		client := &http.Client{
+			Timeout:30*time.Second,
+		}
 		//x := string(b)
 		//fmt.Println(x)
 		client.Do(req)
