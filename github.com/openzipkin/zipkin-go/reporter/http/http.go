@@ -6,6 +6,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -118,6 +119,7 @@ func (r *httpReporter) sendBatch() error {
 		r.logger.Printf("failed when marshalling the spans batch: %s\n", err.Error())
 		return err
 	}
+	fmt.Println(string(body))
 
 	req, err := http.NewRequest("POST", r.url, bytes.NewReader(body))
 	if err != nil {

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"egov/zipkin_report"
 	"fmt"
 	pb "getsequence-grpc/proto-api"
+	zipkingrpc "github.com/openzipkin/zipkin-go/middleware/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
@@ -13,7 +15,10 @@ const(
 	address="192.168.6.12:9028"
 )
 func main(){
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+
+	tracergrpcclient:=zipkin_report.GetTracer("dal","192.168.6.12:9028","http://192.168.4.160:9411/api/v2/spans")
+
+	conn, err := grpc.Dial(address, grpc.WithInsecure(),grpc.WithStatsHandler(zipkingrpc.NewClientHandler(tracergrpcclient)))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 		fmt.Println(err)
