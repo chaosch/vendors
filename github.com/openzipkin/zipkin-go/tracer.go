@@ -1,3 +1,17 @@
+// Copyright 2019 The OpenZipkin Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package zipkin
 
 import (
@@ -97,18 +111,18 @@ func (t *Tracer) StartSpan(name string, options ...SpanOption) Span {
 		// create root span
 		s.SpanContext.TraceID = t.generate.TraceID()
 		s.SpanContext.ID = t.generate.SpanID(s.SpanContext.TraceID)
-	} else {
-		// valid parent context found
-		if t.sharedSpans && s.Kind == model.Server {
-			// join span
-			s.Shared = true
-		} else {
-			// regular child span
-			parentID := s.SpanContext.ID
-			s.SpanContext.ParentID = &parentID
-			s.SpanContext.ID = t.generate.SpanID(model.TraceID{})
-		}
-	}
+	} //else {
+	//	// valid parent context found
+	//	if t.sharedSpans && s.Kind == model.Server {
+	//		// join span
+	//		s.Shared = true
+	//	} else {
+	//		// regular child span
+	//		parentID := s.SpanContext.ID
+	//		s.SpanContext.ParentID = &parentID
+	//		s.SpanContext.ID = t.generate.SpanID(model.TraceID{})
+	//	}
+	//}
 
 	if !s.SpanContext.Debug && s.Sampled == nil {
 		// deferred sampled context found, invoke sampler
