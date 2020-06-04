@@ -77,6 +77,7 @@ func (t *tracerImpl) StartSpan(operationName string, opts ...opentracing.StartSp
 
 	zopts = append(zopts, parseTagsAsZipkinOptions(startSpanOptions.Tags)...)
 
+	//zopts =append(zopts,zipkin.Kind(model.Producer))
 	newSpan := t.zipkinTracer.StartSpan(operationName, zopts...)
 
 	sp := &spanImpl{
@@ -193,4 +194,75 @@ func (t *tracerImpl) Extract(format interface{}, carrier interface{}) (opentraci
 		return t.accessorPropagator.Extract(carrier)
 	}
 	return nil, opentracing.ErrUnsupportedFormat
+}
+
+
+func ParseTagsAsZipkinOptions(t map[string]interface{}) []zipkin.SpanOption {
+	zopts := make([]zipkin.SpanOption, 0)
+
+	tags := map[string]string{}
+	remoteEndpoint := &model.Endpoint{}
+
+	var kind string
+	if val, ok := t[string(ext.SpanKind)]; ok {
+		switch kindVal := val.(type) {
+		case ext.SpanKindEnum:
+			kind = string(kindVal)
+		case string:
+			kind = kindVal
+		default:
+			kind = fmt.Sprintf("%v", kindVal)
+		}
+		mKind := model.Kind(strings.ToUpper(kind))
+		if mKind == model.Client ||
+			mKind == model.Server ||
+			mKind == model.Producer ||
+			mKind == model.Consumer {
+			zopts = append(zopts, zipkin.Kind(mKind))
+		} else {
+			tags["span.kind"] = kind
+		}
+	}
+
+	if val, ok := t[string(ext.PeerService)]; ok {
+		serviceName, _ := val.(string)
+		remoteEndpoint.ServiceName = serviceName
+	}
+
+	if val, ok := t[string(ext.PeerHostIPv4)]; ok {
+		ipv4, _ := val.(string)
+		remoteEndpoint.IPv4 = net.ParseIP(ipv4)
+	}
+
+	if val, ok := t[string(ext.PeerHostIPv6)]; ok {
+		ipv6, _ := val.(string)
+		remoteEndpoint.IPv6 = net.ParseIP(ipv6)
+	}
+
+	if val, ok := t[string(ext.PeerPort)]; ok {
+		port, _ := val.(uint16)
+		remoteEndpoint.Port = port
+	}
+
+	for key, val := range t {
+		if key == string(ext.SpanKind) ||
+			key == string(ext.PeerService) ||
+			key == string(ext.PeerHostIPv4) ||
+			key == string(ext.PeerHostIPv6) ||
+			key == string(ext.PeerPort) {
+			continue
+		}
+
+		tags[key] = fmt.Sprint(val)
+	}
+
+	if len(tags) > 0 {
+		zopts = append(zopts, zipkin.Tags(tags))
+	}
+
+	if !remoteEndpoint.Empty() {
+		zopts = append(zopts, zipkin.RemoteEndpoint(remoteEndpoint))
+	}
+
+	return zopts
 }
