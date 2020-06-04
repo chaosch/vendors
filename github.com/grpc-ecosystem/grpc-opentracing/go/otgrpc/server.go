@@ -45,6 +45,7 @@ func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 		}
 		serverSpan := tracer.StartSpan(
 			info.FullMethod,
+			opentracing.ChildOf(spanContext),
 			ext.RPCServerOption(spanContext),
 			gRPCComponentTag,
 		)
