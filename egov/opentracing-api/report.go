@@ -4,28 +4,28 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/openzipkin/zipkin-go"
 	zipkinot "github.com/openzipkin/zipkin-go-opentracing"
+	"github.com/openzipkin/zipkin-go/reporter"
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
 ///////////////////////////////////////////////
 
-func NewTracer(reportUrl, serviceName, endPoint *string) opentracing.Tracer {
+func NewTracer(reportUrl, serviceName, endPoint *string) (reporter.Reporter, opentracing.Tracer) {
 	if reportUrl == nil || endPoint == nil {
-		return nil
+		return nil,nil
 	}
 	reporter := zipkinhttp.NewReporter(*reportUrl)
-	defer reporter.Close()
 
 	// create our local service endpoint
 	endpoint, err := zipkin.NewEndpoint(*serviceName, *endPoint)
 	if err != nil {
-		return nil
+		return nil,nil
 	}
 
 	// initialize our tracer
 	nativeTracer, err := zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(endpoint))
 	if err != nil {
-		return nil
+		return nil,nil
 	}
 
 	// use zipkin-go-opentracing to wrap our tracer
@@ -34,7 +34,7 @@ func NewTracer(reportUrl, serviceName, endPoint *string) opentracing.Tracer {
 	// optionally set as Global OpenTracing tracer instance
 	opentracing.SetGlobalTracer(tracer)
 
-	return tracer
+	return reporter,tracer
 
 }
 
