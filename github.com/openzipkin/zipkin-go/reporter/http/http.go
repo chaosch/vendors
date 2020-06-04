@@ -101,6 +101,9 @@ func (r *httpReporter) append(span *model.SpanModel) (newBatchSize int) {
 
 func (r *httpReporter) sendBatch() error {
 	// in order to prevent sending the same batch twice
+	if r.url==""{
+		return nil
+	}
 	r.sendMtx.Lock()
 	defer r.sendMtx.Unlock()
 
