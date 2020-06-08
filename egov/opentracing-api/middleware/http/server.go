@@ -78,8 +78,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//sc, _ := h.tracer.Extract(b3.ExtractHTTP(r))
 
 	carrier := opentracing.HTTPHeadersCarrier(r.Header)
-	sc,_:=h.tracer.Extract(opentracing.HTTPHeaders, carrier)
-
+	sc, _ := h.tracer.Extract(opentracing.HTTPHeaders, carrier)
 
 	//if h.requestSampler != nil && sc.Sampled == nil {
 	//	sample := h.requestSampler(r)
@@ -102,16 +101,14 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//	zipkin.RemoteEndpoint(remoteEndpoint),
 	//)
 
-
 	sp := h.tracer.StartSpan(
 		spanName,
 		opentracing.ChildOf(sc),
 		//opentracing.FollowsFrom(sc),
-		ext.SpanKindRPCClient,
+		ext.SpanKindRPCServer,
+		ext.RPCServerOption(sc),
 
 	)
-
-
 
 	for k, v := range h.defaultTags {
 		sp.SetTag(k, v)
@@ -119,17 +116,17 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add our span to context
-	ctx := opentracing.ContextWithSpan(r.Context(),sp)
+	ctx := opentracing.ContextWithSpan(r.Context(), sp)
 
 	// tag typical HTTP request items
 	//zipkin.TagHTTPMethod.Set(sp, r.Method)
 	//zipkin.TagHTTPPath.Set(sp, r.URL.Path)
 	if r.ContentLength > 0 {
 		//zipkin.TagHTTPRequestSize.Set(sp, strconv.FormatInt(r.ContentLength, 10))
-		sp.SetTag(string(zipkin.TagHTTPRequestSize),strconv.FormatInt(r.ContentLength, 10))
+		sp.SetTag(string(zipkin.TagHTTPRequestSize), strconv.FormatInt(r.ContentLength, 10))
 	}
-	sp.SetTag(string(zipkin.TagHTTPMethod),r.Method)
-	sp.SetTag(string(zipkin.TagHTTPPath),r.URL.Path)
+	sp.SetTag(string(zipkin.TagHTTPMethod), r.Method)
+	sp.SetTag(string(zipkin.TagHTTPPath), r.URL.Path)
 
 	// create http.ResponseWriter interceptor for tracking response size and
 	// status code.
@@ -141,13 +138,13 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sCode := strconv.Itoa(code)
 		if code > 399 {
 			//zipkin.TagError.Set(sp, sCode)
-			sp.SetTag(string(zipkin.TagError),sCode)
+			sp.SetTag(string(zipkin.TagError), sCode)
 		}
 		//zipkin.TagHTTPStatusCode.Set(sp, sCode)
-		sp.SetTag(string(zipkin.TagHTTPStatusCode),sCode)
+		sp.SetTag(string(zipkin.TagHTTPStatusCode), sCode)
 		if h.tagResponseSize && ri.size > 0 {
 			//zipkin.TagHTTPResponseSize.Set(sp, ri.getResponseSize())
-			sp.SetTag(string(zipkin.TagHTTPResponseSize),ri.getResponseSize())
+			sp.SetTag(string(zipkin.TagHTTPResponseSize), ri.getResponseSize())
 		}
 		sp.Finish()
 	}()
