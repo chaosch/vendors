@@ -1478,25 +1478,38 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 					sqlCreateFK = fmt.Sprintf(`alter table %s add constraint %s foreign key (%s) references %s `, col.TableName, fkName, col.Name, col.ForeignKey)
 				}
 				//fmt.Println(sqlCreateFK)
-				exitFkName := engine.IsFKExists(col, fkName)
-				if exitFkName != "" {
-					var preSql string
-					switch engine.dialect.DBType() {
-					case core.MYSQL:
-						sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
-						preSql = fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s", col.TableName, exitFkName, fkName)
-					default:
-						sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
-						preSql = fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s", col.TableName, exitFkName, fkName)
+				found, exitFkName := engine.IsFKExists(col, fkName)
+				if found {
+					if exitFkName != "" {
+						var preSql string
+						switch engine.dialect.DBType() {
+						case core.MYSQL:
+							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
+							preSql = fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s", col.TableName, exitFkName, fkName)
+						default:
+							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s DROP FOREIGN KEY %s,ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, exitFkName, fkName, col.Name, col.ForeignKey)
+							preSql = fmt.Sprintf("ALTER TABLE %s RENAME INDEX %s TO %s", col.TableName, exitFkName, fkName)
+						}
+						_, err := engine.Exec(preSql)
+						if err != nil {
+							engine.logger.Error(preSql, err)
+						}
+						_, err = engine.Exec(sqlCreateFK)
+						if err != nil {
+							engine.logger.Error(sqlCreateFK, err)
+						}
+					} else {
+						switch engine.dialect.DBType() {
+						case core.MYSQL:
+							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName,  fkName, col.Name, col.ForeignKey)
+						default:
+							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName,  fkName, col.Name, col.ForeignKey)
+						}
+						_, err := engine.Exec(sqlCreateFK)
+						if err != nil {
+							engine.logger.Error(sqlCreateFK, err)
+						}
 					}
-					_, err := engine.Exec(preSql)
-					if err != nil {
-						engine.logger.Error(preSql, err)
-					}
-				}
-				_, err := engine.Exec(sqlCreateFK)
-				if err != nil {
-					engine.logger.Error(sqlCreateFK, err)
 				}
 			} else {
 				x := &core.Index{}
@@ -1524,7 +1537,7 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 	return nil
 }
 
-func (engine *Engine) IsFKExists(column core.Column, fkName string) string {
+func (engine *Engine) IsFKExists(column core.Column, fkName string) (bool, string) {
 	sql := ""
 	switch engine.dialect.DBType() {
 	case core.ORACLE:
@@ -1566,7 +1579,7 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
        = '%s' and o2.name = '%s'  and l2.name = '%s'`
 	default:
 		engine.logger.Error("no supported database type!")
-		return ""
+		return true, ""
 	}
 	f_table_name := ""
 	f_column_name := ""
@@ -1577,16 +1590,16 @@ WHERE  A.CONSTID = O3.ID AND A.FKEYID = O1.ID AND A.RKEYID = O2.ID AND L1.ID = O
 	result, err := engine.QueryString(sqlQuery)
 	if err != nil {
 		engine.logger.Error(err)
-		return ""
+		return true, ""
 	}
 	if len(result) > 0 {
 		if fkName != result[0]["fk_name"] {
-			return result[0]["fk_name"]
+			return false, result[0]["fk_name"]
 		} else {
-			return ""
+			return false, ""
 		}
 	}
-	return ""
+	return true, ""
 }
 
 func (Engine *Engine) RevertDatabase() map[string]*core.Table {

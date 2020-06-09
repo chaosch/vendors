@@ -105,6 +105,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// add our span to context
 	ctx := zipkin.NewContext(r.Context(), sp)
 
+
 	// tag typical HTTP request items
 	zipkin.TagHTTPMethod.Set(sp, r.Method)
 	zipkin.TagHTTPPath.Set(sp, r.URL.Path)
