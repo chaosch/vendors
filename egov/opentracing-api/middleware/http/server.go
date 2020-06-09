@@ -103,10 +103,11 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	sp := h.tracer.StartSpan(
 		spanName,
-		opentracing.ChildOf(sc),
+		//opentracing.ColoneFrom(sc),
 		//opentracing.FollowsFrom(sc),
+		opentracing.ChildOf(sc),
 		ext.SpanKindRPCServer,
-		ext.RPCServerOption(sc),
+
 
 	)
 

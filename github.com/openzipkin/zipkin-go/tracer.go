@@ -111,18 +111,18 @@ func (t *Tracer) StartSpan(name string, options ...SpanOption) Span {
 		// create root span
 		s.SpanContext.TraceID = t.generate.TraceID()
 		s.SpanContext.ID = t.generate.SpanID(s.SpanContext.TraceID)
-	} //else {
-	//	// valid parent context found
-	//	if t.sharedSpans && s.Kind == model.Server {
-	//		// join span
-	//		s.Shared = true
-	//	} else {
-	//		// regular child span
-	//		parentID := s.SpanContext.ID
-	//		s.SpanContext.ParentID = &parentID
-	//		s.SpanContext.ID = t.generate.SpanID(model.TraceID{})
-	//	}
-	//}
+	} else {
+		// valid parent context found
+		if t.sharedSpans && s.Kind == model.Server {
+			// join span
+			s.Shared = true
+		} else {
+			// regular child span
+			parentID := s.SpanContext.ID
+			s.SpanContext.ParentID = &parentID
+			s.SpanContext.ID = t.generate.SpanID(model.TraceID{})
+		}
+	}
 
 	if !s.SpanContext.Debug && s.Sampled == nil {
 		// deferred sampled context found, invoke sampler

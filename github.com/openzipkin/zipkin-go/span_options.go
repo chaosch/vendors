@@ -48,9 +48,7 @@ func Parent(sc model.SpanContext) SpanOption {
 			/* don't use provided SpanContext, but restart trace */
 			return
 		}
-		s.SpanContext.TraceID = sc.TraceID
-		s.SpanContext.ID=t.generate.SpanID(model.TraceID{})
-		s.SpanContext.ParentID=&sc.ID
+		s.SpanContext = sc
 	}
 }
 

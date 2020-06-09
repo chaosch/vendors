@@ -67,8 +67,6 @@ func (t *tracerImpl) StartSpan(operationName string, opts ...opentracing.StartSp
 	}
 
 	startTime := time.Now()
-
-	startSpanOptions.StartTime=startTime
 	// Time
 	if !startSpanOptions.StartTime.IsZero() {
 		zopts = append(zopts, zipkin.StartTime(startSpanOptions.StartTime))

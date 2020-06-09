@@ -204,6 +204,8 @@ const (
 	//
 	// See opentracing.FollowsFrom()
 	FollowsFromRef
+
+	ColoneFromRef
 )
 
 // SpanReference is a StartSpanOption that pairs a SpanReferenceType and a
@@ -251,6 +253,16 @@ func FollowsFrom(sc SpanContext) SpanReference {
 		ReferencedContext: sc,
 	}
 }
+
+
+
+func ColoneFrom(sc SpanContext) SpanReference {
+	return SpanReference{
+		Type:              ColoneFromRef,
+		ReferencedContext: sc,
+	}
+}
+
 
 // StartTime is a StartSpanOption that sets an explicit start timestamp for the
 // new Span.

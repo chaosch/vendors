@@ -14,6 +14,7 @@ func TestChildOfAndFollowsFrom(t *testing.T) {
 	}{
 		{ChildOf, ChildOfRef, "ChildOf"},
 		{FollowsFrom, FollowsFromRef, "FollowsFrom"},
+		{ColoneFrom, ColoneFromRef, "ColoneFrom"},
 	}
 
 	for _, test := range tests {
