@@ -4,6 +4,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync/atomic"
@@ -125,6 +126,9 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.ContentLength > 0 {
 		//zipkin.TagHTTPRequestSize.Set(sp, strconv.FormatInt(r.ContentLength, 10))
 		sp.SetTag(string(zipkin.TagHTTPRequestSize), strconv.FormatInt(r.ContentLength, 10))
+		sql, _ := ioutil.ReadAll(r.Body)
+		sp.SetTag("request.body", string(sql))
+
 	}
 	sp.SetTag(string(zipkin.TagHTTPMethod), r.Method)
 	sp.SetTag(string(zipkin.TagHTTPPath), r.URL.Path)
