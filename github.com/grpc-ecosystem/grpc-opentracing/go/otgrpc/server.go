@@ -46,21 +46,22 @@ func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 		serverSpan := tracer.StartSpan(
 			info.FullMethod,
 			opentracing.ChildOf(spanContext),
-			ext.RPCServerOption(spanContext),
+			//ext.RPCServerOption(spanContext),
+			ext.SpanKindRPCServer,
 			gRPCComponentTag,
 		)
 		defer serverSpan.Finish()
 
 		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 		//if otgrpcOpts.logPayloads {
-			//serverSpan.LogFields(log.Object("gRPC request", req))
-			serverSpan.SetTag("gRPC request", req)
+		//serverSpan.LogFields(log.Object("gRPC request", req))
+		serverSpan.SetTag("gRPC request", req)
 		//}
 		resp, err = handler(ctx, req)
 		if err == nil {
 			//if otgrpcOpts.logPayloads {
-				//serverSpan.LogFields(log.Object("gRPC response", resp))
-				serverSpan.SetTag("gRPC response", resp)
+			//serverSpan.LogFields(log.Object("gRPC response", resp))
+			serverSpan.SetTag("gRPC response", resp)
 
 			//}
 		} else {
