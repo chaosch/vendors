@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"io"
@@ -128,7 +129,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sp.SetTag(string(zipkin.TagHTTPRequestSize), strconv.FormatInt(r.ContentLength, 10))
 		sql, _ := ioutil.ReadAll(r.Body)
 		sp.SetTag("request.body", string(sql))
-
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(sql))
 	}
 	sp.SetTag(string(zipkin.TagHTTPMethod), r.Method)
 	sp.SetTag(string(zipkin.TagHTTPPath), r.URL.Path)
