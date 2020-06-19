@@ -7,7 +7,7 @@ import (
 
 func TestCoverPassword(t *testing.T) {
 	password := "mongodb://root:123456@192.168.4.124:9009,192.168.4.125:9009/?replicaSet=mongo-cluster&authSource=yizheng"
-	p, err := GetRsaPassword([]byte(password))
+	p, err := NewGetRsaPassword([]byte(password))
 	if err != nil {
 		fmt.Println(err)
 		return
