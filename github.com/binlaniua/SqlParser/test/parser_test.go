@@ -32,8 +32,8 @@ func TestSelect(t *testing.T) {
 	//`)
 
 	p := sqlparse.NewSQLParser(
-		`SELECT  tap.proposer_name,tap1.proposer_name1 from tab_affairs_proposers  as tap use index (ind_name)  
-      join  tab_affairs_proposers1  as tap1 use index (ind_name1) 
+		`SELECT  tap.proposer_name,tap1.proposer_name1 from tab_affairs_proposers  as tap force index (ind_name)  
+      join  tab_affairs_proposers1  as tap1 force index (ind_name1) 
        where tap1.proposer_name like binnary '%abc%'
 	`)
 	r, err := p.DoParser()

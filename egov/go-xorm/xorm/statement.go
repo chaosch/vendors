@@ -1044,7 +1044,7 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, useIndex 
 
 	IndexString := ""
 	if statement.Engine.dialect.DBType() == core.MYSQL && useIndex != "" {
-		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		IndexString += fmt.Sprintf(" force index(%s)", useIndex)
 		//fmt.Fprintf(&buf, " use index(%s)", useIndex)
 	}
 	if statement.Engine.dialect.DBType() == core.MYSQL && ignoreIndex != "" {
@@ -1102,7 +1102,7 @@ func (statement *Statement) JoinWithSchema(joinOP string, tablename interface{},
 	//加入使用索引
 	IndexString := ""
 	if statement.Engine.dialect.DBType() == core.MYSQL && useIndex != "" {
-		IndexString += fmt.Sprintf(" use index(%s)", useIndex)
+		IndexString += fmt.Sprintf(" force index(%s)", useIndex)
 		//fmt.Fprintf(&buf, " use index(%s)", useIndex)
 	}
 	if statement.Engine.dialect.DBType() == core.MYSQL && ignoreIndex != "" {
@@ -1398,7 +1398,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string) {
 	}
 
 	if statement.useIndexes != "" && statement.Engine.dialect.DBType() == core.MYSQL {
-		fromStr += fmt.Sprintf(" use index (%s)", statement.useIndexes)
+		fromStr += fmt.Sprintf(" force index (%s)", statement.useIndexes)
 	}
 	if statement.ignoreIndexes != "" && statement.Engine.dialect.DBType() == core.MYSQL {
 		fromStr += fmt.Sprintf(" ignore index (%s)", statement.ignoreIndexes)
