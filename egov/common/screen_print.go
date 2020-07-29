@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	INFO  LogType= "INFO "
-	WARN  LogType= "WARN "
-	ERROR LogType= "ERROR"
-	DEBUG LogType= "DEBUG"
+	INFO  LogType = "INFO "
+	WARN  LogType = "WARN "
+	ERROR LogType = "ERROR"
+	DEBUG LogType = "DEBUG"
 )
 
 type SystemLogLevel int
@@ -26,7 +26,7 @@ func PrintScreen(LogLevel LogLevel, LogContent string) {
 	LogTime = time.Now().Local().Format("2006-01-02 15:04:05")
 	Pid = strconv.FormatInt(int64(os.Getpid()), 10)
 	_, Pname = filepath.Split(os.Args[0])
-	fmt.Printf("%s %s %s [%s]: /*%s*/\n", LogTime, LogLevel, Pid, Pname, LogContent)
+	fmt.Printf("%s %v %s [%s]: /*%s*/\n", LogTime, LogLevel, Pid, Pname, LogContent)
 }
 
 func ScreenLog1(SystemLogLeveL LogLevel, LogLevel LogType, LogContent string, paras ...interface{}) {

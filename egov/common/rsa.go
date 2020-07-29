@@ -44,7 +44,6 @@ func RsaPassword(pk string) (password string, err error) {
 	//password = fmt.Sprintf("%x", w.Sum(nil)) //w.Sum(nil)将w的hash转成[]byte格式
 	return string(originalData), nil
 }
-
 func GetRsaPassword(pk *string) (err error) {
 	if pk == nil {
 		return errors.New("输入的空地址")
@@ -65,4 +64,16 @@ func GetRsaPassword(pk *string) (err error) {
 	*pk = string(originalData)
 	return nil
 }
-
+func NewGetRsaPassword(pk []byte) (string, error) {
+	if pk == nil {
+		return "", errors.New("输入的空加密数据")
+	}
+	key, _ := base64.StdEncoding.DecodeString(pbKey)
+	prvKey, err := x509.ParsePKIXPublicKey(key)
+	if err != nil {
+		return "", err
+	}
+	pub := prvKey.(*rsa.PublicKey)
+	encrypateData, err := rsa.EncryptPKCS1v15(rand.Reader, pub, pk)
+	return base64.StdEncoding.EncodeToString(encrypateData), err
+}

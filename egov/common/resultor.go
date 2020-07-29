@@ -411,3 +411,25 @@ func (a *ResultSet) Swap(i, j int) { // 重写 Swap() 方法
 func (a *ResultSet) Less(i, j int) bool { // 重写 Less() 方法， 从大到小排序
 	return a.res[i][a.sortField].(string) < a.res[j][a.sortField].(string)
 }
+func RetErrStr2(err ErrContext) string {
+	res := &ResultTemplate{Ok: false}
+	if value, ok := Es[err.Err().ErrCode]; ok {
+		if value == "" {
+			res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
+		} else {
+			res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		}
+		x, _ := json.Marshal(res)
+		//fmt.Println(string(x))
+		return string(x)
+	} else {
+		if value == "" {
+			res.Err = NewError(err.Err().ErrCode, err.Err().ErrMsg)
+		} else {
+			res.Err = NewError(err.Err().ErrCode, value+":"+err.Err().ErrMsg)
+		}
+		x, _ := json.Marshal(res)
+		//fmt.Println(string(x))
+		return string(x)
+	}
+}

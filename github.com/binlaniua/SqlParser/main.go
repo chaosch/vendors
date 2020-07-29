@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/binlaniua/kitgo"
 	"github.com/xwb1989/sqlparser"
-	"reflect"
 	"regexp"
 )
 
@@ -61,6 +60,7 @@ func (sp *SQLParser) DoParser() (*SQLParserResult, error) {
 	ast, err := sqlparser.Parse(sp.sql)
 	if err != nil {
 		return nil, err
+
 	}
 
 	switch node := ast.(type) {
@@ -91,7 +91,7 @@ func (sp *SQLParser) DoParser() (*SQLParserResult, error) {
 
 	//
 	default:
-		return nil, errors.New(fmt.Sprintf("不支持类型 => %s", reflect.TypeOf(ast)))
+		return nil, errors.New("unknown syntax errors ")
 	}
 	return sp.result, nil
 }
