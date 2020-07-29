@@ -6,14 +6,14 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/openzipkin/zipkin-go/model"
+	"github.com/openzipkin/zipkin-go/reporter"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/openzipkin/zipkin-go/model"
-	"github.com/openzipkin/zipkin-go/reporter"
 )
 
 // defaults
