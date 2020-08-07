@@ -57,6 +57,7 @@ type Engine struct {
 	Dictionaries       map[string]string
 	DataTables         map[string]string
 	SplitDatabase      map[string]*Engine
+	IsSplitDatabase    bool
 }
 
 func (engine *Engine) GetTagHandlers() map[string]tagHandler {
@@ -1501,9 +1502,9 @@ func (engine *Engine) CheckFK(indexInstead bool, beans ...interface{}) error {
 					} else {
 						switch engine.dialect.DBType() {
 						case core.MYSQL:
-							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName,  fkName, col.Name, col.ForeignKey)
+							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, fkName, col.Name, col.ForeignKey)
 						default:
-							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName,  fkName, col.Name, col.ForeignKey)
+							sqlCreateFK = fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s`, col.TableName, fkName, col.Name, col.ForeignKey)
 						}
 						_, err := engine.Exec(sqlCreateFK)
 						if err != nil {
