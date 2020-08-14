@@ -6,7 +6,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/openzipkin/zipkin-go/model"
 	"github.com/openzipkin/zipkin-go/reporter"
 	"log"
@@ -121,7 +120,7 @@ func (r *httpReporter) sendBatch() error {
 		r.logger.Printf("failed when marshalling the spans batch: %s\n", err.Error())
 		return err
 	}
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 
 	req, err := http.NewRequest("POST", r.url, bytes.NewReader(body))
 	if err != nil {
