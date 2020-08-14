@@ -133,6 +133,14 @@ func (r *httpReporter) sendBatch() error {
 	}
 
 	resp, err := r.client.Do(req)
+
+	defer func() {
+		r.batchMtx.Lock()
+		r.batch = r.batch[len(sendBatch):]
+		r.batchMtx.Unlock()
+
+	}()
+
 	if err != nil {
 		r.logger.Printf("failed to send the request: %s\n", err.Error())
 		return err
@@ -143,9 +151,6 @@ func (r *httpReporter) sendBatch() error {
 	}
 
 	// Remove sent spans from the batch even if they were not saved
-	r.batchMtx.Lock()
-	r.batch = r.batch[len(sendBatch):]
-	r.batchMtx.Unlock()
 
 	return nil
 }
