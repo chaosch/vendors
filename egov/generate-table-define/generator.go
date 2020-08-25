@@ -9,6 +9,8 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	"io/ioutil"
 	"os"
+	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -128,7 +130,6 @@ func init(){
 
 }
 
-
 //var dsn = "server=yizheng.f3322.net;port=1433;user id=sas;password=Qwer1234;database=ttee44;encrypt=disable;"
 
 func funcGetTabsPk(db_name string) string {
@@ -137,12 +138,18 @@ func funcGetTabsPk(db_name string) string {
 	content += "	//所有表的主键 \n"
 	//content += "	Databases[\"" + db_name + "\"].TabsPk=make(map[string]string)  \n"
 	if db_name != "all" {
-		for _, v := range exactSchemaTableName[db_name] {
+		sorts := sortMapKey(exactSchemaTableComment[db_name])
+		//fmt.Println(sorts)
+		for _, ele := range sorts {
+			v := ele
 			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, v, pks[v])
 			content += "\n"
 		}
 	} else {
-		for k, v := range pks {
+		sorts := sortMapKey(pks)
+		for _, ele := range sorts {
+			k := ele
+			v := pks[ele]
 			content += fmt.Sprintf(`	Databases["`+db_name+`"].TabsPk["%s"]="%s"`, k, v)
 			content += "\n"
 		}
@@ -205,7 +212,6 @@ order by c.name`)
 	}
 }
 
-
 func listDatabase(engine *xorm.Engine, dbName *string) ([]map[string]string, error) {
 	sql := ""
 	if *dbName != "all" {
@@ -247,8 +253,14 @@ func createFields(columns []map[string]string, noSqlMode int) (string, string) {
 func createStruct(tablist map[string]string, engine *xorm.Engine) string {
 	fmt.Println("正在生成模型……")
 	content := ""
-
-	for tName, tComment := range tablist {
+	sorts := sortMapKey(tablist)
+	//for _,ele:=range sorts{
+	//	tName:=ele
+	//	tComment:=tablist[ele]
+	//}
+	for _, ele := range sorts {
+		tName := ele
+		tComment := tablist[ele]
 		content += fmt.Sprintf(`
 //
 // 表名: %s
@@ -389,19 +401,32 @@ func createTab(db_name string, tablist map[string]string) string {
 	addedTable = make(map[string]bool)
 	exactSchemaTableComment[db_name] = make(map[string]string)
 	exactSchemaTableName[db_name] = make(map[string]string)
-	for name, comment := range tablist {
+
+	sorts := sortMapKey(tablist)
+	for _, ele := range sorts {
+		name := ele
+		comment := tablist[ele]
 		addScript := "\n"
 		currentScript := addTabs(addScript, db_name, name, comment)
 		content += currentScript
-
 	}
+
+	//for name, comment := range tablist {
+	//	addScript := "\n"
+	//	currentScript := addTabs(addScript, db_name, name, comment)
+	//	content += currentScript
+	//
+	//}
 
 	fmt.Println(fmt.Sprintf("根据依赖关系实际收集表%v个", len(exactSchemaTableComment[db_name])))
 
 	content_dictionaries := "	//字典表列表\n"
 	content_datatables := "	//本地数据表列表\n"
 
-	for tName, tComment := range exactSchemaTableComment[db_name] {
+	sorts = sortMapKey(exactSchemaTableComment[db_name])
+	for _, ele := range sorts {
+		tName := ele
+		tComment := exactSchemaTableComment[db_name][ele]
 		if strings.HasPrefix(tName, "dic_") {
 			content_dictionaries += fmt.Sprintf(`	Databases["`+db_name+`"]`+".DictionariesRevert[\"%s\"]=\"%s\" \n", tComment, tName)
 			content_dictionaries += fmt.Sprintf(`	Databases["`+db_name+`"]`+".Dictionaries[\"%s\"]=\"%s\" \n", tName, tComment)
@@ -409,8 +434,17 @@ func createTab(db_name string, tablist map[string]string) string {
 			content_datatables += fmt.Sprintf(`	Databases["`+db_name+`"]`+".DataTablesRevert[\"%s\"]=\"%s\" \n", tComment, tName)
 			content_datatables += fmt.Sprintf(`	Databases["`+db_name+`"]`+".DataTables[\"%s\"]=\"%s\" \n", tName, tComment)
 		}
-
 	}
+	//for tName, tComment := range exactSchemaTableComment[db_name] {
+	//	if strings.HasPrefix(tName, "dic_") {
+	//		content_dictionaries += fmt.Sprintf(`	Databases["`+db_name+`"]`+".DictionariesRevert[\"%s\"]=\"%s\" \n", tComment, tName)
+	//		content_dictionaries += fmt.Sprintf(`	Databases["`+db_name+`"]`+".Dictionaries[\"%s\"]=\"%s\" \n", tName, tComment)
+	//	} else {
+	//		content_datatables += fmt.Sprintf(`	Databases["`+db_name+`"]`+".DataTablesRevert[\"%s\"]=\"%s\" \n", tComment, tName)
+	//		content_datatables += fmt.Sprintf(`	Databases["`+db_name+`"]`+".DataTables[\"%s\"]=\"%s\" \n", tName, tComment)
+	//	}
+	//
+	//}
 
 	if db_name == "accept" {
 
@@ -422,7 +456,10 @@ func createTab(db_name string, tablist map[string]string) string {
     // 说明: %s
     //
 `, "tab_affairs_info及其子表")
-		for _, value := range subTables {
+
+		sorts := sortMapKey(subTables)
+		for _, ele := range sorts {
+			value := subTables[ele]
 			content += fmt.Sprintf(`	Databases["`+db_name+`"]`+`.TabsPas["%s"] = &sync.Pool{
 			New : func() interface{} {
 				return &%s{}
@@ -438,6 +475,22 @@ func createTab(db_name string, tablist map[string]string) string {
 `, value, value)
 
 		}
+		//		for _, value := range subTables {
+		//			content += fmt.Sprintf(`	Databases["`+db_name+`"]`+`.TabsPas["%s"] = &sync.Pool{
+		//			New : func() interface{} {
+		//				return &%s{}
+		//			},
+		//		}
+		//`, value, value)
+		//			content += fmt.Sprintf(`	Databases["`+db_name+`"]`+`.TabsArray["%s"] = &sync.Pool{
+		//			New : func() interface{} {
+		//			x:=make([]%s,0)
+		//			return &x
+		//			},
+		//		}
+		//`, value, value)
+		//
+		//		}
 	}
 
 	content += createtabDependencyFast(db_name)
@@ -580,9 +633,15 @@ func createtabDependencyFast(dbName string) string {
 
 	content := "\n "
 	content += "	//表的依赖关系 \n"
-	for tName, _ := range schemaTableComment[dbName] {
+
+	sorts := sortMapKey(schemaTableComment[dbName])
+	for _, ele := range sorts {
+		tName := ele
 		content += `	Databases["` + dbName + `"]` + ".TabsDependency[\"" + tName + "\"]=" + outPutStringArray(dependency[tName]) + "\n"
 	}
+	//for tName, _ := range schemaTableComment[dbName] {
+	//	content += `	Databases["` + dbName + `"]` + ".TabsDependency[\"" + tName + "\"]=" + outPutStringArray(dependency[tName]) + "\n"
+	//}
 	//for x := 0; x < len(tabList); x++ {
 	//	content += `	Databases["` + dbName + `"]` + ".TabsDependency[\"" + tabList[x]["M_TAB"] + "\"]=[]string{" + tabList[x]["F_TAB"] + "} \n"
 	//}
@@ -620,7 +679,8 @@ func getColumnSimpleInfo(db_name string) string {
  WHERE COLUMN_NAME IN (SELECT COLUMN_NAME
                          FROM INFORMATION_SCHEMA.columns
                        GROUP BY COLUMN_NAME
-                       HAVING count (DISTINCT data_type) = 1)`
+                       HAVING count (DISTINCT data_type) = 1)
+                       ORDER BY COLUMN_NAME`
 	}
 	engine, err := xorm.NewEngine("mssql", dsn)
 	if err != nil {
@@ -632,6 +692,7 @@ func getColumnSimpleInfo(db_name string) string {
 	content := "\n "
 	content += "	//所有列的数据类型 \n"
 	content += "	Databases[\"" + db_name + "\"].ColumnTypes=map[string]reflect.Kind{\"none_field\":1 "
+	//sorts:=sortMapKey(colList)
 	for x := 0; x < len(colList); x++ {
 		st := core.SQLType{}
 		st.Name = colList[x]["data_type"]
@@ -653,6 +714,7 @@ func outPutStringArray(strArray []string) string {
 	for _, str := range strArray {
 		result += "\"" + str + "\","
 	}
+	//result+=strings.Join(strArray,"\"")
 	result += "}"
 	return result
 }
@@ -664,3 +726,18 @@ func outPutMapToSqlString(m map[string]string) string {
 	}
 	return result
 }
+
+func sortMapKey(mapObject interface{}) []string {
+	result := make([]string, 0)
+	Data := reflect.Indirect(reflect.ValueOf(mapObject))
+	t := reflect.TypeOf(mapObject)
+	if t.Kind() != reflect.Map {
+		return result
+	}
+	for _, v := range Data.MapKeys() {
+		result = append(result, v.String())
+	}
+	sort.Strings(result)
+	return result
+}
+
