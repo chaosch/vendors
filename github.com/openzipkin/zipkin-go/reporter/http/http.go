@@ -137,10 +137,10 @@ func (r *httpReporter) sendBatch() (e error) {
 	defer func() {
 		r.batchMtx.Lock()
 		r.batch = r.batch[len(sendBatch):]
-		if e != nil {
-			r.batch = make([]*model.SpanModel, 0)
-			r.Close()
-		}
+		//if e != nil {
+		//	r.batch = make([]*model.SpanModel, 0)
+			//r.Close()
+		//}
 		r.batchMtx.Unlock()
 
 	}()
