@@ -139,8 +139,9 @@ func (r *httpReporter) sendBatch() (e error) {
 		r.batch = r.batch[len(sendBatch):]
 		//if e != nil {
 		//	r.batch = make([]*model.SpanModel, 0)
-			//r.Close()
+		//r.Close()
 		//}
+		r.logger.Println("batch size=", len(r.batch))
 		r.batchMtx.Unlock()
 
 	}()
