@@ -416,10 +416,10 @@ func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
   '' indexes,
   0 indexnum
 from information_schema.COLUMNS where TABLE_SCHEMA=?
-`
+and table_name in (select table_name from information_schema.TABLES where table_schema=? and table_type='BASE TABLE' ) `
 	//and table_name in (select table_name from information_schema.TABLES where TABLE_SCHEMA=? and table_type='BASE TABLE' )
 	sql = fmt.Sprintf(sql, "`")
-	rows, err := db.DB().Query(sql, db.DbName)
+	rows, err := db.DB().Query(sql, db.DbName, db.DbName)
 
 	if err != nil {
 		panic(err)
