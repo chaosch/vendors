@@ -1240,3 +1240,8 @@ func (db *postgres)GetAllTableColumns(includeView bool)(map[string]map[string]*c
 	result:=make(map[string]map[string]*core.Column)
 	return result,nil
 }
+
+func (db *postgres) GetAllTableViewsColumns() (map[string]map[string]*core.Column, error) {//todo
+	result := make(map[string]map[string]*core.Column)
+	return result, nil
+}

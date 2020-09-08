@@ -1070,6 +1070,10 @@ func (db *oracle) GetPhysicalColumn(table *core.Table, column *core.Column) *cor
 	return &core.Column{}
 }
 
+func (db *oracle) GetAllTableViewsColumns() (map[string]map[string]*core.Column, error) {//todo
+	return nil, nil
+}
+
 func (db *oracle) GetAllTableColumns(includeView bool) (map[string]map[string]*core.Column, error) {
 	sql := `
 SELECT

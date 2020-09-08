@@ -480,3 +480,8 @@ func (db *sqlite3) GetAllTableColumns(includeView bool) (map[string]map[string]*
 	result := make(map[string]map[string]*core.Column)
 	return result, nil
 }
+
+func (db *sqlite3) GetAllTableViewsColumns() (map[string]map[string]*core.Column, error) {//todo
+	result := make(map[string]map[string]*core.Column)
+	return result, nil
+}

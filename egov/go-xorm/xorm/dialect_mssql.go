@@ -935,3 +935,8 @@ func (db *mssql) CreateRenameIndexSql(tableName string, oldIndex, index *core.In
 	sql := "EXEC sp_rename '%s.%s', '%s', 'index'"
 	return fmt.Sprintf(sql, tableName, oldIndex.Name, index.Name)
 }
+
+func (db *mssql) GetAllTableViewsColumns() (map[string]map[string]*core.Column, error) {//todo
+	result := make(map[string]map[string]*core.Column)
+	return result, nil
+}

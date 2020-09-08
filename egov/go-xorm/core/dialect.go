@@ -85,10 +85,44 @@ type Dialect interface {
 	GetIndexes(tableName string) (map[string]*Index, error)
 
 	GetAllTableColumns(includeView bool) (map[string]map[string]*Column, error)
+	GetAllTableViewsColumns() (map[string]map[string]*Column, error)
+
 	//IsColumnDifferent(tableName string,colName string,column Column)
 
 	Filters() []Filter
 	SetTableComment(d map[string]string, t map[string]string)
+}
+
+func (db *Base) GetAllTableViewsColumns() (map[string]map[string]*Column, error) {
+	sql := `select  	
+  1 object_id,
+	table_name tName  ,
+	'' tComment,
+	column_name NAME,
+	ORDINAL_POSITION  sortcode,
+	0 autoincr,
+  case COLUMN_KEY when 'PRI' then 1 else 0 end pk,
+  0 fk,
+  data_type type,
+  0 byte,
+  case DATA_TYPE when 'varchar' then CHARACTER_MAXIMUM_LENGTH when 'binary' then 0 else 1 end  length,
+  0 %[1]sPRECISION%[1]s,
+  case IS_NULLABLE when  'YES' then 1 else 0 end nullable,
+  COLUMN_COMMENT comments,
+  case DATA_TYPE when 'varchar' then CONCAT('(''',COLUMN_DEFAULT,''')') else CONCAT('((',COLUMN_DEFAULT,'))') end	defaultvalue,
+  '' indexes,
+  0 indexnum
+from information_schema.COLUMNS where TABLE_SCHEMA=?`
+
+	sql = fmt.Sprintf(sql, "`")
+	rows, err := db.DB().Query(sql, db.DbName, db.DbName)
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	return GetStringColumnFormRows(rows), nil
 }
 
 func OpenDialect(dialect Dialect) (*DB, error) {
@@ -440,17 +474,13 @@ and table_name in (select table_name from information_schema.TABLES where table_
   '' indexes,
   0 indexnum
 from information_schema.COLUMNS where TABLE_SCHEMA=?
+and table_name in (select table_name from information_schema.TABLES where table_schema=? and table_type='VIEW' ) 
+
 `
 
 	}
 	sql = fmt.Sprintf(sql, "`")
-	var rows *Rows
-	var err error
-	if !includeView {
-		rows, err = db.DB().Query(sql, db.DbName, db.DbName)
-	} else {
-		rows, err = db.DB().Query(sql, db.DbName)
-	}
+	rows, err := db.DB().Query(sql, db.DbName, db.DbName)
 
 	if err != nil {
 		panic(err)

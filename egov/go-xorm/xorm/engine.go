@@ -1746,7 +1746,7 @@ func (engine *Engine) SyncFast(tableMaps map[string]map[string]*core.Column, bea
 	return nil
 }
 
-func (engine *Engine) SyncFastView(tableMaps map[string]map[string]*core.Column, baseOn string, beans ...interface{}) error {
+func (engine *Engine) SyncFastView(viewMaps map[string]map[string]*core.Column,tableMaps map[string]map[string]*core.Column, baseOn string, beans ...interface{}) error {
 
 	for _, bean := range beans {
 		v := rValue(bean)
@@ -1754,8 +1754,11 @@ func (engine *Engine) SyncFastView(tableMaps map[string]map[string]*core.Column,
 		table, err := engine.autoMapType(v)
 		s := engine.NewSession()
 		defer s.Close()
-		_, isExist := tableMaps[tableName]
+		_, isExist := viewMaps[tableName]
 		if !isExist {
+			if _,isTableExists:=tableMaps[tableName];isTableExists{
+				engine.DropTables(bean)
+			}
 			err = engine.CreateOrReplaceView(tableName, baseOn)
 			if err != nil {
 				fmt.Println(err)
@@ -1763,7 +1766,7 @@ func (engine *Engine) SyncFastView(tableMaps map[string]map[string]*core.Column,
 			}
 		} else {
 			for _, col := range table.Columns() {
-				phyCol, isExist := tableMaps[tableName][col.Name]
+				phyCol, isExist := viewMaps[tableName][col.Name]
 				if !isExist {
 					engine.logger.Debugf("create or replace view %s", tableName)
 					err = engine.CreateOrReplaceView(tableName, baseOn)

@@ -174,6 +174,7 @@ type mysql struct {
 	clientFoundRows   bool
 }
 
+
 func (db *mysql) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
 	return db.Base.Init(d, db, uri, drivername, dataSourceName)
 }
@@ -512,7 +513,7 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 		var col core.IndexColumn
 		var desc, ordinal string
 
-		err = rows.Scan(&indexName, &nonUnique, &colName,&desc,&ordinal)
+		err = rows.Scan(&indexName, &nonUnique, &colName, &desc, &ordinal)
 		if err != nil {
 			return nil, err
 		}
@@ -533,7 +534,7 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 		//	indexName = indexName[5+len(tableName):]
 		//	isRegular = true
 		//}
-		isRegular=true
+		isRegular = true
 		var index *core.Index
 		var ok bool
 		if index, ok = indexes[indexName]; !ok {
