@@ -476,7 +476,7 @@ func (db *sqlite3) GetPhysicalColumn(table *core.Table, column *core.Column) *co
 	return &core.Column{}
 }
 
-func (db *sqlite3) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
+func (db *sqlite3) GetAllTableColumns(includeView bool) (map[string]map[string]*core.Column, error) {
 	result := make(map[string]map[string]*core.Column)
 	return result, nil
 }

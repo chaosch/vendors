@@ -1236,7 +1236,7 @@ func (db *postgres) GetPhysicalColumn(table *core.Table, column *core.Column) *c
 	return &core.Column{}
 }
 
-func (db *postgres)GetAllTableColumns()(map[string]map[string]*core.Column,error){
+func (db *postgres)GetAllTableColumns(includeView bool)(map[string]map[string]*core.Column,error){
 	result:=make(map[string]map[string]*core.Column)
 	return result,nil
 }

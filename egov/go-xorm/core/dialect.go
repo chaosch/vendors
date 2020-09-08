@@ -84,8 +84,7 @@ type Dialect interface {
 
 	GetIndexes(tableName string) (map[string]*Index, error)
 
-	GetAllTableColumns() (map[string]map[string]*Column, error)
-
+	GetAllTableColumns(includeView bool) (map[string]map[string]*Column, error)
 	//IsColumnDifferent(tableName string,colName string,column Column)
 
 	Filters() []Filter
@@ -396,8 +395,10 @@ func (db *Base) GetPhysicalColumn(table *Table, column *Column) *Column {
 	return &Column{}
 }
 
-func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
-	sql := `select  	
+func (db *Base) GetAllTableColumns(includeView bool) (map[string]map[string]*Column, error) {
+	sql := ""
+	if !includeView {
+		sql = `select  	
   1 object_id,
 	table_name tName  ,
 	'' tComment,
@@ -417,9 +418,39 @@ func (db *Base) GetAllTableColumns() (map[string]map[string]*Column, error) {
   0 indexnum
 from information_schema.COLUMNS where TABLE_SCHEMA=?
 and table_name in (select table_name from information_schema.TABLES where table_schema=? and table_type='BASE TABLE' ) `
-	//and table_name in (select table_name from information_schema.TABLES where TABLE_SCHEMA=? and table_type='BASE TABLE' )
+		//and table_name in (select table_name from information_schema.TABLES where TABLE_SCHEMA=? and table_type='BASE TABLE' )
+
+	} else {
+		sql = `select  	
+  1 object_id,
+	table_name tName  ,
+	'' tComment,
+	column_name NAME,
+	ORDINAL_POSITION  sortcode,
+	0 autoincr,
+  case COLUMN_KEY when 'PRI' then 1 else 0 end pk,
+  0 fk,
+  data_type type,
+  0 byte,
+  case DATA_TYPE when 'varchar' then CHARACTER_MAXIMUM_LENGTH when 'binary' then 0 else 1 end  length,
+  0 %[1]sPRECISION%[1]s,
+  case IS_NULLABLE when  'YES' then 1 else 0 end nullable,
+  COLUMN_COMMENT comments,
+  case DATA_TYPE when 'varchar' then CONCAT('(''',COLUMN_DEFAULT,''')') else CONCAT('((',COLUMN_DEFAULT,'))') end	defaultvalue,
+  '' indexes,
+  0 indexnum
+from information_schema.COLUMNS where TABLE_SCHEMA=?
+`
+
+	}
 	sql = fmt.Sprintf(sql, "`")
-	rows, err := db.DB().Query(sql, db.DbName, db.DbName)
+	var rows *Rows
+	var err error
+	if !includeView {
+		rows, err = db.DB().Query(sql, db.DbName, db.DbName)
+	} else {
+		rows, err = db.DB().Query(sql, db.DbName)
+	}
 
 	if err != nil {
 		panic(err)

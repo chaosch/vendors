@@ -753,7 +753,7 @@ func (p *odbcDriver) Parse(driverName, dataSourceName string) (*core.Uri, error)
 	return &core.Uri{DbName: dbName, DbType: core.MSSQL}, nil
 }
 
-func (db *mssql) GetAllTableColumns() (map[string]map[string]*core.Column, error) {
+func (db *mssql) GetAllTableColumns(includeView bool) (map[string]map[string]*core.Column, error) {
 	sql := `SELECT
 	c.object_id,
 	tName = c.NAME,
