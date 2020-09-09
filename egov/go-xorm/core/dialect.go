@@ -141,8 +141,17 @@ type Base struct {
 }
 
 func (b *Base) CreateRenameIndexSql(tableName string, oldIndex, index *Index) string {
-	sql := "ALTER TABLE %s RENAME INDEX %s TO %s"
-	return fmt.Sprintf(sql, tableName, oldIndex.Name, index.Name)
+	//sql := "ALTER TABLE %s RENAME INDEX %s TO %s"
+	//sql = "ALTER TABLE %s DROP INDEX %s Add index %s(%s)"
+	//cols:=""
+	unique := ""
+	if index.Type == UniqueType {
+		unique = "UNIQUE"
+	}
+	return fmt.Sprintf("ALTER TABLE %s DROP INDEX %v Add %s index %v (%v)",
+		tableName, oldIndex.Name, unique, index.Name,
+		CreateIndexString(index.Cols))
+	//return fmt.Sprintf(sql, tableName, oldIndex.Name, index.Name, strings.Join())
 }
 
 func (b *Base) SetTableComment(d map[string]string, t map[string]string) {
