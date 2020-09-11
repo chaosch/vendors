@@ -168,7 +168,7 @@ func NewSimpleLogger3(out io.Writer, prefix string, flag int, l LogLevel) *Simpl
 		DEBUG: log.New(out, fmt.Sprintf("DEBUG %s ", prefix), flag),
 		ERR:   log.New(out, fmt.Sprintf("ERROR %s ", prefix), flag),
 		INFO:  log.New(out, fmt.Sprintf("INFO  %s ", prefix), flag),
-		WATCH: log.New(out, fmt.Sprintf("WATCH  %s ", prefix), flag),
+		WATCH: log.New(out, fmt.Sprintf("WATCH %s ", prefix), flag),
 		WARN:  log.New(out, fmt.Sprintf("WARN  %s ", prefix), flag),
 		SQL:   log.New(out, fmt.Sprintf("SQL   %s ", prefix), flag),
 		level: l,
