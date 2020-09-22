@@ -34,7 +34,7 @@ func (session *Session) Commit() (re error) {
 	defer func() {
 		if re == nil {
 			session.saveLastSQL("COMMIT")
-			session.IsAutoCommit = true
+			//session.IsAutoCommit = true
 			session.IsCommitedOrRollbacked = true
 		}
 	}()
