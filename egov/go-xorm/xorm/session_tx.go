@@ -14,6 +14,7 @@ func (session *Session) Begin() error {
 		session.IsAutoCommit = false
 		session.IsCommitedOrRollbacked = false
 		session.Tx = tx
+		session.SessId = tx.TxId
 		session.saveLastSQL("BEGIN TRANSACTION")
 	}
 	return nil

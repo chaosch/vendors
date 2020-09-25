@@ -7,7 +7,6 @@ package xorm
 import (
 	"database/sql"
 	"egov/go-xorm/core"
-	"egov/object-id"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -78,7 +77,7 @@ func (session *Session) Init() {
 	session.lastSQL = ""
 	session.lastSQLArgs = []interface{}{}
 	session.IdentityInsert = session.Engine.IdentityInsert
-	session.SessId = object_id.NewObjectId().Hex()
+	//session.SessId = object_id.NewObjectId().Hex()
 }
 
 // Close release the connection from pool

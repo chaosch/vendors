@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"database/sql/driver"
+	object_id "egov/object-id"
 	"errors"
 	"fmt"
 	"reflect"
@@ -83,7 +84,7 @@ func (db *DB) Query(query string, args ...interface{}) (*Rows, error) {
 		}
 		return nil, err
 	}
-	return &Rows{rows, db.Mapper,nil,nil}, nil
+	return &Rows{rows, db.Mapper, nil, nil}, nil
 }
 
 func (db *DB) QueryMap(query string, mp interface{}) (*Rows, error) {
@@ -179,7 +180,7 @@ func (s *Stmt) Query(args ...interface{}) (*Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Rows{rows, s.Mapper,nil,nil}, nil
+	return &Rows{rows, s.Mapper, nil, nil}, nil
 }
 
 func (s *Stmt) QueryMap(mp interface{}) (*Rows, error) {
@@ -274,6 +275,7 @@ func (EmptyScanner) Scan(src interface{}) error {
 
 type Tx struct {
 	*sql.Tx
+	TxId   string
 	Mapper IMapper
 }
 
@@ -282,7 +284,7 @@ func (db *DB) Begin() (*Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Tx{tx, db.Mapper}, nil
+	return &Tx{tx,object_id.NewObjectId().Hex(), db.Mapper}, nil
 }
 
 func (tx *Tx) Prepare(query string) (*Stmt, error) {
@@ -328,7 +330,7 @@ func (tx *Tx) Query(query string, args ...interface{}) (*Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Rows{rows, tx.Mapper,nil,nil}, nil
+	return &Rows{rows, tx.Mapper, nil, nil}, nil
 }
 
 func (tx *Tx) QueryMap(query string, mp interface{}) (*Rows, error) {
