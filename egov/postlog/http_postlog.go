@@ -181,7 +181,9 @@ func (p *Pool) SendLog(s string, k string, c interface{}, logsUrl string) error 
 	//	cBytes, _ = json.Marshal(c)
 	//}
 	//cStr := string(cBytes)
-	if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
+	//c=simpleContent{Message:"a"}
+	//fmt.Println(reflect.TypeOf(c).Kind())
+	if reflect.TypeOf(c).Kind() == reflect.String {
 		c = simpleContent{Message: c}
 	}
 	msg := map[string]interface{}{"system": s, "kind": k, "content": c}
@@ -234,7 +236,8 @@ func (p *Pool) HttpPostLogWithSignal(msg map[string]string, logsUrl string, sign
 
 func (p *Pool) SendLogWithSignal(s string, k string, c interface{}, logsUrl string, signal chan bool) {
 	var cBytes []byte
-	if reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Map && reflect.TypeOf(reflect.ValueOf(c)).Kind() != reflect.Struct {
+	//fmt.Println(reflect.TypeOf(reflect.ValueOf(c)).Kind(),reflect.TypeOf(c).Kind())
+	if reflect.TypeOf(c).Kind() != reflect.Map && reflect.TypeOf(c).Kind() != reflect.Struct {
 		if reflect.TypeOf(reflect.ValueOf(c)).Kind() == reflect.String {
 			sc := simpleContent{Message: c}
 			cBytes, _ = json.Marshal(sc)
