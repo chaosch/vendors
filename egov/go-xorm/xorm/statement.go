@@ -546,13 +546,13 @@ func buildConds(engine *Engine, table *core.Table, bean interface{},
 	var useLike bool
 	if len(condParams) > 0 {
 		if reflect.TypeOf(condParams[0]).Kind()!=reflect.Bool{
-			return nil,errors.New("need bool data type")
+			return nil,errors.New("condParams[0] useOr need bool data type")
 		}
 		useOr = condParams[0].(bool)
 	}
 	if len(condParams) > 1 {
 		if reflect.TypeOf(condParams[1]).Kind()!=reflect.Bool{
-			return nil,errors.New("need bool data type")
+			return nil,errors.New("condParams[1] useLike need bool data type")
 		}
 		useLike = condParams[1].(bool)
 	}
