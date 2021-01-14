@@ -27,7 +27,10 @@ func (session *Session) FindRawSql(rowsSlicePtr interface{}, condiBean ...interf
 	if session.IsAutoClose {
 		defer session.Close()
 	}
-
+	var condParams []interface{}
+	if len(condiBean)>1{
+		condParams=condiBean[1:]
+	}
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	if sliceValue.Kind() != reflect.Slice && sliceValue.Kind() != reflect.Map {
 		return nil, errors.New("needs a pointer to a slice or a map")
@@ -63,7 +66,7 @@ func (session *Session) FindRawSql(rowsSlicePtr interface{}, condiBean ...interf
 	if tp == tpStruct {
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}
@@ -144,6 +147,10 @@ func (session *Session) FindRawSql(rowsSlicePtr interface{}, condiBean ...interf
 // map[int64]*Struct
 func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
 	defer session.resetStatement()
+	var condParams []interface{}
+	if len(condiBean)>1{
+		condParams=condiBean[1:]
+	}
 	if session.IsAutoClose {
 		defer session.Close()
 	}
@@ -183,7 +190,7 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 	if tp == tpStruct {
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}
@@ -215,7 +222,7 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 		}
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(xtable, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(xtable, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}

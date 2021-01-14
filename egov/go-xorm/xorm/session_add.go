@@ -24,7 +24,10 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 	if session.IsAutoClose {
 		defer session.Close()
 	}
-
+	var condParams []interface{}
+	if len(condiBean)>1{
+		condParams=condiBean[1:]
+	}
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	if sliceValue.Kind() != reflect.Slice && sliceValue.Kind() != reflect.Map {
 		return errors.New("needs a pointer to a slice or a map"), ""
@@ -60,7 +63,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 	if tp == tpStruct {
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}
@@ -92,7 +95,7 @@ func (session *Session) FindReturnWithSql(rowsSlicePtr interface{}, condiBean ..
 		}
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(xtable, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(xtable, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}
@@ -220,7 +223,10 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 	if session.IsAutoClose {
 		defer session.Close()
 	}
-
+	var condParams []interface{}
+	if len(condiBean)>1{
+		condParams=condiBean[1:]
+	}
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
 	if sliceValue.Kind() != reflect.Slice && sliceValue.Kind() != reflect.Map {
 		return errors.New("needs a pointer to a slice or a map"), nil
@@ -256,7 +262,7 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 	if tp == tpStruct {
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(table, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}
@@ -288,7 +294,7 @@ func (session *Session) FindReturnWithSqlParseResult(rowsSlicePtr interface{}, A
 		}
 		if !session.Statement.noAutoCondition && len(condiBean) > 0 {
 			var err error
-			autoCond, err = session.Statement.buildConds(xtable, condiBean[0], true, true, false, true, addedTableName)
+			autoCond, err = session.Statement.buildConds(xtable, condiBean[0], true, true, false, true, addedTableName,condParams...)
 			if err != nil {
 				panic(err)
 			}

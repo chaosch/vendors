@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -535,10 +536,20 @@ func (statement *Statement) colName(col *core.Column, tableName string) string {
 	return statement.Engine.Quote(col.Name)
 }
 
+//condParams[0] bool 条件是否使用or拼接
+//condParams[1] bool 每个条件是否使用like替代eq
 func buildConds(engine *Engine, table *core.Table, bean interface{},
 	includeVersion bool, includeUpdated bool, includeNil bool,
 	includeAutoIncr bool, allUseBool bool, useAllCols bool, unscoped bool,
-	mustColumnMap map[string]bool, tableName, aliasName string, addedTableName bool) (builder.Cond, error) {
+	mustColumnMap map[string]bool, tableName, aliasName string, addedTableName bool, condParams ...interface{}) (builder.Cond, error) {
+	var useOr bool
+	var useLike bool
+	if len(condParams) > 0 {
+		useOr = condParams[0].(bool)
+	}
+	if len(condParams) > 1 {
+		useLike = condParams[1].(bool)
+	}
 	var conds []builder.Cond
 	for _, col := range table.Columns() {
 		if !includeVersion && col.IsVersion {
@@ -747,10 +758,33 @@ func buildConds(engine *Engine, table *core.Table, bean interface{},
 			val = fieldValue.Interface()
 		}
 
-		conds = append(conds, builder.Eq{colName: val})
+		if !useLike {
+			conds = append(conds, builder.Eq{colName: val})
+		} else {
+			k:=reflect.TypeOf(val).Kind()
+			var valString string
+			switch k {
+			case reflect.String:
+				valString=val.(string)
+			case reflect.Int,reflect.Int64,reflect.Int8,reflect.Int16:
+				valString=strconv.FormatInt(val.(int64),10)
+			case reflect.Uint64,reflect.Uint,reflect.Uint8,reflect.Uint16,reflect.Uint32:
+				valString=strconv.FormatUint(val.(uint64),10)
+			//case reflect.Float32,reflect.Float64:
+			//	valString=strconv.FormatFloat(val.(float64),10)
+			default:
+				return nil,errors.New("unsupported val's type")
+			}
+
+			conds = append(conds, builder.Like{colName,valString})
+		}
 	}
 
-	return builder.And(conds...), nil
+	if !useOr {
+		return builder.And(conds...), nil
+	} else {
+		return builder.Or(conds...), nil
+	}
 }
 
 // TableName return current tableName
@@ -1266,9 +1300,9 @@ func (statement *Statement) genAddColumnStr(col *core.Column) ([]string, []inter
 	return sql, []interface{}{}
 }
 
-func (statement *Statement) buildConds(table *core.Table, bean interface{}, includeVersion bool, includeUpdated bool, includeNil bool, includeAutoIncr bool, addedTableName bool) (builder.Cond, error) {
+func (statement *Statement) buildConds(table *core.Table, bean interface{}, includeVersion bool, includeUpdated bool, includeNil bool, includeAutoIncr bool, addedTableName bool, condParams ...interface{}) (builder.Cond, error) {
 	return buildConds(statement.Engine, table, bean, includeVersion, includeUpdated, includeNil, includeAutoIncr, statement.allUseBool, statement.useAllCols,
-		statement.unscoped, statement.mustColumnMap, statement.TableName(), statement.TableAlias, addedTableName)
+		statement.unscoped, statement.mustColumnMap, statement.TableName(), statement.TableAlias, addedTableName, condParams...)
 }
 
 func (statement *Statement) genConds(bean interface{}) (string, []interface{}, error) {
